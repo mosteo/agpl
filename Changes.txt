@@ -1,0 +1,12 @@
+--------------
+-- 20050408 --
+--------------
+[+] Drawers for the autoscaling Agpl.Gdk.Drawer.
+--------------
+-- 20050407 --
+--------------
+[+] A lot of utilities for Gdk, including a nice autoscaling object.
+--------------
+-- 20050404 --
+--------------
+[+] Agpl.Cv. Package for homogenous basic points and lines in 2D.
