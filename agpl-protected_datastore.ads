@@ -11,14 +11,14 @@ package Agpl.Protected_Datastore is
 
    type Object_Data is abstract tagged null record;
    --  This is data to be kept in the datastore
-   type Object_Data_Access is access Object_Data'Class;
+   type Object_Data_Access is access all Object_Data'Class;
 
    subtype Object_Key is String;
    --  This is the indexing type
 
    type Key_Listener is interface; -- Something that wants to be notified
                                    --  when a key is stored
-   type Key_Listener_Access is access Key_Listener'Class;
+   type Key_Listener_Access is access all Key_Listener'Class;
    procedure On_Key_Stored (This  : in out Key_Listener;
                             Key   : in     Object_Key;
                             Value : in     Object_Data'Class)
