@@ -32,8 +32,8 @@ package Agpl.Optimization.Annealing is
 
    pragma Elaborate_Body;
 
-   Log_Section    : constant String := "annealing";
-   Detail_Section : constant String := "annealing.detail";
+   Log_Section    : constant String := "agpl.optimization.annealing";
+   Detail_Section : constant String := "agpl.optimization.annealing.detail";
 
    type Temperature is new Float range 0.0 .. 1.0;
    --  Valid temperature ranges

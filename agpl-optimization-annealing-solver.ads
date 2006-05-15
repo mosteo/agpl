@@ -45,8 +45,11 @@ generic
                             Temp     : in Temperature) return Acceptability;
    --  Say the probability of keeping a new solution, given the change in
    --  costs and current temperature.
+
    with function Last_Mutation (Sol : in Solution) return String;
    --  Informative, to know mutations working well
+   --  Just returns a description of what was done.
+
    with function Is_Valid (Sol : in Solution) return Boolean;
    --  Debug, to know how many wasted mutations are generated
 package Agpl.Optimization.Annealing.Solver is
@@ -92,7 +95,8 @@ package Agpl.Optimization.Annealing.Solver is
                     Iterations : in     Positive;
                     Timeout    : in     Duration;
                     Converge   : in     Duration;
-                    Progress   : access procedure (Continue : out Boolean) := null);
+                    Progress   : access procedure
+                      (Continue : out Boolean) := null);
    --  Run until Timeout expires or Converge time elapses without a better
    --  solution found or Iterations are performed.
    --  Callback is called once every second, just in case you want to do smthing
