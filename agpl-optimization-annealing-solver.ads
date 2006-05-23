@@ -49,9 +49,6 @@ generic
    with function Last_Mutation (Sol : in Solution) return String;
    --  Informative, to know mutations working well
    --  Just returns a description of what was done.
-
-   with function Is_Valid (Sol : in Solution) return Boolean;
-   --  Debug, to know how many wasted mutations are generated
 package Agpl.Optimization.Annealing.Solver is
 
    pragma Elaborate_Body;

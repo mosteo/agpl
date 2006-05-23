@@ -123,7 +123,7 @@ package Agpl.Dynamic_vector is
    --  Optimize memory usage, vector of only valid positions
    --  Right after optimize, 'Last is valid.
    --  O (n)
-   procedure Optimize (this : in out Object);
+   procedure Purge (this : in out Object);
 
    --  Member functions, not very useful if you access the vector directly:
    function Value (this : in Object) return Item_array;

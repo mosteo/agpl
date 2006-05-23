@@ -139,6 +139,10 @@ package body Agpl.Dynamic_vector is
       Pos  : in Integer)
    is
    begin
+      if Pos > this.Last or else Pos < this.First then
+         raise Constraint_Error;
+      end if;
+
       if this.Last = this.Vector.all'Last then
          --  grow it!
          Grow (this);
@@ -188,7 +192,7 @@ package body Agpl.Dynamic_vector is
 
    --  Optimize memory usage, vector of only valid positions Right after
    --  optimize, 'Last is valid. O (n)
-   procedure Optimize (this : in out Object) is
+   procedure Purge (this : in out Object) is
       New_vector : constant Item_array_access :=
          new Item_array (this.First .. this.Last);
    begin
@@ -199,7 +203,7 @@ package body Agpl.Dynamic_vector is
       Free (this.Vector);
       --  Replace:
       this.Vector := New_vector;
-   end Optimize;
+   end Purge;
 
    --  Member functions, not very useful if you access the vector directly:
    function Value (this : in Object) return Item_array is
