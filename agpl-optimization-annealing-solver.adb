@@ -88,20 +88,23 @@ package body Agpl.Optimization.Annealing.Solver is
    is
    begin
       declare
-         New_Sol  : constant Solution := Mutate (This.Curr_Sol.Get);
-         New_Cost : constant Cost     := Evaluate (New_Sol);
-
-         P        : constant Float    := Random (This.Random_Gen);
-         Goodness : constant Float    := Float (Normalize
-                                                  (Old_Cost => This.Curr_Cost,
-                                                   New_Cost => New_Cost,
-                                                   Temp     => This.Curr_Temp));
+         New_Cost :          Cost;
+         P        : constant Float := Random (This.Random_Gen);
+         Goodness :          Float;
       begin
+         Mutate (This.Curr_Sol.Ref.all); -- Mutate in place
+         New_Cost := Evaluate (This.Curr_Sol.Ref.all);
+         Goodness := Float (Normalize
+                              (Old_Cost => This.Curr_Cost,
+                               New_Cost => New_Cost,
+                               Temp     => This.Curr_Temp));
+
          --         Log ("Move: " & Last_Mutation (New_Sol), Always);
          This.Iterations := This.Iterations + 1;
 
-         if New_Cost > 1000000.0 then -- Too big or so... what a pityful hack
+         if New_Cost = Infinite then -- Invalid solution
             This.Wasted := This.Wasted + 1;
+            Undo (This.Curr_Sol.Ref.all);
          elsif New_Cost < This.Best_Cost or else P < Goodness then
             --  See if we must replace the current solution
             --              Log ("New Sol accepted with " &
@@ -111,13 +114,13 @@ package body Agpl.Optimization.Annealing.Solver is
             --  Keep best solution seen:
             if New_Cost < This.Best_Cost then
                This.Best_Cost := New_Cost;
-               This.Best_Sol.Set (New_Sol);
+               This.Best_Sol.Set (This.Curr_Sol.Get);
             end if;
 
             This.Curr_Cost := New_Cost;
-            This.Curr_Sol.Set (New_Sol);
          else
             This.Discarded := This.Discarded + 1;
+            Undo (This.Curr_Sol.Ref.all);
          end if;
 
          This.Curr_Temp := Anneal (This.Curr_Temp);

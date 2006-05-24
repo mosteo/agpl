@@ -42,6 +42,8 @@ package Agpl.Optimization.Annealing is
    --  We are *minimizing* the solution cost.
    --  If you want ot maximize an utility function, simply negate your function.
 
+   Infinite : constant Cost := Cost'Last;
+
    type Acceptability is new Float range 0.0 .. 1.0;
    --  Probability of keeping a new solution
 

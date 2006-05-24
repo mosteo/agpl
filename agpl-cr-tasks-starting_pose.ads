@@ -40,6 +40,15 @@ package Agpl.Cr.Tasks.Starting_Pose is
    --  Conversely, the cost from this task to any other is the cost from the agent
    --  current position to the task.
 
+   --  As a variation, instead of reporting the cost from current pose to the task,
+   --  it should report the cost from the last finished task to the next one.
+   --  In this way, partially completed task lists can be evaluated using real
+   --  posteriori costs plus estimated costs, and, in an ideal world, everything
+   --  should match and be the same.
+
+   --  Or, even better, if it reports the cost of all past tasks plus the
+   --  estimation to the next, then no jumps in cost will occur.
+
    function Create (For_Agent : in String) return Object;
 
 private

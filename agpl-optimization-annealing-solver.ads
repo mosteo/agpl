@@ -37,8 +37,8 @@ generic
    with function Evaluate (Sol : in Solution) return Cost;
    --  Says how good is a solution.
 
-   with function Mutate (Sol : in Solution) return Solution;
-   --  Creates a new solution from another one.
+   with procedure Mutate (Sol : in out Solution);
+   --  Mutates a solution.
 
    with function Normalize (Old_Cost,
                             New_Cost : in Cost;
@@ -49,6 +49,9 @@ generic
    with function Last_Mutation (Sol : in Solution) return String;
    --  Informative, to know mutations working well
    --  Just returns a description of what was done.
+
+   with procedure Undo (Sol : in out Solution);
+   --  Must undo the last mutation. Only one level of undo is required.
 package Agpl.Optimization.Annealing.Solver is
 
    pragma Elaborate_Body;
