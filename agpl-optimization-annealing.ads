@@ -44,10 +44,12 @@ package Agpl.Optimization.Annealing is
 
    Infinite : constant Cost := Cost'Last;
 
-   type Acceptability is new Float range 0.0 .. 1.0;
-   --  Probability of keeping a new solution
-
    subtype Float_0_1 is Float range 0.0 .. 1.0;
+
+   type Probability is new Float_0_1;
+
+   subtype Acceptability is Probability;
+   --  Probability of keeping a new solution
 
    generic
       Steps : Positive;

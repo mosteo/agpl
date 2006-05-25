@@ -28,6 +28,8 @@ with Agpl.Debug;
 with Agpl.Random;
 with Agpl.Trace;  use Agpl.Trace;
 
+with System.Address_Image;
+
 package body Agpl.Htn.Plan_Node is
 
    ------------------
@@ -367,6 +369,15 @@ package body Agpl.Htn.Plan_Node is
    begin
       return This.Child;
    end Get_Expansion;
+
+   ------------
+   -- Get_Id --
+   ------------
+
+   function Get_Id (This : not null Node_Access) return String is
+   begin
+      return System.Address_Image (This.all'Address);
+   end Get_Id;
 
    ---------------
    -- Get_Owner --

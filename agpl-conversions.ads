@@ -60,4 +60,8 @@ package Agpl.Conversions is
    function To_string (N : Float; Decimals : Natural := 2) return String;
    function To_string (N : Long_Long_Float; Decimals : Natural := 2) return String;
 
+   generic
+      type Real is digits <>;
+   function To_Str (N : Real; Decimals : Natural := 2) return String;
+
 end Agpl.Conversions;

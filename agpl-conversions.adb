@@ -149,6 +149,18 @@ package body Agpl.Conversions is
       end if;
    end To_string;
 
+   function To_Str (N : Real; Decimals : Natural := 2) return String is
+      package F_Io is new Text_Io.Float_Io (Real);
+      S    : String (1 .. 100);
+   begin
+      if Decimals > 0 then
+         f_io.Put (S, N, Aft => Decimals, Exp => 0);
+         return Trim (S);
+      else
+         return To_String (Integer (N));
+      end if;
+   end To_Str;
+
    ------------------------------------------------------------------------
    -- Trim                                                               --
    ------------------------------------------------------------------------

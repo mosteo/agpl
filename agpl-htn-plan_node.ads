@@ -155,6 +155,9 @@ package Agpl.Htn.Plan_Node is
    --  Says if the task of a task node has been finished.
    procedure Set_Finished (This : Node_Access; Finished : Boolean := True);
 
+   function Get_Id (This : not null Node_Access) return String;
+   --  Basicly, the address as string.
+
    function Get_Owner (This : in Node_Access) return String;
    procedure Set_Owner (This : in Node_Access; Owner : in String);
    --  Just for task nodes.
