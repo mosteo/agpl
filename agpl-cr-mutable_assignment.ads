@@ -130,6 +130,12 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo_Flip_Worst (This : in out Object; Undo : in  Undo_Info);
    --  Attempt to flip a task of the worst agent
 
+   procedure Do_Heuristic_All (This : in out Object;
+                               Desc :    out Ustring;
+                               Undo :    out Undo_Info);
+   procedure Undo_Heuristic_All (This : in out Object; Undo : in  Undo_Info);
+   --  Will consider all agents and tasks to provide some "good" assignment.
+
    -----------------
    -- CONVERSIONS --
    -----------------
@@ -156,24 +162,56 @@ private
 
    --  This holds all invariant data accross solutions.
    type Static_Context is record
+      Costs     : Cr.Cost_Matrix.Object;
       Plan      : Htn.Plan.Object;
 
       Mutations : Mutation_Vectors.Object (First => 1);
    end record;
    type Static_Context_Access is access all Static_Context;
 
+   type Solution_Context is abstract tagged null record;
+   type Solution_Context_Access is access all Solution_Context'Class;
+   --  Root for all partial info structures we will need to keep in a solution.
+
+   type Solution_Context_Attributes is
+     (Owner,
+      Is_Flippable);
+   --  Attributes for all partial data kept in the solution
+
+   package Attribute_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Solution_Context_Attributes, String);
+
+   package Index_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (String, Integer);
+
+   type Bag_Context is (Agent_Tasks_Bag, General_Tasks_Bag,
+                        Agent_Or_Bag, Flip_Or_Bag, Ready_Or_Bag);
+
    --  Contains all variable information that is unique to a solution
    type Task_Context is record
-      Prev, Next : Htn.Tasks.Task_Id; -- In the agent assignation!!
+      Job             : Htn.Tasks.Task_Id; -- The task proper.
 
-      Owner         : Ustring;  -- Owner agent
-      Owner_Bag_Idx : Positive; -- Index in the per-agent-bag
+      Prev, Next      : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
+      --  In the agent assignation.
+      --  This could be a pointer for O (1) access instead of O (log n)
+      --  But, since all the operations are O (log X), this doesn't makes things
+      --  worse, and we avoid deep copying on Object adjust.
+      --  The same applies to Job before and to Or_Parent below.
+
+      Attributes      : Attribute_Maps.Map;
+      --  Flippable, owner...
+
+      Owner           : Ustring;  -- Owner agent
+      Owner_Bag_Idx   : Positive; -- Index in the per-agent-bag
 
       General_Bag_Idx : Positive; -- Index in the general bag
-   end record;
-   type Task_Context_Access is access all Task_Context;
 
-   package Task_Bags is new Bag (Task_Context_Access);
+      Is_Flippable    : Boolean;  -- If the task is the last under a OR node.
+      --  Following is meaningful only if this is true.
+      Or_Parent_Id    : Ustring;
+   end record;
+
+   package Task_Bags is new Bag (Task_Context_Access, Bag_Context);
    package Task_Maps is new Ada.Containers.Ordered_Maps
      (Htn.Tasks.Task_Id, Task_Context_Access, Htn.Tasks."<");
    package Task_Bag_Maps is new Ada.Containers.Indefinite_Ordered_Maps
@@ -183,14 +221,19 @@ private
    type Or_Node_Context is record
       Idx_In_Nodes : Positive; -- The index in the general bag of ready OR nodes
 
-      Agent_In_Flip     : Ustring := +No_Agent;  -- Which agent owns this one
-      Idx_In_Agent_Flip : Positive;
+      Is_Flippable      : Boolean; -- Following fields only make sense if true.
+      Owner_Agent       : Ustring := +No_Agent;
+      Idx_In_Agent_Bag  : Positive;
+      Current_Task      : Htn.Tasks.Task_Id; -- Current selected task
+      --  This could be a pointer which would give O (1) instead of O (log T)
+      --  access time. We prefer to sachrifice that improvement, since all
+      --  mutations are O (log), to avoid deep copy adjusts on Object adjust.
 
-      Idx_In_Flip   : Positive; -- The index in the undiscrimined flip-ready bag
+      Idx_In_Flip_Bag   : Positive;
+      --  The index in the undiscrimined flip-ready bag
    end record;
-   type Or_Node_Context_Access is access all Or_Node_Context;
 
-   package Or_Node_Bags is new Bag (Or_Node_Context_Access);
+   package Or_Node_Bags is new Bag (Or_Node_Context_Access, Bag_Context);
    package Or_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (String, Or_Node_Context_Access);
    package Or_Node_Bag_Maps is new Ada.Containers.Indefinite_Ordered_Maps
@@ -214,13 +257,16 @@ private
       --  Invariant information
       Context     : Smart_Static_Contexts.Object;
 
-      --  Currently assigned tasks
+      Valid       : Boolean; -- Is the plan valid?
+      --  We know it when evaluating costs.
+
+      --  Tasks currently assigned to some agent
       Tasks_By_Id : Task_Maps.Map;
 
       --  Task per agent:
       Agent_Tasks : Task_Bag_Maps.Map;
 
-      --  All tasks, undiscriminated:
+      --  All assigned tasks, undiscriminated:
       Tasks_Bag   : Task_Bags.Object (First => 1);
 
       --  All enabled OR-nodes
@@ -247,13 +293,60 @@ private
       Last_Mutation_Undo        : Undo_Info;
    end record;
 
-   type Undo_Info is null record;
+   type Undo_Kinds is (Identity -- Nothing to undo
+                      );
 
+   type Undo_Info is record
+      Kind : Undo_Kinds;
+   end record;
+
+   --  Controlling...
    procedure Initialize (This : in out Object);
    procedure Adjust     (This : in out Object);
 
    Any_Agent    : constant String   := "";
    No_Agent     : constant String   := "";
    Any_Position : constant Positive := Positive'Last;
+
+   Cost_For_Invalid_Task : constant Cost := 0.0;
+   --  We use this as a hack to be able to do cost computations with O (1).
+   --  Since we are using incremental evaluation, we can't go to Cost'Last
+   --  or else we would lose the known cost of the plan.
+
+   ---------------------
+   -- Inner utilities --
+   ---------------------
+
+--     procedure Do_Flip_For_Agent (This : in out Object;
+--                                  Name : in     String;
+--                                  Desc :    out Ustring;
+--                                  Undo :    out Undo_Info);
+   --  Flip a task of the given agent.
+
+   procedure Do_Temporarily_Remove_Task (This : in out Object;
+                                         Job  : not null Task_Context_Access);
+   --  Remove this task from assignation; update all data structures accordingly
+   --  This assumes that the task will be reinserted, so the OR general bag
+   --  won't be touched.
+
+   procedure Moving_Or_Context (This    : in out Or_Node_Context_Access;
+                                Context : in out Bag_Context;
+                                Prev,
+                                Curr    : in     Integer);
+   --  Moving an OR context inside a bag
+
+   procedure Moving_Task_Context (This    : in out Task_Context_Access;
+                                  Context : in out Bag_Context;
+                                  Prev,
+                                  Curr    : in     Integer);
+   --  Moving a task context inside a bag
+
+   procedure Update_Costs_Removing
+     (This               : in out Object;
+      Prev_To_Be_Kept    : in     Task_Context_Access;
+      Curr_To_Be_Deleted : in     Task_Context_Access;
+      Next_To_Be_Kept    : in     Task_Context_Access);
+   --  Update the costs of removing the Curr task.
+   --  Prev or Next can be null
 
 end Agpl.Cr.Mutable_Assignment;

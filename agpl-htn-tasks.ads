@@ -44,6 +44,7 @@ package Agpl.Htn.Tasks is
    type Object_Access is access Object'Class;
 
    type Task_Id is new Natural;
+   No_Task : constant Task_Id;
 
    procedure Assign_Id (This : in out Object);
    --  This should be used when creating a task to assign a unique ID to it.
@@ -91,8 +92,10 @@ package Agpl.Htn.Tasks is
 
 private
 
+   No_Task : constant Task_Id := 0;
+
    type Object is abstract new Ada.Finalization.Controlled with record
-      Id : Task_Id := 0;
+      Id : Task_Id := No_Task;
    end record;
 
    procedure Initialize (This : in out Object);

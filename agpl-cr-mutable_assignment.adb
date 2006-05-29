@@ -94,7 +94,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Adjust     (This : in out Object) is
    begin
-      null;
+      raise Program_Error;
    end Adjust;
 
    -------------------
@@ -106,8 +106,25 @@ package body Agpl.Cr.Mutable_Assignment is
                               Undo :    out Undo_Info)
    is
    begin
-      null;
+
+      declare
+         Worst_Name : constant String := + This.Minimax.Last_Element.Agent;
+      begin
+         null;
+      end;
    end Do_Flip_Worst;
+
+   ----------------------
+   -- Do_Heuristic_All --
+   ----------------------
+
+   procedure Do_Heuristic_All (This : in out Object;
+                               Desc :    out Ustring;
+                               Undo :    out Undo_Info)
+   is
+   begin
+      raise Program_Error;
+   end Do_Heuristic_All;
 
    -----------------
    -- Do_Identity --
@@ -120,8 +137,83 @@ package body Agpl.Cr.Mutable_Assignment is
       pragma Unreferenced (This);
    begin
       Desc := +"Identity";
-      Undo := Undo_Info'(null record);
+      Undo := (Kind => Identity);
    end Do_Identity;
+
+   --------------------------------
+   -- Do_Temporarily_Remove_Task --
+   --------------------------------
+   --  O (ln A) because the agent bags must be lookd up.
+   procedure Do_Temporarily_Remove_Task (This : in out Object;
+                                         Job  : not null Task_Context_Access)
+   is
+      Or_Parent : Or_Node_Context_Access;
+
+      procedure Remove_From_Agent_Or_Bag (Key : in     String;
+                                          Bag : in out Or_Node_Bags.Object)
+      is
+         pragma Unreferenced (Key);
+      begin
+         Bag.Delete (Or_Parent.Idx_In_Agent_Bag,
+                     Moving_Or_Context'Access);
+      end Remove_From_Agent_Or_Bag;
+
+      procedure Remove_From_Agent_Task_Bag (Key : in     String;
+                                            Bag : in out Task_Bags.Object)
+      is
+         pragma Unreferenced (Key);
+      begin
+         Bag.Delete (Job.Owner_Bag_Idx,
+                     Moving_Task_Context'Access);
+      end Remove_From_Agent_Task_Bag;
+   begin
+      --  OR things
+      if Job.Is_Flippable then
+         Or_Parent :=
+           Or_Node_Maps.Element (This.Nodes.Find (+Job.Or_Parent_Id));
+         --  Remove from agent bag
+         Or_Node_Bag_Maps.Update_Element (This.Agent_Nodes.Find (+Job.Owner),
+                                          Remove_From_Agent_Or_Bag'Access);
+      end if;
+
+      --  Costs to be updated
+      declare
+         P, N       : Task_Maps.Cursor;
+         Prev, Next : Task_Context_Access;
+         use Task_Maps;
+      begin
+         P := This.Tasks_By_Id.Find (Job.Prev);
+         N := This.Tasks_By_Id.Find (Job.Next);
+         if Has_Element (P) then
+            Prev := Element (P);
+         end if;
+         if Has_Element (N) then
+            Next := Element (N);
+         end if;
+         Update_Costs_Removing (This,
+                                Prev,
+                                Job,
+                                Next);
+
+         --  Adjust task chaining
+         if Prev /= null then
+            Prev.Next := Job.Next;
+         end if;
+         if Next /= null then
+            Next.Prev := Job.Prev;
+         end if;
+         Job.Prev := Htn.Tasks.No_Task;
+         Job.Next := Htn.Tasks.No_Task;
+      end;
+
+      --  Remove from task bags
+      Task_Bag_Maps.Update_Element (This.Agent_Tasks.Find (+Job.Owner),
+                                    Remove_From_Agent_Task_Bag'Access);
+      Job.Owner := +No_Agent;
+
+      This.Tasks_Bag.Delete (Job.General_Bag_Idx,
+                             Moving_Task_Context'Access);
+   end Do_Temporarily_Remove_Task;
 
    ----------------------
    -- Evaluate_Minimax --
@@ -129,7 +221,11 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Evaluate_Minimax (This : in Object) return Cost is
    begin
-      return This.Minimax.Last_Element.Cost;
+      if This.Valid then
+         return This.Minimax.Last_Element.Cost;
+      else
+         return Optimization.Annealing.Infinite;
+      end if;
    end Evaluate_Minimax;
 
    -----------------------
@@ -138,7 +234,11 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Evaluate_Totalsum (This : in Object) return Cost is
    begin
-      return This.Totalsum;
+      if This.Valid then
+         return This.Totalsum;
+      else
+         return Optimization.Annealing.Infinite;
+      end if;
    end Evaluate_Totalsum;
 
    ----------------
@@ -148,6 +248,10 @@ package body Agpl.Cr.Mutable_Assignment is
    procedure Initialize (This : in out Object) is
    begin
       This.Context.Bind (new Static_Context);
+
+      This.Tasks_Bag.Set_Context (General_Tasks_Bag);
+      This.Flip_Nodes.Set_Context (Flip_Or_Bag);
+      This.Ready_Nodes.Set_Context (Ready_Or_Bag);
    end Initialize;
 
    -------------------
@@ -158,6 +262,53 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       return +This.Last_Mutation_Description;
    end Last_Mutation;
+
+   -----------------------
+   -- Moving_Or_Context --
+   -----------------------
+
+   procedure Moving_Or_Context (This    : in out Or_Node_Context_Access;
+                                Context : in out Bag_Context;
+                                Prev,
+                                Curr    : in     Integer)
+   is
+   begin
+      case Context is
+         when Agent_OR_Bag =>
+            pragma Assert (Prev = This.Idx_In_Agent_Bag);
+            This.Idx_In_Agent_Bag := Curr;
+         when Flip_Or_Bag =>
+            pragma Assert (Prev = This.Idx_In_Flip_Bag);
+            This.Idx_In_Flip_Bag := Curr;
+         when Ready_Or_Bag =>
+            pragma Assert (Prev = This.Idx_In_Nodes);
+            This.Idx_In_Nodes := Curr;
+         when others =>
+            raise Program_Error;
+      end case;
+   end Moving_Or_Context;
+
+   -------------------------
+   -- Moving_Task_Context --
+   -------------------------
+
+   procedure Moving_Task_Context (This    : in out Task_Context_Access;
+                                  Context : in out Bag_Context;
+                                  Prev,
+                                  Curr    : in     Integer)
+   is
+   begin
+      case Context is
+         when Agent_Tasks_Bag =>
+            pragma Assert (Prev = This.Owner_Bag_Idx);
+            This.Owner_Bag_Idx := Curr;
+         when General_Tasks_Bag =>
+            pragma Assert (Prev = This.General_Bag_Idx);
+            This.General_Bag_Idx := Curr;
+         when others =>
+            raise Program_Error;
+      end case;
+   end Moving_Task_Context;
 
    ------------
    -- Mutate --
@@ -186,10 +337,15 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------------
    -- Remove_Agent --
    ------------------
-
+   --  O (n) or worse (depending on the heuristic used).
    procedure Remove_Agent (This : in out Object; Name : in String) is
    begin
-      null;
+      --  If it was the last one, finalize the object
+      if Natural (This.Agent_Tasks.Length) = 1 then
+         Finalize (This);
+      else
+         --  Copy all tasks to any other agent and do some assignation.
+      end if;
    end Remove_Agent;
 
    --------------------
@@ -253,6 +409,15 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Undo_Flip_Worst;
 
+   ------------------------
+   -- Undo_Heuristic_All --
+   ------------------------
+
+   procedure Undo_Heuristic_All (This : in out Object; Undo : in  Undo_Info) is
+   begin
+      raise Program_Error;
+   end Undo_Heuristic_All;
+
    -------------------
    -- Undo_Identity --
    -------------------
@@ -262,5 +427,19 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       null;
    end Undo_Identity;
+
+   ---------------------------
+   -- Update_Costs_Removing --
+   ---------------------------
+
+   procedure Update_Costs_Removing
+     (This               : in out Object;
+      Prev_To_Be_Kept    : in     Task_Context_Access;
+      Curr_To_Be_Deleted : in     Task_Context_Access;
+      Next_To_Be_Kept    : in     Task_Context_Access)
+   is
+   begin
+      null;
+   end Update_Costs_Removing;
 
 end Agpl.Cr.Mutable_Assignment;

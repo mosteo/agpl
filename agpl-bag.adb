@@ -26,14 +26,14 @@
 
 package body Agpl.Bag is
 
-   --------------
-   -- Set_Name --
-   --------------
+   -----------------
+   -- Set_Context --
+   -----------------
 
-   procedure Set_Name (This : in out Object; Name : in String) is
+   procedure Set_Context (This : in out Object; Context : in Bag_Context) is
    begin
-      This.Name := +Name;
-   end Set_Name;
+      This.Context := Context;
+   end Set_Context;
 
    ------------
    -- Insert --
@@ -55,7 +55,7 @@ package body Agpl.Bag is
                      Item  : in     Item_type;
                      Pos   : in     Integer;
                      Moving : access procedure (Item    : in out Item_Type;
-                                                Bag     : in     String;
+                                                Bag     : in out Bag_Context;
                                                 Old_Pos,
                                                 New_Pos : in     Integer))
    is
@@ -76,7 +76,7 @@ package body Agpl.Bag is
       This.Append (This.Vector (Pos));
       if Moving /= null then
          This.Busy := True;
-         Moving (This.Vector (Last (This)), +This.Name, Pos, Last (This));
+         Moving (This.Vector (Last (This)), This.Context, Pos, Last (This));
          This.Busy := False;
       end if;
 
@@ -99,7 +99,7 @@ package body Agpl.Bag is
    procedure Delete (This  : in out Object;
                      Pos   : in Integer;
                      Moving : access procedure (Item    : in out Item_Type;
-                                                Bag     : in     String;
+                                                Bag     : in out Bag_Context;
                                                 Old_Pos,
                                                 New_Pos : in Integer))
    is
@@ -117,7 +117,7 @@ package body Agpl.Bag is
          This.Vector (Pos) := This.Vector (Last (This));
          if Moving /= null then
             This.Busy := True;
-            Moving (This.Vector (Pos), +This.Name, Last (This), Pos);
+            Moving (This.Vector (Pos), This.Context, Last (This), Pos);
             This.Busy := False;
          end if;
       end if;

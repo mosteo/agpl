@@ -33,10 +33,10 @@
 --   (Take care of using the Last function and not the 'Last attribute)
 
 with Agpl.Dynamic_Vector;
-with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 generic
-   type Item_type is private;
+   type Item_type   is private;
+   type Bag_Context is private;  -- Bag-specific info
    Initial_size : Natural := 16; -- Use something meaningful to your app.
    Grow_factor  : Float   := 1.5;
 package Agpl.Bag is
@@ -54,7 +54,7 @@ package Agpl.Bag is
    --  Check the Dynamic_Vector package for usage and operations
    type Object is new Bag_Vectors.Object with private;
 
-   procedure Set_Name (This : in out Object; Name : in String);
+   procedure Set_Context (This : in out Object; Context : in Bag_Context);
    --  The name that will be passed around in the moving callbacks
 
    --  Adds an item before a certain position (that could not exist if we
@@ -72,7 +72,7 @@ package Agpl.Bag is
                      Item  : in     Item_type;
                      Pos   : in     Integer;
                      Moving : access procedure (Item    : in out Item_Type;
-                                                Bag     : in     String;
+                                                Bag     : in out Bag_Context;
                                                 Old_Pos,
                                                 New_Pos : in     Integer));
    --  This version will call Moving with the moved Item and its indexes of
@@ -90,7 +90,7 @@ package Agpl.Bag is
    procedure Delete (This  : in out Object;
                      Pos   : in Integer;
                      Moving : access procedure (Item    : in out Item_Type;
-                                                Bag     : in     String;
+                                                Bag     : in out Bag_Context;
                                                 Old_Pos,
                                                 New_Pos : in     Integer));
    --  Don't alter the bag from within Moving!!
@@ -100,8 +100,8 @@ package Agpl.Bag is
 private
 
    type Object is new Bag_Vectors.Object with record
-      Busy : Boolean := False;
-      Name : Ustring;
+      Busy    : Boolean := False;
+      Context : Bag_Context;
    end record;
 
    function To_Vector (This : in Bag_Vectors.Item_Array) return Object
