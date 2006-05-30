@@ -27,6 +27,15 @@
 package body Agpl.Bag is
 
    -----------------
+   -- Get_Context --
+   -----------------
+
+   function Get_Context (This : in Object) return Bag_Context is
+   begin
+      return This.Context;
+   end Get_Context;
+
+   -----------------
    -- Set_Context --
    -----------------
 

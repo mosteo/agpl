@@ -54,6 +54,7 @@ package Agpl.Bag is
    --  Check the Dynamic_Vector package for usage and operations
    type Object is new Bag_Vectors.Object with private;
 
+   function Get_Context (This : in Object) return Bag_Context;
    procedure Set_Context (This : in out Object; Context : in Bag_Context);
    --  The name that will be passed around in the moving callbacks
 

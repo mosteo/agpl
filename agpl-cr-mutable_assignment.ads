@@ -124,12 +124,6 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo_Identity (This : in out Object; Undo : in  Undo_Info);
    --  Test mutation, does nothing!
 
-   procedure Do_Flip_Worst   (This : in out Object;
-                              Desc :    out Ustring;
-                              Undo :    out Undo_Info);
-   procedure Undo_Flip_Worst (This : in out Object; Undo : in  Undo_Info);
-   --  Attempt to flip a task of the worst agent
-
    procedure Do_Heuristic_All (This : in out Object;
                                Desc :    out Ustring;
                                Undo :    out Undo_Info);
@@ -169,10 +163,10 @@ private
    end record;
    type Static_Context_Access is access all Static_Context;
 
-   type Bag_Index is new String;
+   type Bag_Key is new String;
 
    package Index_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Bag_Index, Integer);
+     (Bag_Key, Integer);
 
    type Solution_Context_Attributes is
      (Owner,
@@ -187,12 +181,11 @@ private
       --  A table with all attributes
 
       Bag_Indexes : Index_Maps.Map;
-      --  A table with all the indexes to bags this thing belongs to.
+      --  A table with all the indexes in bags this thing belongs to.
    end record;
    type Solution_Context_Access is access all Solution_Context'Class;
    --  Root for all partial info structures we will need to keep in a solution.
 
-   type Bag_Key is new String;
    type Bag_Context is record
       Key : Ustring; -- A bag_key
    end record;
@@ -205,8 +198,10 @@ private
        (Bag_Key, Solution_Context_Bags.Object,
         "<", Solution_Context_Bags."=");
 
+   type Solution_Context_Index is new String;
+
    package Solution_Context_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Solution_Context_Access);
+     (Solution_Context_Index, Solution_Context_Access);
 
    --  Contains all variable information that is unique to a solution
    type Task_Context is new Solution_Context with record
@@ -292,11 +287,21 @@ private
    -- Inner utilities --
    ---------------------
 
---     procedure Do_Flip_For_Agent (This : in out Object;
---                                  Name : in     String;
---                                  Desc :    out Ustring;
---                                  Undo :    out Undo_Info);
-   --  Flip a task of the given agent.
+   procedure Add_To_Bag (This    : in out Object;
+                         Context : in Solution_Context_Access;
+                         Bag     : in Bag_Key);
+
+   procedure Remove_From_Bag (This    : in out Object;
+                              Context : in     Solution_Context_Access;
+                              Bag     : in     Bag_Key);
+
+   procedure Remove_From_Bag
+     (This    : in out Object;
+      Context : in     Solution_Context_Access;
+      Bag     : in     Solution_Context_Bag_Maps.Cursor);
+
+   procedure Remove_From_All_Bags (This    : in out Object;
+                                   Context : in     Solution_Context_Access);
 
    procedure Do_Temporarily_Remove_Task (This : in out Object;
                                          Job  : not null Task_Context_Access);
@@ -304,10 +309,11 @@ private
    --  This assumes that the task will be reinserted, so the OR general bag
    --  won't be touched.
 
-   procedure Moving_Solution_Context (This    : in out Solution_Context_Access;
-                                      Context : in out Bag_Context;
+   procedure Moving_Solution_Context (Context : in out Solution_Context_Access;
+                                      Bag     : in out Bag_Context;
                                       Prev,
                                       Curr    : in     Integer);
+   pragma Inline (Moving_Solution_Context);
 
    procedure Update_Costs_Removing
      (This               : in out Object;
