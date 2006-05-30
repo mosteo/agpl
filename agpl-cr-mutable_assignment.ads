@@ -169,9 +169,10 @@ private
    end record;
    type Static_Context_Access is access all Static_Context;
 
-   type Solution_Context is abstract tagged null record;
-   type Solution_Context_Access is access all Solution_Context'Class;
-   --  Root for all partial info structures we will need to keep in a solution.
+   type Bag_Index is new String;
+
+   package Index_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Bag_Index, Integer);
 
    type Solution_Context_Attributes is
      (Owner,
@@ -181,63 +182,52 @@ private
    package Attribute_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Solution_Context_Attributes, String);
 
-   package Index_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Integer);
+   type Solution_Context is abstract tagged record
+      Attributes  : Attribute_Maps.Map;
+      --  A table with all attributes
 
-   type Bag_Context is (Agent_Tasks_Bag, General_Tasks_Bag,
-                        Agent_Or_Bag, Flip_Or_Bag, Ready_Or_Bag);
+      Bag_Indexes : Index_Maps.Map;
+      --  A table with all the indexes to bags this thing belongs to.
+   end record;
+   type Solution_Context_Access is access all Solution_Context'Class;
+   --  Root for all partial info structures we will need to keep in a solution.
+
+   type Bag_Key is new String;
+   type Bag_Context is record
+      Key : Ustring; -- A bag_key
+   end record;
+
+   package Solution_Context_Bags is new Agpl.Bag (Solution_Context_Access,
+                                                  Bag_Context);
+
+   package Solution_Context_Bag_Maps is new
+     Ada.Containers.Indefinite_Ordered_Maps
+       (Bag_Key, Solution_Context_Bags.Object,
+        "<", Solution_Context_Bags."=");
+
+   package Solution_Context_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (String, Solution_Context_Access);
 
    --  Contains all variable information that is unique to a solution
-   type Task_Context is record
+   type Task_Context is new Solution_Context with record
       Job             : Htn.Tasks.Task_Id; -- The task proper.
-
       Prev, Next      : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
       --  In the agent assignation.
       --  This could be a pointer for O (1) access instead of O (log n)
       --  But, since all the operations are O (log X), this doesn't makes things
       --  worse, and we avoid deep copying on Object adjust.
       --  The same applies to Job before and to Or_Parent below.
-
-      Attributes      : Attribute_Maps.Map;
-      --  Flippable, owner...
-
-      Owner           : Ustring;  -- Owner agent
-      Owner_Bag_Idx   : Positive; -- Index in the per-agent-bag
-
-      General_Bag_Idx : Positive; -- Index in the general bag
-
-      Is_Flippable    : Boolean;  -- If the task is the last under a OR node.
-      --  Following is meaningful only if this is true.
-      Or_Parent_Id    : Ustring;
    end record;
-
-   package Task_Bags is new Bag (Task_Context_Access, Bag_Context);
-   package Task_Maps is new Ada.Containers.Ordered_Maps
-     (Htn.Tasks.Task_Id, Task_Context_Access, Htn.Tasks."<");
-   package Task_Bag_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Task_Bags.Object, "<", Task_Bags."=");
+   type Task_Context_Access is access all Task_Context;
 
    --  Contains all variable information that is unique to a solution
-   type Or_Node_Context is record
-      Idx_In_Nodes : Positive; -- The index in the general bag of ready OR nodes
-
-      Is_Flippable      : Boolean; -- Following fields only make sense if true.
-      Owner_Agent       : Ustring := +No_Agent;
-      Idx_In_Agent_Bag  : Positive;
+   type Or_Node_Context is new Solution_Context with record
       Current_Task      : Htn.Tasks.Task_Id; -- Current selected task
       --  This could be a pointer which would give O (1) instead of O (log T)
       --  access time. We prefer to sachrifice that improvement, since all
       --  mutations are O (log), to avoid deep copy adjusts on Object adjust.
-
-      Idx_In_Flip_Bag   : Positive;
-      --  The index in the undiscrimined flip-ready bag
    end record;
-
-   package Or_Node_Bags is new Bag (Or_Node_Context_Access, Bag_Context);
-   package Or_Node_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Or_Node_Context_Access);
-   package Or_Node_Bag_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Or_Node_Bags.Object, "<", Or_Node_Bags."=");
+   type Or_Node_Context_Access is access all Or_Node_Context;
 
    type Minimax_Key is record
       Cost  : Optimization.Annealing.Cost;
@@ -258,29 +248,14 @@ private
       Context     : Smart_Static_Contexts.Object;
 
       Valid       : Boolean; -- Is the plan valid?
-      --  We know it when evaluating costs.
 
-      --  Tasks currently assigned to some agent
-      Tasks_By_Id : Task_Maps.Map;
+      Contexts    : Solution_Context_Maps.Map;
+      --  All contextual infos (tasks, Or-nodes, etc)
+      --  This is the main store where everything can be located.
 
-      --  Task per agent:
-      Agent_Tasks : Task_Bag_Maps.Map;
-
-      --  All assigned tasks, undiscriminated:
-      Tasks_Bag   : Task_Bags.Object (First => 1);
-
-      --  All enabled OR-nodes
-      Nodes       : Or_Node_Maps.Map;
-
-      --  OR-nodes with single children that can be instantly flipped, per agent
-      Agent_Nodes : Or_Node_Bag_Maps.Map;
-
-      --  All OR nodes with single children for flip, undiscriminated
-      Flip_Nodes  : Or_Node_Bags.Object (First => 1);
-
-      --  OR-nodes that are in the assignation, ready to switch a subbranch.
-      --  These include all the previous ones, obviously:
-      Ready_Nodes : Or_Node_Bags.Object (First => 1);
+      Bags        : Solution_Context_Bag_Maps.Map;
+      --  All the different bags:
+      --  ready tasks, ready tasks per agent, OR-ready, Flip-Ready, Flip per ag.
 
       --  The current solution costs
       Totalsum    : Optimization.Annealing.Cost;
@@ -329,17 +304,10 @@ private
    --  This assumes that the task will be reinserted, so the OR general bag
    --  won't be touched.
 
-   procedure Moving_Or_Context (This    : in out Or_Node_Context_Access;
-                                Context : in out Bag_Context;
-                                Prev,
-                                Curr    : in     Integer);
-   --  Moving an OR context inside a bag
-
-   procedure Moving_Task_Context (This    : in out Task_Context_Access;
-                                  Context : in out Bag_Context;
-                                  Prev,
-                                  Curr    : in     Integer);
-   --  Moving a task context inside a bag
+   procedure Moving_Solution_Context (This    : in out Solution_Context_Access;
+                                      Context : in out Bag_Context;
+                                      Prev,
+                                      Curr    : in     Integer);
 
    procedure Update_Costs_Removing
      (This               : in out Object;
