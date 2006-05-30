@@ -30,8 +30,11 @@
 --  This one strives to be a really general, problem-independent solution.
 
 with Agpl.Conversions;
+with Agpl.Cr.Assigner.Hungry3;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
+
+with Ada.Unchecked_Deallocation;
 
 package body Agpl.Cr.Mutable_Assignment is
 
@@ -46,6 +49,9 @@ package body Agpl.Cr.Mutable_Assignment is
       return
         L.Cost < R.Cost or else (L.Cost = R.Cost and then L.Agent < R.Agent);
    end "<";
+
+   procedure Free is new Ada.Unchecked_Deallocation (Solution_Context'Class,
+                                                     Solution_Context_Access);
 
    ------------------
    -- Add_Mutation --
@@ -114,9 +120,27 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------
 
    procedure Adjust     (This : in out Object) is
+      pragma Unreferenced (This);
    begin
-      raise Program_Error;
+      null;
    end Adjust;
+
+   ------------------------
+   -- Clear_Dynamic_Part --
+   ------------------------
+
+   procedure Clear_Dynamic_Part (This : in out Object) is
+      use Solution_Context_Maps;
+      procedure Free (I : Cursor) is
+         X : Solution_Context_Access := Element (I);
+      begin
+         Free (X);
+      end Free;
+   begin
+      Iterate (This.Contexts, Free'Access);
+      This.Contexts.Clear;
+      This.Bags.Clear;
+   end Clear_Dynamic_Part;
 
    ----------------------
    -- Do_Heuristic_All --
@@ -126,8 +150,21 @@ package body Agpl.Cr.Mutable_Assignment is
                                Desc :    out Ustring;
                                Undo :    out Undo_Info)
    is
+      A : Cr.Assignment.Object := This.To_Assignment;
    begin
-      raise Program_Error;
+      Undo.Scratch.Set (This);
+      Desc := +"Heuristic - All";
+      declare
+         use Cr.Assignment;
+         New_Assignment : constant Cr.Assignment.Object :=
+                            Cr.Assigner.Hungry3.Assign
+                              ((Cr.Assigner.Object with Keep_Order => True),
+                               Get_Agents_Without_Tasks (A),
+                               Get_All_Tasks (A),
+                               This.Context.Ref.Costs);
+      begin
+         Set_Assignment (This, New_Assignment);
+      end;
    end Do_Heuristic_All;
 
    -----------------
@@ -141,84 +178,52 @@ package body Agpl.Cr.Mutable_Assignment is
       pragma Unreferenced (This);
    begin
       Desc := +"Identity";
-      Undo := (Kind => Identity);
+      Undo := (others => <>);
    end Do_Identity;
 
-   --------------------------------
-   -- Do_Temporarily_Remove_Task --
-   --------------------------------
-   --  O (ln A) because the agent bags must be lookd up.
-   procedure Do_Temporarily_Remove_Task (This : in out Object;
-                                         Job  : not null Task_Context_Access)
+   --------------------
+   -- Do_Remove_Task --
+   --------------------
+
+   procedure Do_Remove_Task (This : in out   Object;
+                             Job  : not null Task_Context_Access)
    is
---        Or_Parent : Or_Node_Context_Access;
---
---        procedure Remove_From_Agent_Or_Bag (Key : in     String;
---                                            Bag : in out Or_Node_Bags.Object)
---        is
---           pragma Unreferenced (Key);
---        begin
---           Bag.Delete (Or_Parent.Idx_In_Agent_Bag,
---                       Moving_Or_Context'Access);
---        end Remove_From_Agent_Or_Bag;
---
---        procedure Remove_From_Agent_Task_Bag (Key : in     String;
---                                              Bag : in out Task_Bags.Object)
---        is
---           pragma Unreferenced (Key);
---        begin
---           Bag.Delete (Job.Owner_Bag_Idx,
---                       Moving_Task_Context'Access);
---        end Remove_From_Agent_Task_Bag;
    begin
-      null;
---        --  OR things
---        if Job.Is_Flippable then
---           Or_Parent :=
---             Or_Node_Maps.Element (This.Nodes.Find (+Job.Or_Parent_Id));
---           --  Remove from agent bag
---           Or_Node_Bag_Maps.Update_Element (This.Agent_Nodes.Find (+Job.Owner),
---                                            Remove_From_Agent_Or_Bag'Access);
---        end if;
---
---        --  Costs to be updated
---        declare
---           P, N       : Task_Maps.Cursor;
---           Prev, Next : Task_Context_Access;
---           use Task_Maps;
---        begin
---           P := This.Tasks_By_Id.Find (Job.Prev);
---           N := This.Tasks_By_Id.Find (Job.Next);
---           if Has_Element (P) then
---              Prev := Element (P);
---           end if;
---           if Has_Element (N) then
---              Next := Element (N);
---           end if;
---           Update_Costs_Removing (This,
---                                  Prev,
---                                  Job,
---                                  Next);
---
---           --  Adjust task chaining
---           if Prev /= null then
---              Prev.Next := Job.Next;
---           end if;
---           if Next /= null then
---              Next.Prev := Job.Prev;
---           end if;
---           Job.Prev := Htn.Tasks.No_Task;
---           Job.Next := Htn.Tasks.No_Task;
---        end;
---
---        --  Remove from task bags
---        Task_Bag_Maps.Update_Element (This.Agent_Tasks.Find (+Job.Owner),
---                                      Remove_From_Agent_Task_Bag'Access);
---        Job.Owner := +No_Agent;
---
---        This.Tasks_Bag.Delete (Job.General_Bag_Idx,
---                               Moving_Task_Context'Access);
-   end Do_Temporarily_Remove_Task;
+      --  Costs to be updated
+      declare
+         use Solution_Context_Maps;
+         P, N       : Cursor;
+         Prev, Next : Task_Context_Access;
+      begin
+         P := This.Contexts.Find (Task_Key (Job.Prev));
+         N := This.Contexts.Find (Task_Key (Job.Next));
+         if Has_Element (P) then
+            Prev := Task_Context_Access (Element (P));
+         end if;
+         if Has_Element (N) then
+            Next := Task_Context_Access (Element (N));
+         end if;
+         Update_Costs_Removing (This,
+                                Prev,
+                                Job,
+                                Next);
+
+         --  Adjust task chaining
+         if Prev /= null then
+            Prev.Next := Job.Next;
+         end if;
+         if Next /= null then
+            Next.Prev := Job.Prev;
+         end if;
+         Job.Prev := Htn.Tasks.No_Task;
+         Job.Next := Htn.Tasks.No_Task;
+      end;
+
+      --  Remove from bags
+      Remove_From_All_Bags (This, Solution_Context_Access (Job));
+
+      This.Contexts.Delete (Task_Key (Job.Job));
+   end Do_Remove_Task;
 
    ----------------------
    -- Evaluate_Minimax --
@@ -245,6 +250,18 @@ package body Agpl.Cr.Mutable_Assignment is
          return Optimization.Annealing.Infinite;
       end if;
    end Evaluate_Totalsum;
+
+   -------------------
+   -- Get_Attribute --
+   -------------------
+
+   function Get_Attribute (This : in Solution_Context_Access;
+                           Attr : in Solution_Context_Attributes) return String
+   is
+      use Attribute_Maps;
+   begin
+      return Element (Find (This.Attributes, Attr));
+   end Get_Attribute;
 
    ----------------
    -- Initialize --
@@ -306,14 +323,42 @@ package body Agpl.Cr.Mutable_Assignment is
       Log ("Mutate: No mutation performed!", Error);
    end Mutate;
 
+   --------------------
+   -- Reassign_Tasks --
+   --------------------
+
+   procedure Reassign_Tasks (This : in out Object; From, To : in Agent_Id) is
+      procedure It (I : in Solution_Context_Maps.Cursor) is
+         X : constant Solution_Context_Access :=
+               Solution_Context_Maps.Element (I);
+      begin
+         if X.Attributes.Contains (Owner) then
+            if Get_Attribute (X, Owner) = String (From) then
+               Set_Attribute (X, Owner, String (To));
+            end if;
+         end if;
+      end It;
+   begin
+      Solution_Context_Maps.Iterate (This.Contexts, It'Access);
+   end Reassign_Tasks;
+
    ------------------
    -- Remove_Agent --
    ------------------
    --  O (n) or worse (depending on the heuristic used).
-   procedure Remove_Agent (This : in out Object; Name : in String) is
+   procedure Remove_Agent (This : in out Object; Name : in Agent_Id) is
+      Dummy_Desc : Ustring;
+      Dummy_Undo : Undo_Info;
+      C          : Static_Context_Access renames This.Context.Ref;
    begin
-      raise Program_Error;
-         --  Copy all tasks to any other agent and do some assignation.
+      C.Agents.Delete (Name);
+
+      if This.Context.Ref.Agents.Is_Empty then
+         Log ("Remove_Agent: No remaining agents!", Warning);
+      else
+         Reassign_Tasks (This, Name, Agent_Sets.First_Element (C.Agents));
+         Do_Heuristic_All (This, Dummy_Desc, Dummy_Undo);
+      end if;
    end Remove_Agent;
 
    --------------------------
@@ -389,6 +434,19 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Set_Costs;
 
+   -------------------
+   -- Set_Attribute --
+   -------------------
+
+   procedure Set_Attribute (This : in Solution_Context_Access;
+                            Attr : in Solution_Context_Attributes;
+                            Val  : in String)
+   is
+      use Attribute_Maps;
+   begin
+      Include (This.Attributes, Attr, Val);
+   end Set_Attribute;
+
    ---------------
    -- Set_Tasks --
    ---------------
@@ -400,9 +458,19 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Set_Tasks;
 
+   --------------
+   -- Task_Key --
+   --------------
+
+   function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key is
+   begin
+      return Solution_Context_Key ("task:" & Id'Img);
+   end Task_Key;
+
    -------------------
    -- To_Assignment --
    -------------------
+
    function To_Assignment   (This : in Object) return Cr.Assignment.Object is
       Result : Cr.Assignment.Object;
    begin
@@ -419,13 +487,25 @@ package body Agpl.Cr.Mutable_Assignment is
         (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
    end Undo;
 
+   -----------------------
+   -- Undo_From_Scratch --
+   -----------------------
+
+   procedure Undo_From_Scratch (This : in out Object;
+                                Undo : in     Undo_Info)
+   is
+   begin
+      This := Object (Undo.Scratch.Get);
+      This.Last_Mutation_Undo.Scratch.Clear;
+   end Undo_From_Scratch;
+
    ------------------------
    -- Undo_Heuristic_All --
    ------------------------
 
    procedure Undo_Heuristic_All (This : in out Object; Undo : in  Undo_Info) is
    begin
-      raise Program_Error;
+      Undo_From_Scratch (This, Undo);
    end Undo_Heuristic_All;
 
    -------------------

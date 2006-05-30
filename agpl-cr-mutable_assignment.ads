@@ -33,6 +33,7 @@ with Agpl.Bag;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
+with Agpl.Generic_Handle;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Optimization.Annealing;
@@ -40,7 +41,7 @@ with Agpl.Smart_Access;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Ordered_Sets;
 with Ada.Finalization;
 
@@ -49,8 +50,10 @@ package Agpl.Cr.Mutable_Assignment is
    Log_Section    : constant String := "agpl.cr.mutable_assignment";
    Detail_Section : constant String := "agpl.cr.mutable_assignment.detail";
 
-   Any_Agent    : constant String;
-   No_Agent     : constant String;
+   type Agent_Id is new String;
+
+   Any_Agent    : constant Agent_Id;
+   No_Agent     : constant Agent_Id;
    Any_Position : constant Positive;
 
    type Object is tagged private;
@@ -95,7 +98,7 @@ package Agpl.Cr.Mutable_Assignment is
    -- MANAGEMENT SUBPROGRAMS --
    ----------------------------
 
-   procedure Remove_Agent (This : in out Object; Name : in String);
+   procedure Remove_Agent (This : in out Object; Name : in Agent_Id);
    --  Cut out this agent; its tasks will go to others
 
    procedure Set_Costs (This  : in out Object;
@@ -106,6 +109,10 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Set_Tasks (This : in out Object;
                         Plan : in     Htn.Plan.Object);
    --  The tasks are provided in Plan form, inflated or not.
+
+   procedure Clear_Dynamic_Part (This : in out Object);
+   --  Clear the non-static solution data.
+   --  For example as a prepartion step to replace the tasks.
 
    --------------
    -- MUTATING --
@@ -154,8 +161,12 @@ private
 
    package Mutation_Vectors is new Dynamic_Vector (Mutation_Handler);
 
+   package Agent_Sets is new Ada.Containers.Indefinite_Ordered_Sets (Agent_Id);
+
    --  This holds all invariant data accross solutions.
    type Static_Context is record
+      Agents    : Agent_Sets.Set;
+
       Costs     : Cr.Cost_Matrix.Object;
       Plan      : Htn.Plan.Object;
 
@@ -198,10 +209,10 @@ private
        (Bag_Key, Solution_Context_Bags.Object,
         "<", Solution_Context_Bags."=");
 
-   type Solution_Context_Index is new String;
+   type Solution_Context_Key is new String;
 
    package Solution_Context_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Solution_Context_Index, Solution_Context_Access);
+     (Solution_Context_Key, Solution_Context_Access);
 
    --  Contains all variable information that is unique to a solution
    type Task_Context is new Solution_Context with record
@@ -247,10 +258,13 @@ private
       Contexts    : Solution_Context_Maps.Map;
       --  All contextual infos (tasks, Or-nodes, etc)
       --  This is the main store where everything can be located.
+      --  For now this contains:
+      --  All assigned tasks
 
       Bags        : Solution_Context_Bag_Maps.Map;
-      --  All the different bags:
-      --  ready tasks, ready tasks per agent, OR-ready, Flip-Ready, Flip per ag.
+      --  All the different bags
+      --  For now this contains:
+      --  All assigned tasks
 
       --  The current solution costs
       Totalsum    : Optimization.Annealing.Cost;
@@ -263,19 +277,12 @@ private
       Last_Mutation_Undo        : Undo_Info;
    end record;
 
-   type Undo_Kinds is (Identity -- Nothing to undo
-                      );
-
-   type Undo_Info is record
-      Kind : Undo_Kinds;
-   end record;
-
    --  Controlling...
    procedure Initialize (This : in out Object);
    procedure Adjust     (This : in out Object);
 
-   Any_Agent    : constant String   := "";
-   No_Agent     : constant String   := "";
+   Any_Agent    : constant Agent_Id := "";
+   No_Agent     : constant Agent_Id := "";
    Any_Position : constant Positive := Positive'Last;
 
    Cost_For_Invalid_Task : constant Cost := 0.0;
@@ -287,6 +294,19 @@ private
    -- Inner utilities --
    ---------------------
 
+   --  Attributes
+   function Get_Attribute (This : in Solution_Context_Access;
+                           Attr : in Solution_Context_Attributes) return String;
+
+   procedure Set_Attribute (This : in Solution_Context_Access;
+                            Attr : in Solution_Context_Attributes;
+                            Val  : in String);
+
+   --  Keys
+   function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
+   pragma Inline (Task_Key);
+
+   --  Bags
    procedure Add_To_Bag (This    : in out Object;
                          Context : in Solution_Context_Access;
                          Bag     : in Bag_Key);
@@ -303,17 +323,17 @@ private
    procedure Remove_From_All_Bags (This    : in out Object;
                                    Context : in     Solution_Context_Access);
 
-   procedure Do_Temporarily_Remove_Task (This : in out Object;
-                                         Job  : not null Task_Context_Access);
+   procedure Do_Remove_Task (This : in out Object;
+                             Job  : not null Task_Context_Access);
    --  Remove this task from assignation; update all data structures accordingly
-   --  This assumes that the task will be reinserted, so the OR general bag
-   --  won't be touched.
 
    procedure Moving_Solution_Context (Context : in out Solution_Context_Access;
                                       Bag     : in out Bag_Context;
                                       Prev,
                                       Curr    : in     Integer);
    pragma Inline (Moving_Solution_Context);
+
+   procedure Reassign_Tasks (This : in out Object; From, To : in Agent_Id);
 
    procedure Update_Costs_Removing
      (This               : in out Object;
@@ -322,5 +342,21 @@ private
       Next_To_Be_Kept    : in     Task_Context_Access);
    --  Update the costs of removing the Curr task.
    --  Prev or Next can be null
+
+   ------------------
+   -- UNDO SUPPORT --
+   ------------------
+
+   package Object_Handlers is new Agpl.Generic_Handle
+     (Ada.Finalization.Controlled'Class);
+   --  Must be so, because Object is incomplete at this point.
+   --  A simple type conversion should do the trick, even if a check is incurred
+
+   procedure Undo_From_Scratch (This : in out Object;
+                                Undo : in     Undo_Info);
+
+   type Undo_Info is record
+      Scratch : Object_Handlers.Object; -- For heavy mutations
+   end record;
 
 end Agpl.Cr.Mutable_Assignment;
