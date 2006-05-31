@@ -294,6 +294,10 @@ private
    -- Inner utilities --
    ---------------------
 
+   function Is_Sane (This : in Object) return Boolean;
+   --  Check for data structures sanity
+   --  Can be expensive, use it only for debugging.
+
    --  Attributes
    function Get_Attribute (This : in Solution_Context_Access;
                            Attr : in Solution_Context_Attributes) return String;

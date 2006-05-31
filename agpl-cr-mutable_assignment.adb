@@ -272,6 +272,15 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Context.Bind (new Static_Context);
    end Initialize;
 
+   -------------
+   -- Is_Sane --
+   -------------
+
+   function Is_Sane (This : in Object) return Boolean is
+   begin
+      return True;
+   end Is_Sane;
+
    -------------------
    -- Last_Mutation --
    -------------------
@@ -304,6 +313,7 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------
 
    procedure Mutate (This : in out Object) is
+      pragma Assert (Is_Sane (This));
       use Optimization.Annealing;
       Luck : constant Probability := Probability (Random.Uniform);
       M    :          Mutation_Vectors.Object renames
