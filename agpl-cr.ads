@@ -26,19 +26,17 @@
 
 --  Root package for Cooperative Robotics
 
+with Agpl.Optimization;
+
 package Agpl.Cr is
 
    pragma Pure;
 
-   type Costs is new Float; --  Abstract "Cost" to perform some job.
+   subtype Costs is Optimization.Cost; --  Abstract "Cost" to perform some job.
 
-   Infinite : constant Costs;
+   Infinite : constant Costs := Optimization.Infinite;
 
    type Assignment_Criteria is (Minimax, Totalsum);
    --  Possibilities for assignments
-
-private
-
-   Infinite : constant Costs := Costs'Last;
 
 end Agpl.Cr;

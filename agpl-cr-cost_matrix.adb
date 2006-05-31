@@ -123,7 +123,7 @@ package body Agpl.Cr.Cost_Matrix is
       I : constant Cursor := Find (This.Matrix, Key (Agent, Ini, Fin));
    begin
       if I = No_Element then
-         return Costs'Last;
+         return Infinite;
       else
          return Element (I);
       end if;

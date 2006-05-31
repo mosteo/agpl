@@ -38,12 +38,6 @@ package Agpl.Optimization.Annealing is
    type Temperature is new Float range 0.0 .. 1.0;
    --  Valid temperature ranges
 
-   type Cost is new Float;
-   --  We are *minimizing* the solution cost.
-   --  If you want ot maximize an utility function, simply negate your function.
-
-   Infinite : constant Cost := Cost'Last;
-
    subtype Float_0_1 is Float range 0.0 .. 1.0;
 
    type Probability is new Float_0_1;

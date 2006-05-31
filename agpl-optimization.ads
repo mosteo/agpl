@@ -28,4 +28,10 @@ package Agpl.Optimization is
 
    pragma Pure;
 
+   type Cost is new Float;
+   --  We are *minimizing* the solution cost.
+   --  If you want ot maximize an utility function, simply negate your function.
+
+   Infinite : constant Cost := Cost'Last;
+
 end Agpl.Optimization;

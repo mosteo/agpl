@@ -65,8 +65,6 @@ package Agpl.Cr.Mutable_Assignment is
 
    type Undo_Info is private;
 
-   subtype Cost is Optimization.Annealing.Cost;
-
    type Mutation_Doer is access procedure (This : in out Object;
                                            Desc :    out Ustring;
                                            Undo :    out Undo_Info);
@@ -78,10 +76,10 @@ package Agpl.Cr.Mutable_Assignment is
    -- ANNEALING SUBPROGRAMS --
    ---------------------------
 
-   function Evaluate_Minimax (This : in Object) return Cost;
+   function Evaluate_Minimax (This : in Object) return Costs;
    --  Return Inf if invalid
 
-   function Evaluate_Totalsum (This : in Object) return Cost;
+   function Evaluate_Totalsum (This : in Object) return Costs;
    --  Return Inf if invalid
 
    procedure Mutate (This : in out Object);
@@ -98,13 +96,14 @@ package Agpl.Cr.Mutable_Assignment is
    -- MANAGEMENT SUBPROGRAMS --
    ----------------------------
 
+   procedure Add_Agent (This : in out Object; Name : in Agent_Id);
+
    procedure Remove_Agent (This : in out Object; Name : in Agent_Id);
    --  Cut out this agent; its tasks will go to others
 
    procedure Set_Costs (This  : in out Object;
                         Costs : in     Cr.Cost_Matrix.Object);
    --  Any task not present here will be assumed is not doable.
-   --  Setting the costs, automatically add these agents as alive.
 
    procedure Set_Tasks (This : in out Object;
                         Plan : in     Htn.Plan.Object);
@@ -236,13 +235,13 @@ private
    type Or_Node_Context_Access is access all Or_Node_Context;
 
    type Minimax_Key is record
-      Cost  : Optimization.Annealing.Cost;
+      Cost  : Costs;
       Agent : Ustring;
    end record;
    function "<" (L, R : Minimax_Key) return Boolean;
 
    package Agent_Cost_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Optimization.Annealing.Cost, "<", Optimization.Annealing."=");
+     (String, Costs, "<", Optimization."=");
    package Cost_Agent_Sets is new
      Ada.Containers.Ordered_Sets (Minimax_Key);
 
@@ -267,7 +266,7 @@ private
       --  All assigned tasks
 
       --  The current solution costs
-      Totalsum    : Optimization.Annealing.Cost;
+      Totalsum    : Costs;
       Minimax     : Cost_Agent_Sets.Set;
       Agent_Costs : Agent_Cost_Maps.Map;
 
@@ -285,7 +284,7 @@ private
    No_Agent     : constant Agent_Id := "";
    Any_Position : constant Positive := Positive'Last;
 
-   Cost_For_Invalid_Task : constant Cost := 0.0;
+   Cost_For_Invalid_Task : constant Costs := 0.0;
    --  We use this as a hack to be able to do cost computations with O (1).
    --  Since we are using incremental evaluation, we can't go to Cost'Last
    --  or else we would lose the known cost of the plan.
@@ -338,6 +337,18 @@ private
    pragma Inline (Moving_Solution_Context);
 
    procedure Reassign_Tasks (This : in out Object; From, To : in Agent_Id);
+
+   --  Costs
+
+   function Reevaluate_Agent_Cost (This : in Object; Agent : in Agent_Id)
+                                   return    Costs;
+   function Reevaluate_Totalsum   (This : in Object)
+                                   return    Costs;
+   function Reevaluate_Minimax    (This : in Object)
+                                   return    Costs;
+
+   procedure Reevaluate_Costs (This : in out Object);
+   --  Recompute all costs from scratch and update internal cache
 
    procedure Update_Costs_Removing
      (This               : in out Object;

@@ -70,6 +70,7 @@ package Agpl.Cr.Cost_Matrix is
       Agent : in String;
       Ini   : in Htn.Tasks.Task_Id;
       Fin   : in Htn.Tasks.Task_Id) return Costs;
+   --  Returns infinite if Agent-task-task combination is not present
 
    procedure Set_Cost
      (This  : in out Object;
@@ -81,7 +82,7 @@ package Agpl.Cr.Cost_Matrix is
 private
 
    package ATT_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (String, Costs, Ada.Strings.Hash, "=");
+     (String, Costs, Ada.Strings.Hash, "=", Optimization."=");
 
    use Att_Maps;
 

@@ -31,6 +31,7 @@
 
 with Agpl.Conversions;
 with Agpl.Cr.Assigner.Hungry3;
+with Agpl.Htn.Plan_Node;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
@@ -38,6 +39,7 @@ with Ada.Unchecked_Deallocation;
 
 package body Agpl.Cr.Mutable_Assignment is
 
+   use type Optimization.Cost;
    use type Optimization.Annealing.Probability;
 
    function S is new Conversions.To_Str (Optimization.Annealing.Probability);
@@ -52,6 +54,15 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Free is new Ada.Unchecked_Deallocation (Solution_Context'Class,
                                                      Solution_Context_Access);
+
+   ---------------
+   -- Add_Agent --
+   ---------------
+
+   procedure Add_Agent (This : in out Object; Name : in Agent_Id) is
+   begin
+      This.Context.Ref.Agents.Include (Name);
+   end Add_Agent;
 
    ------------------
    -- Add_Mutation --
@@ -229,12 +240,12 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Evaluate_Minimax --
    ----------------------
 
-   function Evaluate_Minimax (This : in Object) return Cost is
+   function Evaluate_Minimax (This : in Object) return Costs is
    begin
       if This.Valid then
          return This.Minimax.Last_Element.Cost;
       else
-         return Optimization.Annealing.Infinite;
+         return Infinite;
       end if;
    end Evaluate_Minimax;
 
@@ -242,12 +253,12 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Evaluate_Totalsum --
    -----------------------
 
-   function Evaluate_Totalsum (This : in Object) return Cost is
+   function Evaluate_Totalsum (This : in Object) return Costs is
    begin
       if This.Valid then
          return This.Totalsum;
       else
-         return Optimization.Annealing.Infinite;
+         return Infinite;
       end if;
    end Evaluate_Totalsum;
 
@@ -278,14 +289,28 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Is_Sane (This : in Object) return Boolean is
 
-      --  Check all the assigned tasks belong to the plan and are not finished.
-      procedure Check_Assigned_Tasks (I : Solution_Context_Maps.Cursor) is
+      procedure Check_Contexts (I : Solution_Context_Maps.Cursor) is
+         X : constant Solution_Context_Access :=
+               Solution_Context_Maps.Element (I);
       begin
-
-      end Check_Assigned_Tasks;
+         if X.all in Task_Context then
+            declare
+               Node : constant Htn.Plan.Subplan :=
+                        Htn.Plan.Get_Node
+                          (This.Context.Ref.Plan, Task_Context (X.all).Job);
+               use Htn.Plan_Node;
+            begin
+               if Get_Finished (Node) or else Get_Expanded (Node) then
+                  raise Constraint_Error;
+               end if;
+            end;
+         else
+            raise Constraint_Error;
+         end if;
+      end Check_Contexts;
 
    begin
-      Solution_Context_Maps.Iterate (Contexts, Check_Assigned_Tasks'Access);
+      Solution_Context_Maps.Iterate (This.Contexts, Check_Contexts'Access);
 
       return True;
    exception
@@ -364,6 +389,94 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       Solution_Context_Maps.Iterate (This.Contexts, It'Access);
    end Reassign_Tasks;
+
+   ---------------------------
+   -- Reevaluate_Agent_Cost --
+   ---------------------------
+
+   function Reevaluate_Agent_Cost (This  : in Object;
+                                   Agent : in Agent_Id)
+                                   return     Costs
+   is
+      C     : Cr.Cost_Matrix.Object renames This.Context.Ref.Costs;
+      Total : Costs;
+
+      use Solution_Context_Maps;
+
+      --  Well use always the cost from prev to current
+      procedure Add (I : Cursor) is
+         X    : constant Solution_Context_Access := Element (I);
+         Curr :          Costs;
+      begin
+         if X.all in Task_Context then
+            if Agent_Id (Get_Attribute (X, Owner)) = Agent then
+               declare
+                  use Cost_Matrix;
+                  use Htn.Tasks;
+                  T : Task_Context renames Task_Context (X.all);
+               begin
+                  --  If there's no previous, this is the Starting task so
+                  --  it doesnt' count
+                  if T.Prev /= No_Task then
+                     Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
+                     if Curr = Infinite then
+                        Total := Infinite;
+                     else
+                        Total := Total + Curr;
+                     end if;
+                  end if;
+               end;
+            end if;
+         end if;
+      end Add;
+
+      I : Cursor := This.Contexts.First;
+   begin
+      while Has_Element (I) loop
+         Add (I);
+         exit when Total = Infinite;
+         Next (I);
+      end loop;
+
+      return Total;
+   end Reevaluate_Agent_Cost;
+
+   ----------------------
+   -- Reevaluate_Costs --
+   ----------------------
+
+   procedure Reevaluate_Costs (This : in out Object) is
+   begin
+      This.Totalsum := Reevaluate_Totalsum (This);
+   end Reevaluate_Costs;
+
+   ------------------------
+   -- Reevaluate_Minimax --
+   ------------------------
+
+   function Reevaluate_Minimax    (This : in Object)
+                                   return    Costs
+   is
+   begin
+      return 0.0;
+   end Reevaluate_Minimax;
+
+   -------------------------
+   -- Reevaluate_Totalsum --
+   -------------------------
+
+   function Reevaluate_Totalsum   (This : in Object)
+                                   return    Costs
+   is
+      Total : Costs := 0.0;
+      procedure Ev (I : Agent_Sets.Cursor) is
+      begin
+         Total := Total + Reevaluate_Agent_Cost (This, Agent_Sets.Element (I));
+      end Ev;
+   begin
+      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
+      return Total;
+   end Reevaluate_Totalsum;
 
    ------------------
    -- Remove_Agent --
@@ -453,8 +566,10 @@ package body Agpl.Cr.Mutable_Assignment is
    procedure Set_Costs (This  : in out Object;
                         Costs : in     Cr.Cost_Matrix.Object)
    is
+      C : constant Static_Context_Access := This.Context.Ref;
    begin
-      null;
+      C.Costs := Costs;
+      Reevaluate_Costs (This);
    end Set_Costs;
 
    -------------------
