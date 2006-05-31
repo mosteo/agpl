@@ -277,8 +277,21 @@ package body Agpl.Cr.Mutable_Assignment is
    -------------
 
    function Is_Sane (This : in Object) return Boolean is
+
+      --  Check all the assigned tasks belong to the plan and are not finished.
+      procedure Check_Assigned_Tasks (I : Solution_Context_Maps.Cursor) is
+      begin
+
+      end Check_Assigned_Tasks;
+
    begin
+      Solution_Context_Maps.Iterate (Contexts, Check_Assigned_Tasks'Access);
+
       return True;
+   exception
+      when E : others =>
+         Log ("Checking solution sanity: " & Report (E), Error);
+         return False;
    end Is_Sane;
 
    -------------------
