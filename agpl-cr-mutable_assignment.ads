@@ -104,10 +104,16 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Set_Costs (This  : in out Object;
                         Costs : in     Cr.Cost_Matrix.Object);
    --  Any task not present here will be assumed is not doable.
+   --  *MUST* include costs from the No_Task
+   --  *MUST* include cost from No_Task to No_Task (i.e. past incurred costs
+   --  of a now idle robot...)
 
    procedure Set_Tasks (This : in out Object;
                         Plan : in     Htn.Plan.Object);
    --  The tasks are provided in Plan form, inflated or not.
+   --  Warning! The plan *MUST NOT* contain Starting_Pose tasks.
+   --  This is managed internally.
+   --  *HOWEVER* the Costs must contemplate the starting task!
 
    procedure Clear_Dynamic_Part (This : in out Object);
    --  Clear the non-static solution data.
@@ -241,7 +247,7 @@ private
    function "<" (L, R : Minimax_Key) return Boolean;
 
    package Agent_Cost_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Costs, "<", Optimization."=");
+     (Agent_Id, Costs, "<", Optimization."=");
    package Cost_Agent_Sets is new
      Ada.Containers.Ordered_Sets (Minimax_Key);
 

@@ -39,8 +39,13 @@ with Ada.Unchecked_Deallocation;
 
 package body Agpl.Cr.Mutable_Assignment is
 
+   use type Htn.Tasks.Task_Id;
    use type Optimization.Cost;
    use type Optimization.Annealing.Probability;
+
+   package Acm renames Agent_Cost_Maps;
+
+   No_Task : Htn.Tasks.Task_Id renames Htn.Tasks.No_Task;
 
    function S is new Conversions.To_Str (Optimization.Annealing.Probability);
 
@@ -230,8 +235,17 @@ package body Agpl.Cr.Mutable_Assignment is
          Job.Next := Htn.Tasks.No_Task;
       end;
 
+      declare
+         Agent : constant Agent_Id :=
+                   Agent_Id (Get_Attribute (Job.all'Access, Owner));
+      begin
+         pragma Assert (Acm.Element (This.Agent_Costs.Find (Agent)) =
+                          Reevaluate_Agent_Cost (This, Agent));
+         null;
+      end;
+
       --  Remove from bags
-      Remove_From_All_Bags (This, Solution_Context_Access (Job));
+      Remove_From_All_Bags (This, Job.all'Access);
 
       This.Contexts.Delete (Task_Key (Job.Job));
    end Do_Remove_Task;
@@ -415,15 +429,13 @@ package body Agpl.Cr.Mutable_Assignment is
                   use Htn.Tasks;
                   T : Task_Context renames Task_Context (X.all);
                begin
-                  --  If there's no previous, this is the Starting task so
-                  --  it doesnt' count
-                  if T.Prev /= No_Task then
-                     Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
-                     if Curr = Infinite then
-                        Total := Infinite;
-                     else
-                        Total := Total + Curr;
-                     end if;
+                  --  The case when Prev = No_Task is contemplated in the
+                  --  Cost_Matrix object
+                  Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
+                  if Curr = Infinite then
+                     Total := Infinite;
+                  else
+                     Total := Total + Curr;
                   end if;
                end;
             end if;
@@ -446,8 +458,19 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------
 
    procedure Reevaluate_Costs (This : in out Object) is
+      procedure Ev (I : Agent_Sets.Cursor) is
+         Id   : constant Agent_Id := Agent_Sets.Element (I);
+         Cost : constant Costs    := Reevaluate_Agent_Cost (This, Id);
+      begin
+         This.Minimax.Insert ((Cost, +String (Id)));
+         This.Agent_Costs.Insert (Id, Cost);
+      end Ev;
    begin
       This.Totalsum := Reevaluate_Totalsum (This);
+
+      This.Minimax.Clear;
+      This.Agent_Costs.Clear;
+      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
    end Reevaluate_Costs;
 
    ------------------------
@@ -457,8 +480,17 @@ package body Agpl.Cr.Mutable_Assignment is
    function Reevaluate_Minimax    (This : in Object)
                                    return    Costs
    is
+      Minimax : Cost_Agent_Sets.Set;
+
+      procedure Ev (I : Agent_Sets.Cursor) is
+         Id   : constant Agent_Id := Agent_Sets.Element (I);
+         Cost : constant Costs    := Reevaluate_Agent_Cost (This, Id);
+      begin
+         Minimax.Insert ((Cost, +String (Id)));
+      end Ev;
    begin
-      return 0.0;
+      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
+      return Minimax.Last_Element.Cost;
    end Reevaluate_Minimax;
 
    -------------------------
@@ -611,7 +643,48 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function To_Assignment   (This : in Object) return Cr.Assignment.Object is
       Result : Cr.Assignment.Object;
+
+      function Find_First (Agent : in Agent_Id) return Task_Context_Access is
+         Curr : Task_Context_Access;
+         use Solution_Context_Maps;
+         I : Cursor := This.Contexts.First;
+      begin
+         --  Locate any:
+         while Has_Element (I) loop
+            if Get_Attribute (Element (I), Owner) = String (Agent) and then
+              Element (I).all in Task_Context
+            then
+               Curr := Task_Context_Access (Element (I));
+               exit;
+            end if;
+         end loop;
+
+         --  Go back to first one:
+         if Curr /= null then
+            while Curr.Prev /= Htn.Tasks.No_Task loop
+               Curr := Task_Context_Access
+                 (Element (This.Contexts.Find (Task_Key (Curr.Prev))));
+            end loop;
+         end if;
+
+         return Curr;
+      end Find_First;
+
+      procedure Assign_Agent (I : Agent_Sets.Cursor) is
+         Agent : constant Agent_Id            := Agent_Sets.Element (I);
+         Curr  :          Task_Context_Access := Find_First (Agent);
+      begin
+         while Curr /= null loop
+            Assignment.Add
+              (Result, Agent,
+               Htn.Plan.Get_Task (This.Context.Ref.Plan, Curr.Job).all);
+            exit when Curr.Next = Htn.Tasks.No_Task;
+            Curr := Solution_Context_Maps.Element
+              (This.Contexts.Find (Task_Key (Curr.Next)));
+         end loop;
+      end Assign_Agent;
    begin
+      Agent_Sets.Iterate (This.Context.Ref.Agents, Assign_Agent'Access);
       return Result;
    end To_Assignment;
 
@@ -666,8 +739,49 @@ package body Agpl.Cr.Mutable_Assignment is
       Curr_To_Be_Deleted : in     Task_Context_Access;
       Next_To_Be_Kept    : in     Task_Context_Access)
    is
+      Prev : Task_Context_Access renames Prev_To_Be_Kept;
+      Next : Task_Context_Access renames Next_To_Be_Kept;
+      Curr : Task_Context_Access renames Curr_To_Be_Deleted;
+
+      Agent : constant Agent_Id :=
+                Agent_Id (Get_Attribute (Curr.all'Access, Owner));
+      Minus_1  : Costs := 0.0;
+      Minus_2  : Costs := 0.0;
+      Plus     : Costs := 0.0;
+      Cost     : Costs := Acm.Element (This.Agent_Costs.Find (Agent));
+      Cm       : Cost_Matrix.Object renames This.Context.Ref.Costs;
+
+      Pr, Ne   : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
    begin
-      null;
+      This.Agent_Costs.Delete (Agent);
+      This.Minimax.Delete ((Cost, +String (Agent)));
+
+      if Prev /= null then
+         Pr := Prev.Job;
+      end if;
+      if Next /= null then
+         Ne := Next.Job;
+      end if;
+
+      Minus_1 := Cost_Matrix.Get_Cost (Cm,
+                                       String (Agent),
+                                       Pr,
+                                       Curr.Job);
+
+      Minus_2 := Cost_Matrix.Get_Cost (Cm,
+                                       String (Agent),
+                                       Curr.Job,
+                                       Ne);
+
+      Plus    := Cost_Matrix.Get_Cost (Cm,
+                                       String (Agent),
+                                       Pr,
+                                       Ne);
+
+      Cost := Cost - Minus_1 - Minus_2 + Plus;
+
+      This.Agent_Costs.Insert (Agent, Cost);
+      This.Minimax.Insert ((Cost, +String (Agent)));
    end Update_Costs_Removing;
 
 end Agpl.Cr.Mutable_Assignment;

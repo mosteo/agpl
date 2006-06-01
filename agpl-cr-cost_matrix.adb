@@ -72,6 +72,18 @@ package body Agpl.Cr.Cost_Matrix is
                             Cr.Agent.Get_Cost (AL.Element (A),
                                                TL.Element (Fin),
                                                TL.Element (Ini)));
+
+                  --  Special case for the starting task
+                  if Tl.Element (Ini) in Cr.Tasks.Starting_Pose.Object then
+                     Set_Cost (This,
+                               Cr.Agent.Get_Name (Al.Element (A)),
+                               Htn.Tasks.No_Task,
+                               Htn.Tasks.Get_Id (Tl.Element (Fin)),
+                               Get_Cost (This,
+                                         Cr.Agent.Get_Name (Al.Element (A)),
+                                         Htn.Tasks.Get_Id (Tl.Element (Ini)),
+                                         Htn.Tasks.Get_Id (Tl.Element (Fin))));
+                  end if;
                end if;
 
                TL.Next (Fin);
@@ -123,7 +135,11 @@ package body Agpl.Cr.Cost_Matrix is
       I : constant Cursor := Find (This.Matrix, Key (Agent, Ini, Fin));
    begin
       if I = No_Element then
-         return Infinite;
+         if Fin = Htn.Tasks.No_Task then
+            return 0.0;
+         else
+            return Infinite;
+         end if;
       else
          return Element (I);
       end if;

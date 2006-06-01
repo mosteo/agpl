@@ -71,6 +71,10 @@ package Agpl.Cr.Cost_Matrix is
       Ini   : in Htn.Tasks.Task_Id;
       Fin   : in Htn.Tasks.Task_Id) return Costs;
    --  Returns infinite if Agent-task-task combination is not present
+   --  If Ini = Fin = No_Task, this should be explicitely informed by the
+   --  caller if this has to represent something (i.e past costs)
+   --  If no cost is found and Fin = No_Task then 0.0 is returned
+   --  Else infinite is returned
 
    procedure Set_Cost
      (This  : in out Object;
