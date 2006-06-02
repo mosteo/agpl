@@ -36,16 +36,7 @@ package Agpl.Cr.Assignment is
 
    pragma Elaborate_Body;
 
-   --  FORCED TO DO THIS BECAUSE A GNAT BUG. NOT MY FAULT!!!!!
-   --  Only package violating this private part is:
-   --  Expres.Mutable_Assignment
-
-   type Object is tagged record
-      Agents : Agent.Maps.Map;
-
-      Ok     : Boolean;
-      --  An assignment can be invalid.
-   end record;
+   type Object is tagged private;
 
    --   type Object is tagged private;
 
@@ -103,6 +94,13 @@ package Agpl.Cr.Assignment is
 
    procedure Print_Assignment (This : in Object);
 
-   --  private
+private
+
+      type Object is tagged record
+      Agents : Agent.Maps.Map;
+
+      Ok     : Boolean := True;
+      --  An assignment can be invalid.
+   end record;
 
 end Agpl.Cr.Assignment;

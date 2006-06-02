@@ -2,3 +2,7 @@
 ----------
 [+] Modified Agpl.Cr.Cost para que incluya la No_Task (Id = 0) cuando se creen costes desde starting task.
 [+] Implemented Agpl.Cr.Mutable_Assignment.Reevaluate_*
+
+2006 06 02
+----------
+[+] Agpl.Cr.Agent.Dummy

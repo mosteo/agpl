@@ -114,10 +114,18 @@ package Agpl.Cr.Mutable_Assignment is
    --  Warning! The plan *MUST NOT* contain Starting_Pose tasks.
    --  This is managed internally.
    --  *HOWEVER* the Costs must contemplate the starting task!
+   --  No attempt to assignation is made. All dynamic data structures will be
+   --  cleared. You should call Create_Some_Solution or To_Assignment
+   --  subsequently.
+
+   procedure Create_Some_Solution (This : in out Object);
+   --  Prepare the object with a greedy solution.
+   --  Basically is a call to To_Assignment with a greedy solution.
 
    procedure Clear_Dynamic_Part (This : in out Object);
    --  Clear the non-static solution data.
    --  For example as a prepartion step to replace the tasks.
+   --  If frees any dynamic memory in use.
 
    --------------
    -- MUTATING --
@@ -152,7 +160,8 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Set_Assignment (This : in out Object;
                              Ass  : in     Cr.Assignment.Object);
    --  The assignment given will be used as current solution.
-   --  Should check that no pending tasks are unassigned.
+   --  Any unassigned tasks will be greedily inserted in arbitrary order.
+   --  The dynamic structures will be prepared.
 
 private
 
