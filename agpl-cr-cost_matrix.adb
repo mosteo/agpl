@@ -1,6 +1,10 @@
 with Agpl.Cr.Tasks.Starting_Pose;
+with Agpl.Htn.Tasks.Lists;
 
 package body Agpl.Cr.Cost_Matrix is
+
+   use type Cr.Costs;
+   use type Htn.Tasks.Task_Id;
 
    ---------
    -- Key --
@@ -144,6 +148,38 @@ package body Agpl.Cr.Cost_Matrix is
          return Element (I);
       end if;
    end Get_Cost;
+
+   -------------------
+   -- Get_Plan_Cost --
+   -------------------
+
+   function Get_Plan_Cost
+     (This  : in Object;
+      Agent : in Cr.Agent.Object'Class) return Costs
+   is
+      T    : constant Htn.Tasks.Lists.List := Agent.Get_Tasks;
+      Prev :          Htn.Tasks.Task_Id    := Htn.Tasks.No_Task;
+      use Htn.Tasks.Lists;
+
+      Total,
+      Partial : Cr.Costs               := 0.0;
+      I       : Htn.Tasks.Lists.Cursor := T.First;
+   begin
+      while Has_Element (I) loop
+         Partial := Get_Cost (This,
+                              Cr.Agent.Get_Name (Agent),
+                              Prev, Htn.Tasks.Get_Id (Element (I)));
+         if Partial = Cr.Infinite then
+            Total := Infinite;
+         else
+            Total := Total + Partial;
+         end if;
+         exit when Partial = Cr.Infinite;
+         Prev := Htn.Tasks.Get_Id (Element (I));
+         Next (I);
+      end loop;
+      return Total;
+   end Get_Plan_Cost;
 
    --------------
    -- Set_Cost --

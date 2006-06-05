@@ -4,6 +4,8 @@ with Agpl.Htn.Plan_Node;
 
 package body Agpl.Cr.Assigner is
 
+   use type Cr.Costs;
+
    use type Htn.Plan.Subplan;
    use type Htn.Plan_Node.Node_Kind;
 

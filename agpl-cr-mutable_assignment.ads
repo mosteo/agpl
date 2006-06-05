@@ -92,6 +92,11 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo (This : in out Object);
    --  Must undo the last mutation. Only one level of undo is required.
 
+   function Normalize (Old_Cost,
+                       New_Cost : in Optimization.Cost;
+                       Temp     : in Optimization.Annealing.Temperature)
+                       return        Optimization.Annealing.Acceptability;
+
    ----------------------------
    -- MANAGEMENT SUBPROGRAMS --
    ----------------------------
@@ -118,7 +123,8 @@ package Agpl.Cr.Mutable_Assignment is
    --  cleared. You should call Create_Some_Solution or To_Assignment
    --  subsequently.
 
-   procedure Create_Some_Solution (This : in out Object);
+   procedure Create_Some_Solution (This      : in out Object;
+                                   Criterion : in Assignment_Criteria);
    --  Prepare the object with a greedy solution.
    --  Basically is a call to To_Assignment with a greedy solution.
 
@@ -157,10 +163,12 @@ package Agpl.Cr.Mutable_Assignment is
    function To_Assignment   (This : in Object) return Cr.Assignment.Object;
    --  Obtain an assignment from the current configuration.
 
-   procedure Set_Assignment (This : in out Object;
-                             Ass  : in     Cr.Assignment.Object);
+   procedure Set_Assignment (This      : in out Object;
+                             Ass       : in     Cr.Assignment.Object;
+                             Criterion : in Assignment_Criteria);
    --  The assignment given will be used as current solution.
    --  Any unassigned tasks will be greedily inserted in arbitrary order.
+   --  The criterio is used only for previously unassigned tasks.
    --  The dynamic structures will be prepared.
 
 private
@@ -323,6 +331,8 @@ private
    --  Keys
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
    pragma Inline (Task_Key);
+
+   All_Assigned_Tasks : constant Bag_Key := "aat";
 
    --  Bags
    procedure Add_To_Bag (This    : in out Object;

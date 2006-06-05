@@ -31,11 +31,16 @@
 
 with Agpl.Conversions;
 with Agpl.Cr.Agent.Dummy;
+with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Assigner.Hungry3;
+with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
+with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Maps;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
+with Ada.Numerics.Generic_Elementary_Functions;
 with Ada.Unchecked_Deallocation;
 
 package body Agpl.Cr.Mutable_Assignment is
@@ -163,11 +168,23 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Create_Some_Solution --
    --------------------------
 
-   procedure Create_Some_Solution (This : in out Object) is
+   procedure Create_Some_Solution (This      : in out Object;
+                                   Criterion : in Assignment_Criteria) is
       A : Cr.Assignment.Object;
+
+      procedure Put_Agent (I : Agent_Sets.Cursor) is
+         Ag : Cr.Agent.Dummy.Object;
+      begin
+         Ag.Set_Name (String (Agent_Sets.Element (I)));
+         A.Set_Agent (Ag);
+      end Put_Agent;
    begin
       A.Set_Valid;
-      Set_Assignment (This, A);
+      Agent_Sets.Iterate (This.Context.Ref.Agents, Put_Agent'Access);
+      --  This ensures that all agents appear in the assignment, even if some
+      --  haven't tasks.
+
+      Set_Assignment (This, A, Criterion);
       --  Using an empty assignment we ensure that a greedy allocation will
       --  occur with all tasks in the plan.
    end Create_Some_Solution;
@@ -193,7 +210,8 @@ package body Agpl.Cr.Mutable_Assignment is
                                Get_All_Tasks (A),
                                This.Context.Ref.Costs);
       begin
-         Set_Assignment (This, New_Assignment);
+         Set_Assignment (This, New_Assignment, Minimax);
+         --  Note: here Minimax will not be used since there are no new tasks.
       end;
    end Do_Heuristic_All;
 
@@ -399,6 +417,39 @@ package body Agpl.Cr.Mutable_Assignment is
       Log ("Mutate: No mutation performed!", Error);
    end Mutate;
 
+   ---------------
+   -- Normalize --
+   ---------------
+
+   function Normalize
+     (Old_Cost,
+      New_Cost : in Optimization.Cost;
+      Temp     : in Optimization.Annealing.Temperature)
+      return        Optimization.Annealing.Acceptability
+   is
+      package Acceptability_Math is new
+        Ada.Numerics.Generic_Elementary_Functions
+          (Optimization.Annealing.Acceptability);
+
+      use Conversions;
+      use Optimization; use Annealing;
+      use Acceptability_Math;
+   begin
+      if New_Cost < Old_Cost then
+         return Acceptability'Last;
+      else
+         return
+           (Acceptability (Old_Cost / New_Cost) *
+              Acceptability (Temp)) ** 0.75; -- We increase the wildlity a bit.
+      end if;
+   exception
+      when Constraint_Error =>
+         Log ("Old_Cost: " & To_String (Float (Old_Cost)), Error);
+         Log ("New_Cost: " & To_String (Float (New_Cost)), Error);
+         Log ("Temp    : " & To_String (Float (Temp)), Error);
+         raise;
+   end Normalize;
+
    --------------------
    -- Reassign_Tasks --
    --------------------
@@ -485,6 +536,8 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Minimax.Clear;
       This.Agent_Costs.Clear;
       Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
+
+      This.Valid := This.Totalsum < Infinite;
    end Reevaluate_Costs;
 
    ------------------------
@@ -598,11 +651,102 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Set_Assignment --
    --------------------
 
-   procedure Set_Assignment (This : in out Object;
-                             Ass  : in     Cr.Assignment.Object)
+   procedure Set_Assignment (This      : in out Object;
+                             Ass       : in     Cr.Assignment.Object;
+                             Criterion : in Assignment_Criteria)
    is
+      New_Ass       : Cr.Assignment.Object := Ass;
+      Pending_Tasks : Htn.Tasks.Maps.Map;
+      L             : constant Htn.Tasks.Lists.List :=
+                        Htn.Plan.Enumerate_Tasks (This.Context.Ref.Plan,
+                                                  Primitive => True,
+                                                  Pending   => True);
+      procedure Ins (I : Htn.Tasks.Lists.Cursor) is
+         use Htn.Tasks.Lists;
+      begin
+         Pending_Tasks.Insert (Element (I).Get_Id, Element (I));
+      end Ins;
+
+      procedure Process_Agent (I : Cr.Agent.Lists.Cursor) is
+         use Cr.Agent.Lists;
+         use Htn.Tasks.Lists;
+         A : constant Cr.Agent.Object'Class  := Element (I);
+         T : constant Htn.Tasks.Lists.List   := A.Get_Tasks;
+         J :          Htn.Tasks.Lists.Cursor := First (T);
+         C : constant Task_Context_Access := new Task_Context;
+      begin
+         while Has_Element (J) loop
+            C.Job := Element (J).Get_Id;
+            if Has_Element (Previous (J)) then
+               C.Prev := Element (Previous (J)).Get_Id;
+            end if;
+            if Has_Element (Next (J)) then
+               C.Next := Element (Next (J)).Get_Id;
+            end if;
+            Set_Attribute (C.all'Access, Owner, Cr.Agent.Get_Name (A));
+
+            This.Contexts.Insert (Task_Key (C.Job), Solution_Context_Access (C));
+            Add_To_Bag (This, Solution_Context_Access (C), All_Assigned_Tasks);
+            Next (J);
+         end loop;
+      end Process_Agent;
+
+      procedure Remove_Agent_Tasks (I : Cr.Agent.Lists.Cursor) is
+         use Cr.Agent.Lists;
+         use Htn.Tasks.Lists;
+         A : constant Cr.Agent.Object'Class  := Element (I);
+         T : constant Htn.Tasks.Lists.List   := A.Get_Tasks;
+         J :          Htn.Tasks.Lists.Cursor := First (T);
+      begin
+         while Has_Element (J) loop
+            Pending_Tasks.Delete (Element (J).Get_Id);
+            Next (J);
+         end loop;
+      end Remove_Agent_Tasks;
    begin
-      null;
+      --  Keep mapped tasks
+      Htn.Tasks.Lists.Iterate (L, Ins'Access);
+
+      --  Remove assigned tasks
+      declare
+         Agents : constant Cr.Agent.Lists.List := Ass.Get_Agents;
+      begin
+         Cr.Agent.Lists.Iterate (Agents, Remove_Agent_Tasks'Access);
+      end;
+
+      --  Do something with unassigned plan tasks
+      while not Pending_Tasks.Is_Empty loop
+         declare
+            New_New_Ass : Cr.Assignment.Object;
+            Success     : Boolean;
+         begin
+            Tasks.Insertions.Greedy
+              (New_Ass,
+               Htn.Tasks.Maps.First_Element (Pending_Tasks),
+               This.Context.Ref.Costs,
+               Criterion,
+               New_New_Ass,
+               Success);
+
+            if not Success then
+               Log ("Set_Assignment: cannot assign task " &
+                    Pending_Tasks.First_Element.To_String, Error);
+               raise Program_Error;
+            end if;
+
+            Pending_Tasks.Delete_First;
+            New_Ass := New_New_Ass;
+         end;
+      end loop;
+
+      --  Add all agent tasks
+      declare
+         Agents : constant Cr.Agent.Lists.List := New_Ass.Get_Agents;
+      begin
+         Cr.Agent.Lists.Iterate (Agents, Process_Agent'Access);
+      end;
+
+      Reevaluate_Costs (This);
    end Set_Assignment;
 
    ---------------
@@ -693,6 +837,9 @@ package body Agpl.Cr.Mutable_Assignment is
          Curr       :          Task_Context_Access := Find_First (Agent_Name);
       begin
          Agent.Set_Name (String (Agent_Name));
+         --  Add the empty agent so all appear in the assignment, even the ones
+         --  without tasks:
+         Assignment.Set_Agent (Result, Agent);
          while Curr /= null loop
             Assignment.Add
               (Result, Agent,

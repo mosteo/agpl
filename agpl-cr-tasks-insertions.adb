@@ -1,6 +1,9 @@
+with Agpl.Cr.Agent.Lists;
 with Agpl.Htn.Tasks.Lists;
 
 package body Agpl.Cr.Tasks.Insertions is
+
+   use type Cr.Costs;
 
    ---------------
    -- Before_Id --
@@ -144,6 +147,132 @@ package body Agpl.Cr.Tasks.Insertions is
       end if;
    end Greedy;
 
+   ------------
+   -- Greedy --
+   ------------
+
+   procedure Greedy (A          : in     Agent.Object'Class;
+                     T          : in     Htn.Tasks.Object'Class;
+                     C          : in     Cost_Matrix.Object;
+                     Not_Before : in     Natural;
+                     New_Agent  :    out Agent.Handle.Object;
+                     Cost_Delta :    out Cr.Costs;
+                     Cost_Total :    out Cr.Costs;
+                     Success    :    out Boolean)
+   is
+      use Agpl.Htn.Tasks;
+      use Agpl.Htn.Tasks.Lists;
+      New_Tasks : List            := A.Get_Tasks;
+      Name      : constant String := A.Get_Name;
+   begin
+      New_Agent.Set (A);
+
+      if New_Tasks.Is_Empty or else Natural (New_Tasks.Length) <= Not_Before then
+         Cost_Delta := Cost_Matrix.Get_Cost
+           (C, Name, Htn.Tasks.No_Task, Get_Id (T));
+         Cost_Total := Cost_Delta;
+         Success    := True;
+         declare
+            Aux : Cr.Agent.Object'Class := A;
+         begin
+            Aux.Add_Task (T);
+            New_Agent.Set (Aux);
+         end;
+      else
+         declare
+            Best_Pos    : Cursor := No_Element;
+            --  Points to the point of insertion (next task of best point).
+            Best_Cost   : Costs  := Costs'Last; -- New cost due to new task.
+            Prev        : Cursor := No_Element;
+            Curr        : Cursor := First (New_Tasks);
+            Orig_Cost   : constant Costs := Cost_Matrix.Get_Plan_Cost (C, A);
+            --  Original plan cost.
+         begin
+            --  Skip Not_Before tasks:
+            declare
+               Counter : Natural := Not_Before;
+            begin
+               while Counter > 0 loop
+                  Counter := Counter - 1;
+                  Prev    := Curr;
+                  Next (Curr);
+               end loop;
+            end;
+
+            while Curr /= No_Element or else Prev /= No_Element loop
+               declare
+                  Curr_Cost   : Costs := Orig_Cost;
+                  New_Cost_1  : Costs;
+                  New_Cost_2  : Costs := 0.0;
+               begin
+                  --  First task special case:
+                  if Prev = No_Element then
+                     Curr_Cost  := Curr_Cost -
+                       Cost_Matrix.Get_Cost (C, Name, Htn.Tasks.No_Task,
+                                             Get_Id (Element (Curr)));
+                     New_Cost_1 := Cost_Matrix.Get_Cost
+                       (C, Name, Htn.Tasks.No_Task, Get_Id (T));
+                     New_Cost_2 := Cost_Matrix.Get_Cost
+                       (C, Name, Get_Id (T), Get_Id (Element (Curr)));
+                  elsif Curr = No_Element then -- Last task special case
+                     New_Cost_1 := Cost_Matrix.Get_Cost
+                       (C, Name, Get_Id (Element (Prev)), Get_Id (T));
+                  else
+                     Curr_Cost  := Curr_Cost -
+                       Cost_Matrix.Get_Cost
+                         (C, Name,
+                          Get_Id (Element (Prev)), Get_Id (Element (Curr)));
+                     New_Cost_1 := Cost_Matrix.Get_Cost
+                       (C, Name, Get_Id (Element (Prev)), Get_Id (T));
+                     New_Cost_2 := Cost_matrix.Get_Cost
+                       (C, Name, Get_Id (T), Get_Id (Element (Curr)));
+                  end if;
+
+                  if New_Cost_1 /= Cr.Infinite and then
+                    New_Cost_2 /= Cr.Infinite
+                  then
+                     Curr_Cost := Curr_Cost + New_Cost_1 + New_Cost_2;
+
+                     if Curr_Cost < Best_Cost then
+                        Best_Cost := Curr_Cost;
+                        Best_Pos  := Curr;
+                     end if;
+                  end if;
+               end;
+
+               Prev := Curr;
+               Next (Curr);
+            end loop;
+
+            --  Insert at the best place:
+            if Best_Cost = Cr.Infinite then
+               Success := False;
+            else
+               Success    := True;
+               Cost_Delta := Best_Cost - Orig_Cost;
+               Cost_Total := Best_Cost;
+
+               if Best_Pos = No_Element then -- last position
+                  declare
+                     Aux : Cr.Agent.Object'Class := A;
+                  begin
+                     Aux.Add_Task (T);
+                     New_Agent.Set (Aux);
+                  end;
+               else
+                  declare
+                     Aux       : Cr.Agent.Object'Class := A;
+                  begin
+                     Htn.Tasks.Lists.Insert (New_Tasks, Best_Pos, T);
+                     Aux.Set_Tasks (New_Tasks);
+                     New_Agent.Set (Aux);
+                  end;
+               end if;
+            end if;
+         end;
+      end if;
+   end Greedy;
+
    procedure Greedy (A          : in     Agent.Object'Class;
                      T          : in     Htn.Tasks.Object'Class;
                      New_Agent  :    out Agent.Handle.Object;
@@ -152,6 +281,62 @@ package body Agpl.Cr.Tasks.Insertions is
                      Success    :    out Boolean) is
    begin
       Greedy(A, T, 0, New_Agent, Cost_Delta, Cost_Total, Success);
+   end Greedy;
+
+   ------------
+   -- Greedy --
+   ------------
+
+   procedure Greedy (Ass       : in     Assignment.Object;
+                     T         : in     Htn.Tasks.Object'Class;
+                     Costs     : in     Cost_Matrix.Object;
+                     Criterion : in     Assignment_Criteria;
+                     New_Ass   :    out Assignment.Object;
+                     Success   :    out Boolean)
+   is
+      Agents : constant Agent.Lists.List := Ass.Get_Agents;
+
+      Best_Agent : Agent.Handle.Object;
+      Best_Cost  : Cr.Costs := Infinite;
+
+      procedure Check_Agent (I : in Cr.Agent.Lists.Cursor) is
+         New_Agent : Cr.Agent.Handle.Object;
+         New_Total,
+         New_Delta : Cr.Costs;
+         New_Cost  : Cr.Costs;
+         Success   : Boolean;
+      begin
+         Greedy (Agent.Lists.Element (I),
+                 T,
+                 Costs,
+                 0,
+                 New_Agent,
+                 Cost_Delta => New_Delta,
+                 Cost_Total => New_Total,
+                 Success    => Success);
+
+         if Success then
+            case Criterion is
+               when Minimax => New_Cost := New_Total;
+               when Totalsum => New_Cost := New_Delta;
+            end case;
+            if New_Cost < Best_Cost then
+               Best_Cost  := New_Cost;
+               Best_Agent := New_Agent;
+            end if;
+         end if;
+      end Check_Agent;
+   begin
+      New_Ass := Ass;
+
+      Agent.Lists.Iterate (Agents, Check_Agent'Access);
+
+      if Best_Agent.Is_Valid then
+         Success := True;
+         New_Ass.Set_Agent (Best_Agent.Get);
+      else
+         Success := False;
+      end if;
    end Greedy;
 
 end Agpl.Cr.Tasks.Insertions;

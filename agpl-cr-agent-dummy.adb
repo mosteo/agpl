@@ -24,59 +24,24 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  A container for indefinite objects allowing an easier storage for them.
---  'Read and 'Write are implemented, so this type can be safely serialized.
+--  This agent doesn't know how to do anything, but can be used as a placeholder
+--  is Assignation objects :/
 
-with Ada.Finalization;
-with Ada.Streams;
+package body Agpl.Cr.Agent.Dummy is
 
-generic
-   type Item (<>) is private;
-package Agpl.Generic_Handle is
+   -------------
+   -- Execute --
+   -------------
 
-   pragma Preelaborate;
+   procedure Execute
+     (This     : in out Object;
+      The_Task : in out Htn.Tasks.Primitive.Object'Class;
+      Plan     : in out Htn.Plan.Object;
+      Done     :    out Boolean)
+   is
+      pragma Unreferenced (This, The_Task, Plan);
+   begin
+      Done := False;
+   end Execute;
 
-   type Item_Access is access Item;
-
-   No_Data : exception;
-
-   type Object is tagged private;
-
-   function Set (This : in Item) return Object;
-   function "+" (This : in Item) return Object renames Set;
-   --  Creation
-
-   procedure Set (This : in out Object; X : in Item);
-   --  Creation
-
-   function Get (This : in Object) return Item;
-   function "+" (This : in Object) return Item renames Get;
-   --  Extraction. May raise No_Data if uninitialized.
-
-   function Ref (This : in Object) return Item_Access;
-   --  Reference to the held item.
-
-   procedure Clear (This : in out Object);
-   --  Make it uninitialized.
-
-   function Is_Valid (This : in Object) return Boolean;
-   --  Says if it contains some value.
-
-   procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
-                   This   :    out Object);
-   for Object'Read use Read;
-
-   procedure Write (Stream : access Ada.Streams.Root_Stream_Type'Class;
-                    This   : in     Object);
-   for Object'Write use Write;
-
-private
-
-   type Object is new Ada.Finalization.Controlled with record
-      Data : Item_Access;
-   end record;
-
-   procedure Adjust   (This : in out Object);
-   procedure Finalize (This : in out Object);
-
-end Agpl.Generic_Handle;
+end Agpl.Cr.Agent.Dummy;

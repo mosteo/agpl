@@ -27,6 +27,8 @@
 with Agpl.Cr;
 with Agpl.Cr.Agent;
 with Agpl.Cr.Agent.Handle;
+with Agpl.Cr.Assignment;
+with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Lists;
 use  Agpl;
@@ -69,6 +71,23 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy (A          : in     Agent.Object'Class;
                      T          : in     Htn.Tasks.Object'Class;
+                     C          : in     Cost_Matrix.Object;
+                     Not_Before : in     Natural;
+                     New_Agent  :    out Agent.Handle.Object;
+                     Cost_Delta :    out Cr.Costs;
+                     Cost_Total :    out Cr.Costs;
+                     Success    :    out Boolean);
+   --  Tests the best place where to insert task T for the agent.
+   --  The task list is not reordered, only each place is tried.
+   --  Costs aren't given by the agent but taken from the cost_matrix
+   --  Returns a copy of @A@ with the task inserted in New_Agent.
+   --  Returns the increase in cost in @Cost_Delta@
+   --  Returns total cost for agent agenda in @Cost_Total@
+   --  New_Agent will be of same class than A
+   --  Success will be false if the agent can't insert T at any place.
+
+   procedure Greedy (A          : in     Agent.Object'Class;
+                     T          : in     Htn.Tasks.Object'Class;
                      Not_Before : in     Natural;
                      New_Agent  :    out Agent.Handle.Object;
                      Cost_Delta :    out Cr.Costs;
@@ -76,5 +95,14 @@ package Agpl.Cr.Tasks.Insertions is
                      Success    :    out Boolean);
    --  As previous, but with Not_Before you can force an amount of tasks to
    --  not be considered
+
+   procedure Greedy (Ass       : in     Assignment.Object;
+                     T         : in     Htn.Tasks.Object'Class;
+                     Costs     : in     Cost_Matrix.Object;
+                     Criterion : in     Assignment_Criteria;
+                     New_Ass   :    out Assignment.Object;
+                     Success   :    out Boolean);
+   --  Insert a task in the best place of the best agent of an assignment
+   --  The results are given in New_Ass, with Success true.
 
 end Agpl.Cr.Tasks.Insertions;

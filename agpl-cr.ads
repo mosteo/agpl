@@ -33,6 +33,7 @@ package Agpl.Cr is
    pragma Pure;
 
    subtype Costs is Optimization.Cost; --  Abstract "Cost" to perform some job.
+   use type Costs;
 
    Infinite : constant Costs := Optimization.Infinite;
 

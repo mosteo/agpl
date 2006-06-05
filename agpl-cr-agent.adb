@@ -5,6 +5,8 @@ with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 package body Agpl.Cr.Agent is
 
+   use type Cr.Costs;
+
    --------------
    -- Add_Task --
    --------------

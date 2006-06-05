@@ -27,6 +27,7 @@
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Strings.Hash;
 
+with Agpl.Cr.Agent;
 with Agpl.Cr.Agent.Lists;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Lists;
@@ -75,6 +76,11 @@ package Agpl.Cr.Cost_Matrix is
    --  caller if this has to represent something (i.e past costs)
    --  If no cost is found and Fin = No_Task then 0.0 is returned
    --  Else infinite is returned
+
+   function Get_Plan_Cost
+     (This  : in Object;
+      Agent : in Cr.Agent.Object'Class) return Costs;
+   --  Say the full cost of an agent plan.
 
    procedure Set_Cost
      (This  : in out Object;
