@@ -6,3 +6,7 @@
 2006 06 02
 ----------
 [+] Agpl.Cr.Agent.Dummy
+
+2006 06 05
+----------
+[+] Mutable_Assignment compiles (doesn't work).

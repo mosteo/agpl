@@ -46,6 +46,8 @@ package Agpl.Cr.Assignment is
       The_Task : in     Htn.Tasks.Object'Class);
    --  Add a task to some agent
 
+   procedure Clear (This : in out Object);
+
    procedure Fill_Owners (This : in Object; Plan : in out Htn.Plan.Object);
    --  Fill the owners of tasks in a plan with this assignment.
 

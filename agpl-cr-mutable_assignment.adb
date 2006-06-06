@@ -164,6 +164,15 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Bags.Clear;
    end Clear_Dynamic_Part;
 
+   ----------------
+   -- Clear_Undo --
+   ----------------
+
+   procedure Clear_Undo (This : in out Object) is
+   begin
+      This.Last_Mutation_Undo.Ass.Clear;
+   end Clear_Undo;
+
    --------------------------
    -- Create_Some_Solution --
    --------------------------
@@ -199,7 +208,7 @@ package body Agpl.Cr.Mutable_Assignment is
    is
       A : Cr.Assignment.Object := This.To_Assignment;
    begin
-      Undo.Scratch.Set (This);
+      Undo.Ass := To_Assignment (This);
       Desc := +"Heuristic - All";
       declare
          use Cr.Assignment;
@@ -862,6 +871,7 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       This.Context.Ref.Mutations.Vector
         (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
+      Clear_Undo (This);
    end Undo;
 
    -----------------------
@@ -872,8 +882,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                 Undo : in     Undo_Info)
    is
    begin
-      This := Object (Undo.Scratch.Get);
-      This.Last_Mutation_Undo.Scratch.Clear;
+      Set_Assignment (This, Undo.Ass, Minimax);
    end Undo_From_Scratch;
 
    ------------------------

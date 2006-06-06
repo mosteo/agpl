@@ -271,6 +271,23 @@ private
    package Smart_Static_Contexts is new
      Smart_Access (Static_Context, Static_Context_Access);
 
+   ------------------
+   -- UNDO SUPPORT --
+   ------------------
+
+   procedure Clear_Undo (This : in out Object);
+
+   procedure Undo_From_Scratch (This : in out Object;
+                                Undo : in     Undo_Info);
+
+   type Undo_Info is record
+      Ass : Assignment.Object; -- For scratch starting
+   end record;
+
+   ------------
+   -- Object --
+   ------------
+
    type Object is new Ada.Finalization.Controlled with record
       --  Invariant information
       Context     : Smart_Static_Contexts.Object;
@@ -382,21 +399,5 @@ private
       Next_To_Be_Kept    : in     Task_Context_Access);
    --  Update the costs of removing the Curr task.
    --  Prev or Next can be null
-
-   ------------------
-   -- UNDO SUPPORT --
-   ------------------
-
-   package Object_Handlers is new Agpl.Generic_Handle
-     (Ada.Finalization.Controlled'Class);
-   --  Must be so, because Object is incomplete at this point.
-   --  A simple type conversion should do the trick, even if a check is incurred
-
-   procedure Undo_From_Scratch (This : in out Object;
-                                Undo : in     Undo_Info);
-
-   type Undo_Info is record
-      Scratch : Object_Handlers.Object; -- For heavy mutations
-   end record;
 
 end Agpl.Cr.Mutable_Assignment;

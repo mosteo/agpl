@@ -63,6 +63,16 @@ package body Agpl.Cr.Assignment is
       end if;
    end Add;
 
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (This : in out Object) is
+   begin
+      This.Agents.Clear;
+      This.Ok := True;
+   end Clear;
+
    -----------------
    -- Fill_Owners --
    -----------------
