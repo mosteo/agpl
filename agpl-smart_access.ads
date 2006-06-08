@@ -27,112 +27,44 @@
 --  This package provides smart access pointers.
 --  Thread *safe*.
 
-with Agpl.Monitor;
+with Agpl.Smart_Access_Limited;
 
-with Ada.Finalization;  use Ada;
+with Ada.Streams;
 
 generic
-   type Item (<>)   is limited private; -- Type.
+   type Item (<>)   is private;         -- Type.
    type Item_access is access Item;     -- This is the access we want safe.
    Item_id : String := "Anonymous";     -- For debug and error reporting.
 package Agpl.Smart_access is
 
    pragma Elaborate_Body;
 
-   Allocated_Access     : exception;
-   --  Raised when trying to bind an already binded access.
+   package Lim is new Smart_Access_Limited (Item, Item_Access, Item_Id);
 
-   Deallocated_Access   : exception;
-   --  Raised when trying to access an already deallocated access.
-
-   Uninitialized_Access : exception;
-   --  Raised when trying to access a uninitialized access.
-
-   type Object is tagged private; -- Initially null...
-
-   --  Is null?
-   function Is_Null (This : in Object) return Boolean;
+   type Object is new Lim.Object with private;
 
    Null_Access : constant Object;
    --  Get an uninitialized access.
-
-   --  Initialization.
-   --  May raise Allocated_Access.
-   procedure Bind (This : in out Object; Data : in Item_Access);
-   function  Bind (This : in     Item_Access) return Object;
 
    --  Get value
    --  Of course, if the access value is copied outside, error can occur.
    function Val (This : in Object) return Item;
    function "+" (This : in Object) return Item renames Val;
 
-   function Ref (This : in Object) return Item_Access;
-   function "+" (This : in Object) return Item_Access renames Ref;
+   --  Serialization...
+   function Input (S : access Ada.Streams.Root_Stream_Type'Class) return Object;
+   for Object'Input use Input;
 
-   --  Rebind. Like Unbind but assigning a new value.
-   procedure Rebind
-     (This  : in out Object;
-      Data  : in     Item_Access;
-      Force : in     Boolean := False);
-
-   --  Unbinding:
-   --  The value is no longer controlled
-   --  Only valid if one reference (last) or forced.
-   --  In other case, constraint error will be raised.
-   --  Note that unbinding forcefully a pointer with more references will also
-   --  nullify the other instances!
-   procedure Unbind (This : in out Object; Force : in Boolean := False);
-
---     --  Serialization...
---     function Input (S : access Ada.Streams.Root_Stream_Type'Class) return Object;
---     for Object'Input use Input;
---
---     procedure Output (S    : access Ada.Streams.Root_Stream_Type'Class;
---                       This : in Object);
---     for Object'Output use Output;
+   procedure Output (S    : access Ada.Streams.Root_Stream_Type'Class;
+                     This : in Object);
+   for Object'Output use Output;
 
 private
 
-   --  Internal, debugging exceptions:
-   Tracker_Already_Deallocated : exception;
+   pragma Inline (Val);
 
-   pragma Inline (Is_Null, Val, Ref);
+   type Object is new Lim.Object with null record;
 
-   --  Auxiliary type to do the counting.
-   type Tracker_Type is record
-      Data  : Item_access;          pragma Atomic (Data);
-      Count : Natural     := 1;
-      Alloc : Boolean     := False; -- To keep track of unalloc/dealloc status.
-   end record;
-
-   type Tracker_access is access Tracker_type;
-
-   procedure Discount (This : in out Tracker_access);
-   procedure Addcount (This : in out Tracker_access);
-   pragma Inline (Discount, Addcount);
-
-   --  The tracker is always allocated, even for null handlers, for simplicity
-   --  and speed reasons.
-   type Object is new Finalization.Controlled with record
-      Tracker : Tracker_access := new Tracker_Type;
-      pragma Atomic (Tracker);
-   end record;
-
-   procedure Adjust   (this : in out Object);
-   procedure Finalize (this : in out Object);
-   pragma Inline (Adjust, Finalize);
-
-   Mutex : aliased Monitor.Semaphore;
-   --  Global monitor for each operation.
-   --  This means that there is only *one* mutex for every instantiation.
-   --  This can cause slow down in multithreaded environment but...
-   --  It is placed here because the finalization order will cause P_E if
-   --  it is after the following Null_Access:
-
-   Null_Access : constant Object :=
-                   (Finalization.Controlled with
-                    Tracker => new Tracker_Type'(Data  => null,
-                                                 Count => 1,
-                                                 Alloc => False));
+   Null_Access : constant Object := (Lim.Null_Access with null record);
 
 end Agpl.Smart_access;

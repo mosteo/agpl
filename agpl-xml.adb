@@ -40,7 +40,6 @@ with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with DOM.Core.Documents;
 with DOM.Core.Elements;
-with DOM.Core.Nodes;
 with DOM.Readers;
 with Input_Sources.File;
 with Input_Sources.Strings;

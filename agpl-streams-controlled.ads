@@ -50,19 +50,19 @@ package Agpl.Streams.Controlled is
    ------------------------------------------------------------------------
    -- Finalize                                                           --
    ------------------------------------------------------------------------
-   -- Called on destruction of the stream
-   -- Default one does nothing.
+   --  Called on destruction of the stream
+   --  Default one does nothing.
    procedure Finalize (This : in out Stream_Type);
 
    ------------------------------------------------------------------------
    -- Initialize                                                         --
    ------------------------------------------------------------------------
-   -- Called on creation of the stream
-   -- Default one does nothing.
+   --  Called on creation of the stream
+   --  Default one does nothing.
    procedure Initialize (This : in out Stream_Type);
 
 private
-   
+
    type Controller_Type (Parent : access Stream_Type'Class) is new
    Ada.Finalization.Limited_Controlled with null record;
 

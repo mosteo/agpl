@@ -152,7 +152,7 @@ package body Agpl.Protected_Datastore is
                V.Append (Listener);
             end Add;
          begin
-            Update_Element (I, Add'Access);
+            Update_Element (Callbacks, I, Add'Access);
          end;
       end Listen;
 

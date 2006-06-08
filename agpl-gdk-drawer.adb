@@ -80,7 +80,7 @@ package body Agpl.Gdk.Drawer is
 
       procedure Get_Ranges (I : Cursor) is
       begin
-         Update_Element (I, Get_Ranges'Access);
+         Update_Element (This.Queue, I, Get_Ranges'Access);
       end Get_Ranges;
 
       ----------
@@ -94,7 +94,7 @@ package body Agpl.Gdk.Drawer is
 
       procedure Draw (I : Cursor) is
       begin
-         Update_Element (I, Draw'Access);
+         Update_Element (This.Queue, I, Draw'Access);
       end Draw;
 
       W_Width,

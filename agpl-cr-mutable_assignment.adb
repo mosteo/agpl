@@ -72,7 +72,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Add_Agent (This : in out Object; Name : in Agent_Id) is
    begin
-      This.Context.Ref.Agents.Include (Name);
+      This.Context.Ref.all.Agents.Include (Name);
    end Add_Agent;
 
    ------------------
@@ -85,10 +85,10 @@ package body Agpl.Cr.Mutable_Assignment is
                            Weight  : in     Float   := 1.0)
    is
    begin
-      This.Context.Ref.Mutations.Append ((Doer   => Mutator,
-                                          Undoer => Undoer,
-                                          Weight => Weight,
-                                          Prob   => 0.0));
+      This.Context.Ref.all.Mutations.Append ((Doer   => Mutator,
+                                              Undoer => Undoer,
+                                              Weight => Weight,
+                                              Prob   => 0.0));
 
       --  Adjust new probabilities
       declare
@@ -134,7 +134,7 @@ package body Agpl.Cr.Mutable_Assignment is
       end Add;
    begin
       Solution_Context_Bag_Maps.Update_Element
-        (This.Bags.Find (Bag), Add'Access);
+        (This.Bags, This.Bags.Find (Bag), Add'Access);
    end Add_To_Bag;
 
    ------------
@@ -641,7 +641,6 @@ package body Agpl.Cr.Mutable_Assignment is
       Context : in     Solution_Context_Access;
       Bag     : in     Solution_Context_Bag_Maps.Cursor)
    is
-      pragma Unreferenced (This);
       procedure Remove (Key : in     Bag_Key;
                         Bag : in out Solution_Context_Bags.Object)
       is
@@ -653,7 +652,7 @@ package body Agpl.Cr.Mutable_Assignment is
             Moving_Solution_Context'Access);
       end Remove;
    begin
-      Solution_Context_Bag_Maps.Update_Element (Bag, Remove'Access);
+      Solution_Context_Bag_Maps.Update_Element (This.Bags, Bag, Remove'Access);
    end Remove_From_Bag;
 
    --------------------

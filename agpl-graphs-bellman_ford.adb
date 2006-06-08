@@ -36,9 +36,9 @@ package body Agpl.Graphs.Bellman_Ford is
    is
    begin
       Add_Edge (This, E);
-      Add_Edge (This, (Source => E.Dest,
-                       Dest   => E.Source,
-                       Weight => E.Weight));
+      Add_Edge (This, Edge'(Source => E.Dest,
+                            Dest   => E.Source,
+                            Weight => E.Weight));
    end Add_Undirected_Edge;
 
    ----------------

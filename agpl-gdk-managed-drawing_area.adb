@@ -28,7 +28,6 @@ with Gdk.Event; use Gdk.Event;
 
 with Gtk.Handlers;
 with Gtk.Enums; use Gtk.Enums;
-with Gtk.Widget; use Gtk.Widget;
 
 with Ada.Unchecked_Deallocation;
 

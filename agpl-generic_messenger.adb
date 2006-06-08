@@ -30,7 +30,7 @@ package body Agpl.Generic_Messenger is
 
       procedure Iter (I : Lists.Cursor) is
       begin
-         Lists.Update_Element (I, Call'Access);
+         Lists.Update_Element (This.Objects, I, Call'Access);
       end Iter;
    begin
       Lists.Iterate (This.Objects, Iter'Access);

@@ -72,7 +72,6 @@ package body Agpl.Event_queues.Calendar is
    -------------------
 
    function Get_Remaining (This : in Event_Type) return Duration is
-      use Ada.Calendar;
    begin
       return This.Deadline - Clock;
    end Get_Remaining;

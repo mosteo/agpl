@@ -33,7 +33,6 @@ with Agpl.Bag;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
-with Agpl.Generic_Handle;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Optimization.Annealing;

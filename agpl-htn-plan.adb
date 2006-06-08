@@ -710,7 +710,6 @@ package body Agpl.Htn.Plan is
       procedure Print_Node (X      : in Plan_Node.Node_Access;
                             Indent : in Natural) is
          use Plan_Node;
-         use Trace;
          Indent_Grow: constant Natural := 3;
          Whites     :          String (1 .. Indent) := (others => ' ');
          New_Indent : constant Natural := Indent + Indent_Grow;

@@ -301,7 +301,6 @@ package body Agpl.Trace is
 
       -- Open --
       procedure Open is
-         use Text_Io;
       begin
          if Gnat.Os_Lib.Is_Regular_File (S (File)) then
             Open (F, Mode => Append_File, Name => S (File));

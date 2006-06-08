@@ -27,8 +27,6 @@
 with Agpl.Trace; use Agpl.Trace;
 
 --  with Agpl.Cr.Agent.Handle;
-with Agpl.Cr.Agent.Maps;
-with Agpl.Htn.Tasks.Lists;
 with Agpl.Htn.Tasks.Lists_Utils;
 
 package body Agpl.Cr.Assignment is

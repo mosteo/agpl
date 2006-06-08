@@ -125,6 +125,7 @@ package body Agpl.Gdk.Modal_Drawing_Area is
    --------------
 
    procedure Finalize (This : in out Object) is
+      pragma Unreferenced (This);
    begin
       null;
    end Finalize;
