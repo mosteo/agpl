@@ -49,7 +49,7 @@ package body Dom.Core.Nodes.Output is
    Tab : constant Natural := 3;
 
    procedure Print_Whites (U : in out ASU.Unbounded_String; Whites : in Natural) is
-      S : String (1 .. Whites) := (others => ' ');
+      S : constant String (1 .. Whites) := (others => ' ');
    begin
       ASU.Append (U, S);
    end Print_Whites;
@@ -101,7 +101,7 @@ package body Dom.Core.Nodes.Output is
    --  The <?xml?> processing instruction is displayed only if Print_XML_PI
    --  By default, names are of the form  ns_prefix:local_name. However, if
    --  with_URI is True, names will be  ns_URI:local_name instead
-      procedure Append (U : in out ASU.Unbounded_string; S : String) 
+      procedure Append (U : in out ASU.Unbounded_string; S : String)
          renames ASU.Append;
       procedure Print_Name (N : Node);
       --  Print the name of the node.
@@ -154,7 +154,7 @@ package body Dom.Core.Nodes.Output is
                Print (N.Children, U, Print_Comments, Print_XML_PI, With_URI, Indent => Indent + Tab);
             end if;
 
-            if N.Attributes.Last >= 1 or else 
+            if N.Attributes.Last >= 1 or else
                (N.Children.Last >= 0 and then N.Children.Items (N.Children.Last).Node_Type /= Text_Node) then
                Append (U, NL);
                Print_Whites (U, Indent);
@@ -178,7 +178,7 @@ package body Dom.Core.Nodes.Output is
             then
                Append (U, "<?" & N.Target.all);
                if N.Pi_Data'Length = 0
-                 or else N.Pi_Data (N.Pi_Data'First) /= ' ' 
+                 or else N.Pi_Data (N.Pi_Data'First) /= ' '
                then
                   Append (U, " ");
                end if;

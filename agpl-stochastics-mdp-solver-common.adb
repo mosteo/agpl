@@ -163,14 +163,14 @@ package body Agpl.Stochastics.Mdp.Solver.Common is
             J         : State.Object_Lists.Cursor := First (Immediate);
          begin
             --  Insert visited node:
-            if not Is_In (State.Get_Id (Visited), Known) then
+            if not Contains (Known, State.Get_Id (Visited)) then
                Insert (Known, State.Get_Id (Visited), Visited, Pos, Ok);
                pragma Assert (Ok);
             end if;
 
             --  Copy unvisited nodes to the pending list:
             while J /= State.Object_Lists.No_Element loop
-               if not Is_In (State.Get_Id (Element (J)), Known) then
+               if not Contains (Known, State.Get_Id (Element (J))) then
                   Append (Pending, Element (J));
                end if;
                Next (J);
@@ -229,14 +229,14 @@ package body Agpl.Stochastics.Mdp.Solver.Common is
             J         : State.Object_Lists.Cursor := First (Immediate);
          begin
             --  Insert visited node:
-            if not Is_In (State.Get_Id (Visited), Known) then
+            if not Contains (Known, State.Get_Id (Visited)) then
                Insert (Known, State.Get_Id (Visited), Visited, Pos, Ok);
                pragma Assert (Ok);
             end if;
 
             --  Copy unvisited nodes to the pending list:
             while J /= State.Object_Lists.No_Element loop
-               if not Is_In (State.Get_Id (Element (J)), Known) then
+               if not Contains (Known, State.Get_Id (Element (J))) then
                   Append (Pending, Element (J));
                end if;
                Next (J);

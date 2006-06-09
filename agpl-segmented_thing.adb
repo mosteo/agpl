@@ -34,8 +34,8 @@
 
 --  Support for segmented things (initially implemented for segmented files).
 --  Allows to keep info about an object which is integrally composed of seg-
---  ments. 
---  Semantics are: 
+--  ments.
+--  Semantics are:
 --  Equal data adjacent segments are merged automatically.
 --  No position is without segment.
 
@@ -46,14 +46,14 @@ package body Agpl.Segmented_Thing is
    use Ordered_Segments;
    use Ordered_Keys;
    use type Ada.Containers.Count_Type;
-   
+
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- Creates a segmented object with initially a single segment comprending
-   -- all the object
+   --  Creates a segmented object with initially a single segment comprending
+   --  all the object
    procedure Create (
-      This         :    out Object; 
+      This         :    out Object;
       First        : in     Index_Type;
       Last         : in     Index_Type;
       Initial_Data : in     Segment_Data)
@@ -66,7 +66,7 @@ package body Agpl.Segmented_Thing is
       Clear (This.Segments);
       This.Pos   := 0;
       Insert (
-         This.Segments, 
+         This.Segments,
          (Data => Initial_Data, First => First, Last => Last),
          Inserted,
          Success);
@@ -77,7 +77,7 @@ package body Agpl.Segmented_Thing is
    ------------------------------------------------------------------------
    -- Count                                                              --
    ------------------------------------------------------------------------
-   -- Says the number of segments.
+   --  Says the number of segments.
    function Count (This : in Object) return Natural is
    begin
       return Natural (Length (This.Segments));
@@ -99,7 +99,7 @@ package body Agpl.Segmented_Thing is
    ------------------------------------------------------------------------
    -- Get                                                                --
    ------------------------------------------------------------------------
-   -- Return a numbered piece
+   --  Return a numbered piece
    function Get (This : in Object; Index : in Positive) return Chunk_Type is
       I : Cursor := First (This.Segments);
    begin
@@ -111,9 +111,9 @@ package body Agpl.Segmented_Thing is
       return Element (I);
    end Get;
 
-   -- This has variable cost: O (1) for sequential advance.
+   --  This has variable cost: O (1) for sequential advance.
    procedure Get (
-      This  : in out Object; 
+      This  : in out Object;
       Index : in     Positive;
       Data  :    out Chunk_Type)
    is
@@ -141,7 +141,7 @@ package body Agpl.Segmented_Thing is
    ------------------------------------------------------------------------
    -- Get_At                                                             --
    ------------------------------------------------------------------------
-   -- Return the data at given point
+   --  Return the data at given point
    function Get_At (This : in Object; Pos : in Index_Type) return Segment_Data is
    begin
       pragma Assert (Pos >= This.First and then Pos <= This.Last);
@@ -152,14 +152,14 @@ package body Agpl.Segmented_Thing is
    function Get_At (This : in Object; Offset, Total : in Index_Type) return Segment_Data is
    begin
       return Get_At (This,
-         This.First + 
+         This.First +
          Index_Type (Float (This.Last - This.First) * Float (Offset) / Float (Total)));
    end Get_At;
 
    ------------------------------------------------------------------------
    -- Set                                                                --
    ------------------------------------------------------------------------
-   -- Set data for a given segment. Splitting and merging are done if necessary.
+   --  Set data for a given segment. Splitting and merging are done if necessary.
    procedure Set (
       This  : in out Object;
       First : in     Index_Type;
@@ -177,7 +177,7 @@ package body Agpl.Segmented_Thing is
          raise Constraint_Error;
       end if;
 
-      -- Invalidate inner cursor
+      --  Invalidate inner cursor
       if This.Idx = Target then
          This.Pos := 0;
       end if;
@@ -185,29 +185,29 @@ package body Agpl.Segmented_Thing is
       Curr := Floor (This.Segments, First);
       loop
          exit when Curr = No_Element or else Element (Curr).First > Last;
-         -- Three cases: contained, overlapped or covered:
+         --  Three cases: contained, overlapped or covered:
          declare
             Chunk : constant Chunk_Type := Element (Curr);
          begin
             if First <= Chunk.First and then Last >= Chunk.Last then
-               -- Covered by new:
+               --  Covered by new:
                Target := Curr;
                Next (Curr);
                Delete (This.Segments, Target);
             elsif First >= Chunk.First and then Last <= Chunk.Last then
-               -- New covered by old:
+               --  New covered by old:
                if Chunk.Data /= Data then
-                  -- Carve a hole
+                  --  Carve a hole
                   declare
-                     Prev_First : Index_Type   := Chunk.First;
-                     Succ_Last  : Index_Type   := Chunk.Last;
-                     Prev_Data  : Segment_Data := Chunk.Data;
+                     Prev_First : constant Index_Type   := Chunk.First;
+                     Succ_Last  : constant Index_Type   := Chunk.Last;
+                     Prev_Data  : constant Segment_Data := Chunk.Data;
                   begin
                      Delete (This.Segments, Curr);
                      if First > Prev_First then
                         Insert (
                            This.Segments,
-                           (Data => Prev_Data, 
+                           (Data => Prev_Data,
                             First => Prev_First, Last => First - 1),
                            Inserted,
                            Success);
@@ -216,7 +216,7 @@ package body Agpl.Segmented_Thing is
                      if Last < Succ_Last then
                         Insert (
                            This.Segments,
-                           (Data => Prev_Data, 
+                           (Data => Prev_Data,
                             First => Last + 1, Last => Succ_Last),
                            Inserted,
                            Success);
@@ -228,14 +228,14 @@ package body Agpl.Segmented_Thing is
                   return; -- Nothing to do
                end if;
             elsif Chunk.First < First then
-               -- Overlapping right
+               --  Overlapping right
                if Chunk.Data = Data then
                   Insert_First := Chunk.First;
                   Target       := Curr;
                   Next (Curr);
                   Delete (This.Segments, Target);
                else
-                  -- Cut
+                  --  Cut
                   Target := Curr;
                   Next (Curr);
                   Delete (This.Segments, Target);
@@ -247,14 +247,14 @@ package body Agpl.Segmented_Thing is
                   pragma Assert (Success);
                end if;
             elsif Chunk.Last > Last then
-               -- Overlapping left
+               --  Overlapping left
                if Chunk.Data = Data then
                   Insert_Last  := Chunk.Last;
                   Target       := Curr;
                   Next (Curr);
                   Delete (This.Segments, Target);
                else
-                  -- Cut
+                  --  Cut
                   Target := Curr;
                   Next (Curr);
                   Delete (This.Segments, Target);

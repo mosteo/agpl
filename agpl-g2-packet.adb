@@ -36,10 +36,8 @@ with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Endian;
 with Agpl.Streams.Memory_Arrays_Constrained;
 with Agpl.Trace;          use Agpl.Trace;
-with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Unchecked_conversion;
-with Ada.Unchecked_deallocation;    use Ada;
 
 package body Agpl.G2.Packet is
 
@@ -436,7 +434,7 @@ package body Agpl.G2.Packet is
    --  Returns the expected full length (control + len_len + name_len + etc)
    function Full_length (this : in Object) return Natural is
    begin
-      return Full_length (Val (this));
+      return Full_length (Ref (This).all);
    end Full_length;
 
    --  Return the number of bytes neccesaries to carry this number:
@@ -457,7 +455,7 @@ package body Agpl.G2.Packet is
    procedure Write (
       Stream : access Streams.Root_stream_type'Class; this : in Object) is
    begin
-      Write (Stream, Val (this));
+      Write (Stream, Ref (this).all);
    end Write;
 
    --  Writing to stream.

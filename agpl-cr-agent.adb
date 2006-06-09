@@ -1,7 +1,6 @@
 with Agpl.Cr.Tasks.Starting_Pose;
 with Agpl.Strings; use Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
-with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 package body Agpl.Cr.Agent is
 

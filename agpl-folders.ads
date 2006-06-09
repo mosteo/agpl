@@ -39,7 +39,7 @@ package Agpl.Folders is
    ------------------------------------------------------------------------
    -- Ensure_Slash                                                       --
    ------------------------------------------------------------------------
-   -- Returns the same string with a Folder_Separator added if it is missing.
+   --  Returns the same string with a Folder_Separator added if it is missing.
    function Ensure_Slash (This : in String; Separator : in Character := '/')
       return String;
    pragma Inline (Ensure_Slash);

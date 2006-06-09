@@ -34,7 +34,7 @@
 
 --  Efficient event queue. Useful for timeouts, as an example.
 
--- Implemented with tagged types. That makes genericity unnecesary. A queue
+--  Implemented with tagged types. That makes genericity unnecesary. A queue
 --   can perform multiple kind of events.
 
 with Agpl.Protected_sorted_index;
@@ -48,7 +48,7 @@ package Agpl.Event_queues.Real_Time is
 
    pragma Elaborate_Body;
 
-   -- Handle for an event. Can be used to cancel it:
+   --  Handle for an event. Can be used to cancel it:
    type Event_type is private;
 
    type Object (
@@ -56,7 +56,7 @@ package Agpl.Event_queues.Real_Time is
       Tracer     : Trace.Object_Access := Trace.Null_Object) is limited private;
    type Object_access is access all Object;
 
-   -- Create an event
+   --  Create an event
    procedure Create (
       This     : in out Object;
       Event    : out    Event_type;
@@ -68,7 +68,7 @@ package Agpl.Event_queues.Real_Time is
       This     : in out Object;
       Event    : in out Event_type);
 
-   -- Pending events?
+   --  Pending events?
    function Is_empty (This : in Object) return Boolean;
 
    function Length (This : in Object) return Natural;
@@ -77,13 +77,13 @@ package Agpl.Event_queues.Real_Time is
 
 private
 
-   -- Uses timestamp
+   --  Uses timestamp
    function Less  (L, R : in Event_type) return Boolean;
-   -- Uses Id.
+   --  Uses Id.
    function Equal (L, R : in Event_type) return Boolean;
    pragma Inline (Less, Equal);
 
-   -- Maximum simultaneous pending events:
+   --  Maximum simultaneous pending events:
    type Id_type is mod 2 ** 32;
 
    package Id_sequence is new Sequence (Id_type);

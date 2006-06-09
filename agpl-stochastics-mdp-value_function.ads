@@ -99,7 +99,7 @@ package Agpl.Stochastics.Mdp.Value_Function is
 private
 
    package Value_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (State.Object_Id, Rewards, State.Hash);
+     (State.Object_Id, Rewards, State.Hash, State."=");
 
    package Action_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (State.Object_Id,
@@ -120,7 +120,7 @@ private
    end record;
 
    type Cursor is record
-      Valid : Boolean := false;
+      Valid : Boolean := False;
       Pos   : Value_Maps.Cursor;
    end record;
 

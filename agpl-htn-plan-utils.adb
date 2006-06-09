@@ -112,7 +112,6 @@ package body Agpl.Htn.Plan.Utils is
       end Replace_Child;
 
       procedure Explore_Node (Node : in Subplan) is
-         use Plan_Node;
       begin
          if Node /= null then
             case Get_Kind (Node) is

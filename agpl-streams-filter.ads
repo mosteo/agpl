@@ -47,13 +47,13 @@ package Agpl.Streams.Filter is
    -- Exceptions                                                         --
    ------------------------------------------------------------------------
    Unknown_Availability : exception;
-   -- Raised when we don't know in advance how many data is available.
-   
+   --  Raised when we don't know in advance how many data is available.
+
    ------------------------------------------------------------------------
    -- Stream_type                                                        --
    ------------------------------------------------------------------------
-   -- Since it is derived from Controlled, Initialize and Finalize can be
-   -- overriden
+   --  Since it is derived from Controlled, Initialize and Finalize can be
+   --  overriden
    type Stream_Type
    is new Agpl.Streams.Controlled.Stream_Type with private;
 
@@ -62,9 +62,9 @@ package Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- The default creation procedure assigns the back filter to the stream.
+   --  The default creation procedure assigns the back filter to the stream.
    procedure Create (
-      This : in out Stream_Type; 
+      This : in out Stream_Type;
       Back : access Ada.Streams.Root_Stream_Type'Class);
 
    ------------------------------------------------------------------------
@@ -85,9 +85,9 @@ package Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Prefetch                                                           --
    ------------------------------------------------------------------------
-   -- A "pull" procedure to get data into de filter from the "read" end, 
-   -- but without needing the data to be actually read from the filter.
-   -- Unimplemented for the default filter. (It hasn't caching capabilities).
+   --  A "pull" procedure to get data into de filter from the "read" end,
+   --  but without needing the data to be actually read from the filter.
+   --  Unimplemented for the default filter. (It hasn't caching capabilities).
    procedure Prefetch (
       This  : in out Stream_Type;
       Count : in     Stream_Element_Count);
@@ -95,15 +95,15 @@ package Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Available_Read                                                     --
    ------------------------------------------------------------------------
-   -- Unlimited
-   function Available_Read (This : in Stream_Type) 
+   --  Unlimited
+   function Available_Read (This : in Stream_Type)
       return Stream_Element_Count;
 
    ------------------------------------------------------------------------
    -- Available_Write                                                    --
    ------------------------------------------------------------------------
-   -- Unlimited
-   function Available_Write (This: in Stream_Type) 
+   --  Unlimited
+   function Available_Write (This: in Stream_Type)
       return Stream_Element_Count;
 
 private

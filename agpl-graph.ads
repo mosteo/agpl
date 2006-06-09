@@ -42,7 +42,7 @@ with Agpl.Constants;
 with Agpl.Dynamic_vector;
 with Agpl.Types;
 
-with Charles.Lists.Double.Unbounded;
+with Ada.Containers.Doubly_Linked_Lists;
 
 package Agpl.Graph is
 
@@ -60,13 +60,13 @@ package Agpl.Graph is
    ------------------------------------------------------------------------
    -- Get_bmp                                                            --
    ------------------------------------------------------------------------
-   function Get_bmp (This : in Object; Height : in Positive) 
+   function Get_bmp (This : in Object; Height : in Positive)
       return Bmp.Object;
 
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   -- Removes all samples
+   --  Removes all samples
    procedure Reset (This : in out Object);
 
    ------------------------------------------------------------------------
@@ -87,19 +87,19 @@ package Agpl.Graph is
    ------------------------------------------------------------------------
    -- Set_YAxis                                                          --
    ------------------------------------------------------------------------
-   -- Repeat indicates if the axis will repeat x2, x3, etc.
+   --  Repeat indicates if the axis will repeat x2, x3, etc.
    procedure Set_YAxis (
-      This   : in out Object; 
+      This   : in out Object;
       Height : in     Float;
       Color  : in     Types.Rgb_triplet;
-      Repeat : in     Boolean := false);
+      Repeat : in     Boolean := False);
 
 private
 
-   package Lists is new Charles.Lists.Double.Unbounded (
+   package Lists is new Ada.Containers.Doubly_Linked_Lists (
       Float, "=");
 
-   type List_array is array (Positive range <>) of Lists.Container_type;
+   type List_array is array (Positive range <>) of Lists.List;
 
    type Orientations is (Horizontal, Vertical);
 
@@ -121,8 +121,8 @@ private
       Bgcolor : Types.Rgb_triplet := Constants.Black;
       Fgcolor : Types.Rgb_array (1 .. Series) := (others => Constants.White);
 
-      Scale_min_forced : Boolean := false;
-      Scale_max_forced : Boolean := false;
+      Scale_min_forced : Boolean := False;
+      Scale_max_forced : Boolean := False;
       Scale_min        : Float;
       Scale_max        : Float;
 
@@ -132,16 +132,16 @@ private
    -----------------
    -- Get_max_min --
    -----------------
-   -- Says max and min values in a graph
-   -- Uses forced extremes if present
+   --  Says max and min values in a graph
+   --  Uses forced extremes if present
    procedure Get_max_min (This : in Object; Max, Min : out Float);
 
    ---------------
    -- Draw_axis --
    ---------------
    procedure Draw_axis (
-      This     : in     Object; 
-      Max, Min : in     Float; 
+      This     : in     Object;
+      Max, Min : in     Float;
       Height   : in     Positive;
       Canvas   : in out Bmp.Object);
 

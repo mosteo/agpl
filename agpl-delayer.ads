@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-delayer.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
--- This object will force a delay if no enough time has elapsed.
+--  This object will force a delay if no enough time has elapsed.
 
 with Ada.Calendar;
 use  Ada;
@@ -42,13 +42,13 @@ package Agpl.Delayer is
    ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------
-   -- Interval in milliseconds
+   --  Interval in milliseconds
    protected type Object (Interval : Natural) is
 
       -------------
       -- Request --
       -------------
-      -- Will return when the next slot of time has been reached.
+      --  Will return when the next slot of time has been reached.
       procedure Request;
 
    private

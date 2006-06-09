@@ -32,8 +32,8 @@
 ------------------------------------------------------------------------------
 --  $Id: aenea-countries.adb,v 1.3 2004/03/09 23:46:48 Jano Exp $
 
-with Charles.Maps.Sorted.Strings.Unbounded;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
-package Agpl.Aux.Indexer_String_Integer is new 
-   Charles.Maps.Sorted.Strings.Unbounded (Integer, "<", "=");
+package Agpl.Aux.Indexer_String_Integer is new
+   Ada.Containers.Indefinite_Ordered_Maps (String, Integer, "<", "=");
 

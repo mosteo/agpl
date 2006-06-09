@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-streams-circular.ads,v 1.1 2004/03/22 07:14:59 Jano Exp $
 
---  Wraps around a regular Stream_IO stream to provide Available_Read/Write 
+--  Wraps around a regular Stream_IO stream to provide Available_Read/Write
 --  functions.
 
 with Agpl.Streams.Observable;
@@ -51,7 +51,7 @@ package Agpl.Streams.File is
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- The Index function shouldn't be called after this creation!!
+   --  The Index function shouldn't be called after this creation!!
    procedure Create (
       Stream :    out Stream_Type;
       From   : in     Ada.Streams.Stream_IO.File_Type);
@@ -64,27 +64,27 @@ package Agpl.Streams.File is
       Item   :    out Stream_Element_Array;
       Last   :    out Stream_Element_Offset);
 
-	procedure Write(
+   procedure Write(
       Stream : in out Stream_type;
       Item   : in     Stream_Element_Array);
 
    ------------------------------------------------------------------------
    -- Available_read                                                     --
    ------------------------------------------------------------------------
-   -- Says how many data has been written but not read:
-   function Available_read (Stream : in Stream_type) 
+   --  Says how many data has been written but not read:
+   function Available_read (Stream : in Stream_type)
       return Stream_element_count;
-   function Available_read (Stream : in Stream_type) 
+   function Available_read (Stream : in Stream_type)
       return Natural;
    pragma Inline (Available_read);
 
    ------------------------------------------------------------------------
    -- Available_write                                                    --
    ------------------------------------------------------------------------
-   -- Doesn't check free space, always return the largest possible value.
-   function Available_write (Stream : in Stream_type) 
+   --  Doesn't check free space, always return the largest possible value.
+   function Available_write (Stream : in Stream_type)
       return Stream_element_count;
-   function Available_write (Stream : in Stream_type) 
+   function Available_write (Stream : in Stream_type)
       return Natural;
    pragma Inline (Available_write);
 

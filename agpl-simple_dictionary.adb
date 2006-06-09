@@ -41,35 +41,35 @@ package body Agpl.Simple_Dictionary is
    ------------------------------------------------------------------------
    -- Add_Word                                                           --
    ------------------------------------------------------------------------
-   -- Add a word with given index (key).
+   --  Add a word with given index (key).
    procedure Add_Word (This : in out Object; Key : in String; Element : in Element_Type) is
    begin
-      Replace_Element (This, Key, Element);
-      
-      -- Correctly replaced?
+      Include (This, Key, Element);
+
+      --  Correctly replaced?
       pragma Assert (Element_Map.Element (Find (This, Key)) = Element);
    end Add_Word;
 
    ------------------------------------------------------------------------
    -- Are_Compatible                                                     --
    ------------------------------------------------------------------------
-   -- True if elements in both containers are equal, extra are ignored.
-   -- Commutative.
+   --  True if elements in both containers are equal, extra are ignored.
+   --  Commutative.
    function Are_Compatible (L, R : in Object) return Boolean is
-      I, J    : Iterator_Type;
-      Matched : Boolean := false;
+      I, J    : Cursor;
+      Matched : Boolean := False;
    begin
       I := First (L);
-      while I /= Back (L) loop
+      while Has_Element (I) loop
          J := Find (R, Key (I));
-         if J /= Back (R) then
+         if Has_Element (J) then
             if not Equal (Element (I), Element (J)) then
-               return false;
+               return False;
             else
-               Matched := true;
+               Matched := True;
             end if;
          end if;
-         I := Succ (I);
+         Next (I);
       end loop;
 
       return Matched;
@@ -78,24 +78,24 @@ package body Agpl.Simple_Dictionary is
    ------------------------------------------------------------------------
    -- Contains_Key                                                       --
    ------------------------------------------------------------------------
-   -- True if the dictionary contains the given key
+   --  True if the dictionary contains the given key
    function Contains_Key (This : in Object; Key : in String) return Boolean is
    begin
-      return Is_In (Key, This);
+      return Contains (This, Key);
    end Contains_Key;
 
    ------------------------------------------------------------------------
    -- Get_Contents                                                       --
    ------------------------------------------------------------------------
-   -- Return an array of contents in the dictionary
+   --  Return an array of contents in the dictionary
    function Get_Contents (This : in Object) return Pair_Array is
-      I   : Iterator_Type := First (This);
-      Res : Pair_Array (1 .. Length (This));
+      I   : Cursor := First (This);
+      Res : Pair_Array (1 .. Integer (Length (This)));
    begin
       for J in Res'Range loop
          Res (J).Key   := U (Key (I));
          Res (J).Value := Element (I);
-         I := Succ (I);
+         Next (I);
       end loop;
       return Res;
    end Get_Contents;
@@ -111,15 +111,15 @@ package body Agpl.Simple_Dictionary is
    ------------------------------------------------------------------------
    -- Merge                                                              --
    ------------------------------------------------------------------------
-   -- Adds elements not in Former from Later.
-   -- No compatibility check is performed
+   --  Adds elements not in Former from Later.
+   --  No compatibility check is performed
    procedure Merge (Former : in out Object; Later : in Object) is
-      I : Iterator_Type := First (Later);
+      I : Cursor := First (Later);
    begin
-      while I /= Back (Later) loop
+      while Has_Element (I) loop
          Add_Word (Former, Key (I), Element (I));
-         I := Succ (I);
+         Next (I);
       end loop;
    end Merge;
-      
+
 end Agpl.Simple_Dictionary;

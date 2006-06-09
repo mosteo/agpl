@@ -34,7 +34,6 @@
 
 with Ada.Calendar;
 with Ada.Finalization;
-with Ada.Unchecked_Deallocation;
 use  Ada;
 
 generic
@@ -42,24 +41,24 @@ package Agpl.Average_queue.Timed is
 
    pragma Elaborate_Body;
 
-   -- This object is thread safe:
-   -- Number of averaging slots, and how many milliseconds these take:
+   --  This object is thread safe:
+   --  Number of averaging slots, and how many milliseconds these take:
    type Object (Slots : Positive := 12; Slot_duration : Positive := 5000)
-   is limited private; 
+   is limited private;
    type Object_Access is access all Object;
 
    ------------------------------------------------------------------------
    -- Extended_Push                                                      --
    ------------------------------------------------------------------------
-   -- Gives extra info: If a gap change has happened and how many empty
-   -- gaps after it have happened:
+   --  Gives extra info: If a gap change has happened and how many empty
+   --  gaps after it have happened:
    procedure Extended_Push (
       This       : in out Object;
       Data       : in     Item;
       Gap_Change : out Boolean;  -- True if at least a new gap has been pushed
       Empty_Gaps : out Natural); -- Number of empty gaps after the last one pushed
-                                 -- and before the current one.
-   
+                                 --  and before the current one.
+
    ------------------------------------------------------------------------
    -- Push                                                               --
    ------------------------------------------------------------------------
@@ -75,7 +74,7 @@ package Agpl.Average_queue.Timed is
    ------------------------------------------------------------------------
    procedure Free (This : in out Object_Access);
 
-private 
+private
 
    use type Calendar.Time;
 
@@ -86,16 +85,16 @@ private
       procedure Create;
       procedure Destroy;
    private
-      -- Constant:
-      Gap        : Duration      := Duration (Slot_duration) / 1000.0; 
+      --  Constant:
+      Gap        : Duration      := Duration (Slot_duration) / 1000.0;
 
       Slot_start : Calendar.Time := Calendar.Clock;
       Acum       : Item          := 0.0;
       Data       : Average_queue.Object_access;
    end Safe_object;
 
-   type Object (Slots : Positive := 12; Slot_duration : Positive := 5000) is 
-      new Finalization.Limited_Controlled with 
+   type Object (Slots : Positive := 12; Slot_duration : Positive := 5000) is
+      new Finalization.Limited_Controlled with
       record
          Safe       : Safe_object (Slots, Slot_duration);
       end record;

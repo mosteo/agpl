@@ -37,7 +37,6 @@
 with Agpl.Streams.Memory_arrays;
 
 with Ada.Unchecked_deallocation;
-with Interfaces;
 
 package body Agpl.Bmp is
 
@@ -55,7 +54,7 @@ package body Agpl.Bmp is
    is
    begin
       Finalize (This);
-      This.Data   := 
+      This.Data   :=
          new Ada.Streams.Stream_element_array (
             1 .. Ada.Streams.Stream_element_offset (Width * Height * 3));
       This.Width  := Width;
@@ -65,32 +64,32 @@ package body Agpl.Bmp is
    ------------------------------------------------------------------------
    -- Check_coordinates                                                  --
    ------------------------------------------------------------------------
-   -- Return true if inside bounds, false if outside, exception if checking
+   --  Return true if inside bounds, false if outside, exception if checking
    function Check_coordinates (This : in Object; Row, Column : in Integer)
       return Boolean;
    pragma Inline (Check_coordinates);
    function Check_coordinates (This : in Object; Row, Column : in Integer)
-      return Boolean is 
+      return Boolean is
    begin
-      if Row < 1 or else Column < 1 or else 
+      if Row < 1 or else Column < 1 or else
          Row > This.Height or else Column > This.Width
       then
          if not This.Checking then
-            return false;
+            return False;
          else
             raise Coordinates_out_of_bounds;
          end if;
       else
-         return true;
+         return True;
       end if;
    end Check_coordinates;
    ------------------------------------------------------------------------
    -- Index_of                                                          --
    ------------------------------------------------------------------------
-   function Index_of (This : in Object; Row, Column : in Positive) 
+   function Index_of (This : in Object; Row, Column : in Positive)
       return Ada.Streams.Stream_element_offset;
    pragma Inline (Index_of);
-   function Index_of (This : in Object; Row, Column : in Positive) 
+   function Index_of (This : in Object; Row, Column : in Positive)
       return Ada.Streams.Stream_element_offset is
    begin
       return ADS.Stream_element_offset (
@@ -103,7 +102,7 @@ package body Agpl.Bmp is
    function Get_pixel (
       This   : in Object;
       Row,
-      Column : in Integer) return Types.Rgb_triplet 
+      Column : in Integer) return Types.Rgb_triplet
    is
       Pos : ADS.Stream_element_offset;
    begin
@@ -121,9 +120,9 @@ package body Agpl.Bmp is
    -- Set_pixel                                                          --
    ------------------------------------------------------------------------
    procedure Set_pixel (
-      This   : in out Object; 
-      Row, 
-      Column : in     Integer; 
+      This   : in out Object;
+      Row,
+      Column : in     Integer;
       Rgb    : in     Types.Rgb_triplet)
    is
       Pos : ADS.Stream_element_offset;
@@ -141,8 +140,8 @@ package body Agpl.Bmp is
    ------------------------------------------------------------------------
    -- Set_checking                                                       --
    ------------------------------------------------------------------------
-   -- If drawing outbounds, we can get an error or silent discarding:
-   procedure Set_checking (This : in out Object; Check : in Boolean := true) 
+   --  If drawing outbounds, we can get an error or silent discarding:
+   procedure Set_checking (This : in out Object; Check : in Boolean := True)
    is
    begin
       This.Checking := Check;
@@ -151,60 +150,60 @@ package body Agpl.Bmp is
    ------------------------------------------------------------------------
    -- Get_stream                                                         --
    ------------------------------------------------------------------------
-   -- Returns a stream with a valid BMP representation (not the pixel matrix).
-   function Get_stream (This : in Object) 
-      return Ada.Streams.Stream_element_array 
+   --  Returns a stream with a valid BMP representation (not the pixel matrix).
+   function Get_stream (This : in Object)
+      return Ada.Streams.Stream_element_array
    is
       Headers : aliased ADS.Stream_element_array := (1 .. 54 => 0);
       Stream  : aliased AGS.Memory_arrays.Stream_type (Headers'Access);
-      Str     : AGS.Stream_access := Stream'Unchecked_Access;
+      Str     : constant AGS.Stream_access := Stream'Unchecked_Access;
 
       use Interfaces;
    begin
-      -- HEADER
-      -- Magic
+      --  HEADER
+      --  Magic
       String'Write (Str, "BM");
-      -- File size
+      --  File size
       Unsigned_32'Write (Str, Unsigned_32(Headers'Length + This.Data'Length));
-      -- Reserved
+      --  Reserved
       Unsigned_32'Write (Str, 0);
-      -- Offset of image data
+      --  Offset of image data
       Unsigned_32'Write (Str, Unsigned_32 (Headers'Length));
-      
-      -- INFOHEADER
-      -- Size of infoheader?
+
+      --  INFOHEADER
+      --  Size of infoheader?
       Unsigned_32'Write (
          Str,
          Unsigned_32 (Headers'Length - AGS.Memory_arrays.Index (Stream)));
-      -- Width
+      --  Width
       Unsigned_32'Write (Str, Unsigned_32 (This.Width));
-      -- Height
+      --  Height
       Unsigned_32'Write (Str, Unsigned_32 (This.Height));
-      -- Color planes
+      --  Color planes
       Unsigned_16'Write (Str, 1);
-      -- bpp
+      --  bpp
       Unsigned_16'Write (Str, 24);
-      -- No compression
+      --  No compression
       Unsigned_32'Write (Str, 0);
-      -- Data size
+      --  Data size
       Unsigned_32'Write (Str, Unsigned_32 (This.Data'Length));
-      -- Pixels per meter, horizontal and vertical
+      --  Pixels per meter, horizontal and vertical
       Unsigned_32'Write (Str, 0);
       Unsigned_32'Write (Str, 0);
-      -- Palette colors
+      --  Palette colors
       Unsigned_32'Write (Str, 0);
-      -- Important colors
+      --  Important colors
       Unsigned_32'Write (Str, 0);
 
       if AGS.Memory_arrays.Index (Stream) /= Headers'Last then
-         raise Constraint_error;
+         raise Constraint_Error;
       end if;
 
       return Headers & This.Data.all;
    end Get_stream;
 
    procedure Free is new Ada.Unchecked_deallocation (
-      Ada.Streams.Stream_element_array, 
+      Ada.Streams.Stream_element_array,
       Agpl.Streams.Stream_element_array_access);
 
    procedure Initialize (This : in out Object) is

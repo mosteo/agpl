@@ -31,7 +31,7 @@
 --  harass or legally prosecute these users.                                --
 ------------------------------------------------------------------------------
 
---  Filter stream who allows to buffer for write or read some data. Just a 
+--  Filter stream who allows to buffer for write or read some data. Just a
 --  convenience to use Circular_Unbounded.
 
 package body Agpl.Streams.Filter.Buffered_Unbounded is
@@ -41,17 +41,17 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- Max_Memory_Usage can cause an internal growing to fail.
-   -- Grow_Factor stablishes how many unused space will be allocated upon
-   -- buffer expansion. (100 causes as many used as free to be allocated)
-   -- If Lazy, buffers allocation is not done until first writing.
+   --  Max_Memory_Usage can cause an internal growing to fail.
+   --  Grow_Factor stablishes how many unused space will be allocated upon
+   --  buffer expansion. (100 causes as many used as free to be allocated)
+   --  If Lazy, buffers allocation is not done until first writing.
    procedure Create (
       This              : in out Stream_Type;
       Back              : access Ada.Streams.Root_Stream_Type'Class;
       Max_Memory_Usage  : in     Stream_Element_Count := 1024 * 1024;
       Initial_Size      : in     Stream_Element_Count := 1024 * 4;
       Grow_Factor       : in     Natural              := 100;
-      Lazy              : in     Boolean              := true)
+      Lazy              : in     Boolean              := True)
    is
    begin
       This.Back := Streams.Stream_Access (Back);
@@ -73,7 +73,7 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Read                                                               --
    ------------------------------------------------------------------------
-   -- Will read from internal buffer
+   --  Will read from internal buffer
    procedure Read (
       This : in out Stream_Type;
       Item :    out Ada.Streams.Stream_Element_Array;
@@ -85,8 +85,8 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Write                                                              --
    ------------------------------------------------------------------------
-   -- Will cache all data written
-	procedure Write (
+   --  Will cache all data written
+   procedure Write (
       This : in out Stream_Type;
       Item : in     Ada.Streams.Stream_Element_Array) is
    begin
@@ -96,7 +96,7 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   -- Cleans everything inside
+   --  Cleans everything inside
    procedure Reset (This : in out Stream_Type) is
    begin
       Circular.Reset (This.Buf_In);
@@ -106,15 +106,15 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Flush_Read                                                         --
    ------------------------------------------------------------------------
-   -- Tries to read so many data from the back stream.
+   --  Tries to read so many data from the back stream.
    procedure Flush_Read (
-      This  : in out Stream_type; 
-      Count : in     Stream_Element_Count := Stream_Element_Count'Last) 
+      This  : in out Stream_type;
+      Count : in     Stream_Element_Count := Stream_Element_Count'Last)
    is
       Last : Stream_Element_Offset;
       Rest : Stream_Element_Count := Count;
    begin
-      loop 
+      loop
          declare
             Item : Stream_Element_Array (1 .. Stream_Element_Count'Min (Rest, Chunk_Size));
          begin
@@ -131,10 +131,10 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Flush_Write                                                        --
    ------------------------------------------------------------------------
-   -- Writes to the back buffer as many data as indicated or less if not as many is cached.
+   --  Writes to the back buffer as many data as indicated or less if not as many is cached.
    procedure Flush_Write (
-      This  : in out Stream_type; 
-      Count : in     Stream_Element_Count := Stream_Element_Count'Last) 
+      This  : in out Stream_type;
+      Count : in     Stream_Element_Count := Stream_Element_Count'Last)
    is
       Last : Stream_Element_Offset;
       Rest : Stream_Element_Count := Count;
@@ -156,8 +156,8 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Available_Read                                                     --
    ------------------------------------------------------------------------
-   -- Returns the amount of read buffered data.
-   function Available_Read (This : in Stream_Type) 
+   --  Returns the amount of read buffered data.
+   function Available_Read (This : in Stream_Type)
       return Stream_Element_Count is
    begin
       return Circular.Available_Read (This.Buf_In);
@@ -166,8 +166,8 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Available_Write                                                    --
    ------------------------------------------------------------------------
-   -- Returns Max_Memory_Usage
-   function Available_Write (This : in Stream_Type) 
+   --  Returns Max_Memory_Usage
+   function Available_Write (This : in Stream_Type)
       return Stream_Element_Count is
    begin
       return Circular.Available_Write (This.Buf_Out);
@@ -176,8 +176,8 @@ package body Agpl.Streams.Filter.Buffered_Unbounded is
    ------------------------------------------------------------------------
    -- Get_Buffered_Write_Count                                           --
    ------------------------------------------------------------------------
-   -- Returns the amount of written buffered data.
-   function Get_Buffered_Write_Count (This : in Stream_Type) 
+   --  Returns the amount of written buffered data.
+   function Get_Buffered_Write_Count (This : in Stream_Type)
       return Stream_Element_Count is
    begin
       return Circular.Available_Read (This.Buf_Out);

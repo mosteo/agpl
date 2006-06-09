@@ -26,7 +26,7 @@ package body Agpl.Stochastics.Mdp.Value_Function is
    is
       use Value_Maps;
    begin
-      return Is_In (S, This.Values);
+      return Contains (This.Values, S);
    end Contains;
 
    ----------------
@@ -51,7 +51,7 @@ package body Agpl.Stochastics.Mdp.Value_Function is
    is
       use Action_Maps;
    begin
-      if Is_In (S, This.Actions) then
+      if Contains (This.Actions, S) then
          return Element (Find (This.Actions, S));
       else
          raise Unknown_Value;
@@ -82,7 +82,7 @@ package body Agpl.Stochastics.Mdp.Value_Function is
    is
       use Value_Maps;
    begin
-      if Is_In (S, This.Values) then
+      if Contains (This.Values, S) then
          return Element (Find (This.Values, S));
       else
          raise Unknown_Value;
@@ -105,7 +105,7 @@ package body Agpl.Stochastics.Mdp.Value_Function is
       PS      : State.Object_Maps.Cursor;
       Sid     : constant State.Object_Id := State.Get_Id (S);
    begin
-      if Value_Maps.Is_In (Sid, This.Values) then
+      if Value_Maps.Contains (This.Values, Sid) then
          Value_Maps.Replace (This.Values, Sid, Value);
          Action_Maps.Replace (This.Actions, Sid, A);
          State.Object_Maps.Replace (This.States, Sid, S);
@@ -153,11 +153,11 @@ package body Agpl.Stochastics.Mdp.Value_Function is
    begin
       if not Is_Empty (This.Values) then
          return
-           (Valid => true,
+           (Valid => True,
             Pos   => First (This.Values));
       else
          return
-           (Valid => false,
+           (Valid => False,
             Pos   => No_Element);
       end if;
    end First;

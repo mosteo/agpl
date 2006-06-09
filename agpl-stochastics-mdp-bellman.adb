@@ -65,7 +65,7 @@ package body Agpl.Stochastics.Mdp.Bellman is
          States :
          while S /= State.Object_Lists.No_Element loop
             declare
-               Prob : Probabilities :=
+               Prob : constant Probabilities :=
                         T (Ini,
                            Action.Object_Lists.Element (A),
                            State.Object_Lists.Element (S));

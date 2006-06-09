@@ -32,10 +32,9 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-constants.ads,v 1.1 2004/02/24 15:26:09 Jano Exp $
 
-with Charles.Hash_String;
-with Charles.Maps.Hashed.Strings.Unbounded;
-
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Finalization;
+with Ada.Strings.Hash;
 use  Ada;
 
 package Agpl.Counter.Multi is
@@ -70,9 +69,10 @@ package Agpl.Counter.Multi is
 
 private
 
-   package Counter_Map is new Charles.Maps.Hashed.Strings.Unbounded (
+   package Counter_Map is new Ada.Containers.Indefinite_Hashed_Maps
+     (String,
       Counter.Object_Access,
-      Charles.Hash_String,
+      Ada.Strings.Hash,
       "=",
       "=");
 
@@ -87,7 +87,7 @@ private
       function  Max_Key return String; -- Key with highest value
       procedure Destroy;
    private
-      Values     : aliased Counter_Map.Container_Type;
+      Values     : aliased Counter_Map.Map;
    end Safe_Object;
 
    type Object is new Finalization.Limited_Controlled with record

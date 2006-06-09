@@ -33,7 +33,7 @@
 --  This lead to erroneous results for packets with mixed endianness.
 
 with Agpl.Dynamic_vector;
-with Agpl.Smart_Access;
+with Agpl.Smart_Access_Limited;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Calendar;
@@ -263,7 +263,7 @@ private
    function Clone (this : in Child_access) return Child_access;
 
    --  We'll use safe accesses for this thing:
-   package Safe_child is new Smart_Access (Child, Child_access);
+   package Safe_child is new Smart_Access_Limited (Child, Child_access);
 
    type Object is new Safe_child.Object with null record;
 

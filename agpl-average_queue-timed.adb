@@ -39,15 +39,15 @@ package body Agpl.Average_queue.Timed is
    ------------------------------------------------------------------------
    -- Extended_Push                                                      --
    ------------------------------------------------------------------------
-   -- Gives extra info: If a gap change has happened and how many empty
-   -- gaps after it have happened:
+   --  Gives extra info: If a gap change has happened and how many empty
+   --  gaps after it have happened:
 
    procedure Extended_Push
      (This       : in out Object;
       Data       : in Item;
       Gap_Change : out Boolean;  -- True if at least a new gap has been pushed
       Empty_Gaps : out Natural)  -- Number of empty gaps after the last one
-                                 --pushed
+                                 --  pushed
    is
    begin
       This.Safe.Push (Data, Gap_Change, Empty_Gaps);
@@ -83,14 +83,14 @@ package body Agpl.Average_queue.Timed is
          Gap_Change : out Boolean;
          Empty_Gaps : out Natural)
       is
-         Now : Calendar.Time := Calendar.Clock;
+         Now : constant Calendar.Time := Calendar.Clock;
       begin
          if Now - Slot_start > Gap then
-            -- Push acum
+            --  Push acum
             Push (Data.all, Acum);
             Gap_Change := True;
 
-            -- Zeroes for elapsed empty gaps
+            --  Zeroes for elapsed empty gaps
             Empty_Gaps :=
                Natural (Float'Floor
                            (Float ((Now - Slot_start - Gap) / Gap)));
@@ -104,10 +104,10 @@ package body Agpl.Average_queue.Timed is
                end loop;
             end if;
 
-            -- New acum:
+            --  New acum:
             Acum := Value;
 
-            -- New slot_start, the pushed one plus empty ones:
+            --  New slot_start, the pushed one plus empty ones:
             Slot_start := Slot_start + Gap * (Empty_Gaps + 1);
          else
             Acum       := Acum + Value;
@@ -144,7 +144,7 @@ package body Agpl.Average_queue.Timed is
       -------------
       procedure Destroy is
          procedure Free is new Unchecked_Deallocation (
-            Average_queue.Object,
+            Average_queue.Object'Class,
             Average_queue.Object_access);
       begin
          Free (Data);

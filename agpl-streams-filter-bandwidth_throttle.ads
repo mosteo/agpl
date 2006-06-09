@@ -52,8 +52,8 @@ package Agpl.Streams.Filter.Bandwidth_Throttle is
    ------------------------------------------------------------------------
    -- Exceptions                                                         --
    ------------------------------------------------------------------------
-   -- Some internal error happened, this stream should be reset:
-   -- Should never happen.
+   --  Some internal error happened, this stream should be reset:
+   --  Should never happen.
    Synchronization_Lost : exception;
 
    ------------------------------------------------------------------------
@@ -66,13 +66,13 @@ package Agpl.Streams.Filter.Bandwidth_Throttle is
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- The bandwidth throttles can be null to imply unlimited bandwidth
+   --  The bandwidth throttles can be null to imply unlimited bandwidth
    procedure Create (
       This              : in out Stream_Type;
       Back              : access Ada.Streams.Root_Stream_Type'Class;
       Throttle_In       : in     Agpl.Bandwidth_Throttle.Object_Access;
       Throttle_Out      : in     Agpl.Bandwidth_Throttle.Object_Access;
-      Max_Buffer_Size   : in     Stream_Element_Count := 
+      Max_Buffer_Size   : in     Stream_Element_Count :=
                                     Stream_Element_Count'Last;
       Initial_Size      : in     Stream_Element_Count := 4096;
       Grow_Percent      : in     Natural              := 50;
@@ -90,16 +90,16 @@ package Agpl.Streams.Filter.Bandwidth_Throttle is
    ------------------------------------------------------------------------
    -- Write                                                              --
    ------------------------------------------------------------------------
-   -- Non-blocking. Will cache data which cannot be immediately written.
-	procedure Write (
+   --  Non-blocking. Will cache data which cannot be immediately written.
+   procedure Write (
       This : in out Stream_Type;
       Item : in     Ada.Streams.Stream_Element_Array);
 
    ------------------------------------------------------------------------
    -- Prefetch                                                           --
    ------------------------------------------------------------------------
-   -- A "pull" procedure to get data into de filter from the "read" end, 
-   -- but without needing the data to be actually read from the filter.
+   --  A "pull" procedure to get data into de filter from the "read" end,
+   --  but without needing the data to be actually read from the filter.
    procedure Prefetch (
       This  : in out Stream_Type;
       Count : in     Stream_Element_Count);
@@ -107,64 +107,64 @@ package Agpl.Streams.Filter.Bandwidth_Throttle is
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   -- Cleans everything inside, including stats.
+   --  Cleans everything inside, including stats.
    procedure Reset (This : in out Stream_Type);
 
    ------------------------------------------------------------------------
    -- Flush                                                              --
    ------------------------------------------------------------------------
-   -- Tries to write again data which was cached.
+   --  Tries to write again data which was cached.
    procedure Flush (This : in out Stream_type);
 
    ------------------------------------------------------------------------
    -- Available_Read                                                     --
    ------------------------------------------------------------------------
-   -- Raises Unknown
-   function Available_Read (This : in Stream_Type) 
+   --  Raises Unknown
+   function Available_Read (This : in Stream_Type)
       return Stream_Element_Count;
 
    ------------------------------------------------------------------------
    -- Available_Write                                                    --
    ------------------------------------------------------------------------
-   -- Returns Max_Memory_Usage
-   function Available_Write (This : in Stream_Type) 
+   --  Returns Max_Memory_Usage
+   function Available_Write (This : in Stream_Type)
       return Stream_Element_Count;
 
    ------------------------------------------------------------------------
    -- Get_Buffered_Write_Count                                           --
    ------------------------------------------------------------------------
-   -- Returns the amount of written buffered data pending to be sent.
-   function Get_Buffered_Write_Count (This : in Stream_Type) 
+   --  Returns the amount of written buffered data pending to be sent.
+   function Get_Buffered_Write_Count (This : in Stream_Type)
       return Stream_Element_Count;
 
    ------------------------------------------------------------------------
    -- Get_Total_Read                                                     --
    ------------------------------------------------------------------------
-   -- How many bytes have been read from this throttle.
+   --  How many bytes have been read from this throttle.
    function Get_Total_Read (This : in Stream_Type) return Stream_Element_Count;
 
    ------------------------------------------------------------------------
    -- Get_Current_Write_Rate                                             --
    ------------------------------------------------------------------------
-   -- Gives the instantaneous writting speed.
+   --  Gives the instantaneous writting speed.
    function Get_Current_Write_Rate (This : access Stream_Type) return Types.Data_Rate;
 
    ------------------------------------------------------------------------
    -- Get_Current_Read_Rate                                              --
    ------------------------------------------------------------------------
-   -- Gives the reading speed since creation or last reset.
+   --  Gives the reading speed since creation or last reset.
    function Get_Current_Read_Rate (This : access Stream_Type) return Types.Data_Rate;
 
    ------------------------------------------------------------------------
    -- Get_Global_Write_Rate                                              --
    ------------------------------------------------------------------------
-   -- Gives the writting speed since creation or last reset.
+   --  Gives the writting speed since creation or last reset.
    function Get_Global_Write_Rate (This : in Stream_Type) return Types.Data_Rate;
 
    ------------------------------------------------------------------------
    -- Get_Global_Read_Rate                                               --
    ------------------------------------------------------------------------
-   -- Gives the reading speed since creation or last reset.
+   --  Gives the reading speed since creation or last reset.
    function Get_Global_Read_Rate (This : in Stream_Type) return Types.Data_Rate;
 
 private
@@ -181,7 +181,7 @@ private
    package Avg_Rate is new Agpl.Average_Queue (Float);
    package Avg      is new Avg_Rate.Timed;
 
-   type Stream_type is new Agpl.Streams.Filter.Stream_Type with 
+   type Stream_type is new Agpl.Streams.Filter.Stream_Type with
    record
       Buf_Out             : Agpl.Streams.Circular_Unbounded.Stream_Type;
       Throttle_In,
@@ -189,7 +189,7 @@ private
 
       Start               : Calendar.Time := Calendar.Clock;
 
-      -- Statistics
+      --  Statistics
       Total_Written       : Stream_Element_Count := 0;
       Total_Read          : Stream_Element_Count := 0;
       Avg_In              : Avg.Object_Access;

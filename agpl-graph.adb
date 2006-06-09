@@ -33,16 +33,12 @@
 --  $Id: agpl-graph.adb,v 1.2 2004/03/01 18:51:51 Jano Exp $
 
 --  Type for generating a simple graph
---  Data values are floats, vertical scale is automatic, 
+--  Data values are floats, vertical scale is automatic,
 --  horizontal is zoomable, always starting from the end.
 --  multiple series are allowed.
 
-with Agpl.Bmp;
 with Agpl.Bmp.Draw;
 with Agpl.Exceptions;
-with Agpl.Types;
-
-with Charles.Lists.Double.Unbounded;
 
 package body Agpl.Graph is
 
@@ -55,7 +51,7 @@ package body Agpl.Graph is
       use Lists;
    begin
       Append (This.Data (Serie), Sample);
-      while Length (This.Data (Serie)) > This.Samples loop
+      while Natural (Length (This.Data (Serie))) > This.Samples loop
          Delete_first (This.Data (Serie));
       end loop;
    end Add_sample;
@@ -69,19 +65,19 @@ package body Agpl.Graph is
       Max, Min : Float;
       Gamut    : Float;
       use Lists;
-      I : Iterator_type;
+      I : Cursor;
       X, Y, PrevX, PrevY : Integer;
    begin
       Bmp.Create (B, Width => This.Samples, Height => Height);
       Bmp.Draw.Delete (B, This.Bgcolor);
-      Bmp.Set_checking (B, false);
+      Bmp.Set_checking (B, False);
 
       Get_max_min (This, Max => Max, Min => Min);
       Draw_axis (This, Max => Max, Min => Min, Height => Height, Canvas => B);
 
       if Max < Min then
          return B; -- No data, return empty graph
-      end if; 
+      end if;
 
       Gamut := Max - Min;
       if Gamut = 0.0 then
@@ -91,7 +87,7 @@ package body Agpl.Graph is
       for N in This.Data'Range loop
          I := Last (This.Data (N));
          X := This.Samples;
-         while I /= Back (This.Data (N)) loop
+         while Has_Element (I) loop
             if Max = Min then
                Y := Height;
             else
@@ -103,7 +99,7 @@ package body Agpl.Graph is
                PrevX := X;
             end if;
             Bmp.Draw.Line (
-               B, 
+               B,
                C1    => X,
                R1    => Y,
                C2    => PrevX,
@@ -111,7 +107,7 @@ package body Agpl.Graph is
                Color => This.Fgcolor (N));
             PrevX := X;
             PrevY := Y;
-            I := Pred (I);
+            Previous (I);
             X := X - 1;
          end loop;
       end loop;
@@ -122,10 +118,10 @@ package body Agpl.Graph is
    -----------------
    -- Get_max_min --
    -----------------
-   -- Says max and min values in a graph
+   --  Says max and min values in a graph
    procedure Get_max_min (This : in Object; Max, Min : out Float) is
       use Lists;
-      I : Iterator_type;
+      I : Cursor;
    begin
       if This.Scale_min_forced then
          Min := This.Scale_min;
@@ -138,21 +134,21 @@ package body Agpl.Graph is
          Max := Float'First;
       end if;
 
-      -- Early exit if both ranges forced:
+      --  Early exit if both ranges forced:
       if This.Scale_min_forced and then This.Scale_max_forced then
          return;
       end if;
 
       for N in This.Data'Range loop
          I := First (This.Data (N));
-         while I /= Back (This.Data (N)) loop
+         while Has_Element (I) loop
             if not This.Scale_max_forced then
                Max := Float'Max (Max, Element (I));
             end if;
             if not This.Scale_min_forced then
                Min := Float'Min (Min, Element (I));
             end if;
-            I := Succ (I);
+            Next (I);
          end loop;
       end loop;
    end Get_max_min;
@@ -161,8 +157,8 @@ package body Agpl.Graph is
    -- Draw_axis --
    ---------------
    procedure Draw_axis (
-      This     : in     Object; 
-      Max, Min : in     Float; 
+      This     : in     Object;
+      Max, Min : in     Float;
       Height   : in     Positive;
       Canvas   : in out Bmp.Object)
    is
@@ -186,27 +182,27 @@ package body Agpl.Graph is
             Y := Positive (Float'Floor (
                (Max - Ax.Height) * Float (Height - 1) / (Max - Min)) + 1.0);
             Agpl.Bmp.Draw.Line (
-               Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples, 
+               Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples,
                Color => Ax.Color);
          end if;
          if Ax.Repeat then
-            -- Upwards
+            --  Upwards
             FY := Ax.Height * 2.0;
             while FY < Max loop
                Y := Positive (Float'Floor (
                  (Max - FY) * Float (Height - 1) / (Max - Min)) + 1.0);
                Agpl.Bmp.Draw.Line (
-                  Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples, 
+                  Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples,
                   Color => Ax.Color);
                FY := FY + Ax.Height;
             end loop;
-            -- Downwards
+            --  Downwards
             FY := 0.0;
             while FY > Min loop
                Y := Positive (Float'Floor (
                  (Max - FY) * Float (Height - 1) / (Max - Min)) + 1.0);
                Agpl.Bmp.Draw.Line (
-                  Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples, 
+                  Canvas, R1 => Y, C1 => 1, R2 => Y, C2 => This.Samples,
                   Color => Ax.Color);
                FY := FY - Ax.Height;
             end loop;
@@ -239,31 +235,31 @@ package body Agpl.Graph is
    ------------------------------------------------------------------------
    procedure Set_scale_min (This : in out Object; Min : in Float) is
    begin
-      This.Scale_min_forced := true;
+      This.Scale_min_forced := True;
       This.Scale_min        := Min;
    end Set_scale_min;
 
    procedure Set_scale_max (This : in out Object; Max : in Float) is
    begin
-      This.Scale_max_forced := true;
+      This.Scale_max_forced := True;
       This.Scale_max        := Max;
    end Set_scale_max;
 
-   procedure Set_scale_auto (This : in out Object) is 
+   procedure Set_scale_auto (This : in out Object) is
    begin
-      This.Scale_min_forced := false;
-      This.Scale_max_forced := false;
+      This.Scale_min_forced := False;
+      This.Scale_max_forced := False;
    end Set_scale_auto;
 
    ------------------------------------------------------------------------
    -- Set_YAxis                                                          --
    ------------------------------------------------------------------------
-   -- Repeat indicates if the axis will repeat x2, x3, etc.
+   --  Repeat indicates if the axis will repeat x2, x3, etc.
    procedure Set_YAxis (
-      This   : in out Object; 
+      This   : in out Object;
       Height : in     Float;
       Color  : in     Types.Rgb_triplet;
-      Repeat : in     Boolean := false)
+      Repeat : in     Boolean := False)
    is
       Axis : Axis_type (Horizontal);
    begin
@@ -276,7 +272,7 @@ package body Agpl.Graph is
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   -- Removes all samples
+   --  Removes all samples
    procedure Reset (This : in out Object) is
    begin
       for N in 1 .. This.Series loop

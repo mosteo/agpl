@@ -41,15 +41,15 @@ package Agpl.Bmp.Draw is
    ------------------------------------------------------------------------
    -- Delete                                                             --
    ------------------------------------------------------------------------
-   -- Fills the full BMP
+   --  Fills the full BMP
    procedure Delete (
-      This  : in out Object; 
+      This  : in out Object;
       Color : in     Types.RGB_Triplet := Types.Constants.Black);
 
    ------------------------------------------------------------------------
    -- Box                                                                --
    ------------------------------------------------------------------------
-   -- Filled box
+   --  Filled box
    procedure Box (
       This : in out Object;
       R1, C1,
@@ -76,11 +76,11 @@ package Agpl.Bmp.Draw is
       Col   : in     Integer;
       Rad   : in     Natural;
       Color : in     Types.RGB_triplet);
-   
+
    ------------------------------------------------------------------------
    -- Line                                                               --
    ------------------------------------------------------------------------
-   -- Bresenham algorithm for line drawing
+   --  Bresenham algorithm for line drawing
    procedure Line (
       This   : in out Object;
       R1, C1,
@@ -90,14 +90,14 @@ package Agpl.Bmp.Draw is
    ------------------------------------------------------------------------
    -- Plot                                                               --
    ------------------------------------------------------------------------
-   -- Puts a single point
+   --  Puts a single point
    procedure Plot (
       This  : in out Object;
       Row   : in     Integer;
       Col   : in     Integer;
       Color : in     Types.RGB_Triplet) renames Set_pixel;
 
-private 
+private
 
    ------------------------------------------------------------------------
    -- Circ                                                               --
@@ -108,7 +108,7 @@ private
       Col    : in     Integer;
       Rad    : in     Natural;
       Color  : in     Types.RGB_triplet;
-      Fill   : in     Boolean := false;
+      Fill   : in     Boolean := False;
       FColor : in     Types.RGB_triplet := Types.Constants.Black);
 
 end Agpl.Bmp.Draw;

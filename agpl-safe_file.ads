@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-safe_file.ads,v 1.3 2004/01/21 21:05:25 Jano Exp $
 
---  Facilities for saving/loading from a file in a way that it doesn't 
+--  Facilities for saving/loading from a file in a way that it doesn't
 --  overwrite the previous version.
 --  When opening for writing, a temporary is used. After completion, the
 --  original file is removed and the temporary renamed.
@@ -47,7 +47,7 @@ use  Ada;
 package Agpl.Safe_file is
 
    File_Not_Found : exception;
-   
+
    ------------------------------------------------------------------------
    -- Exists_for_reading                                                 --
    ------------------------------------------------------------------------
@@ -56,8 +56,8 @@ package Agpl.Safe_file is
    ------------------------------------------------------------------------
    -- Get_Real_Name                                                      --
    ------------------------------------------------------------------------
-   -- Gets the real name found (i.e. the supplied or the backup one
-   -- May raise File_Not_Found
+   --  Gets the real name found (i.e. the supplied or the backup one
+   --  May raise File_Not_Found
    function Get_Real_Name (Name : in String) return String;
 
    ------------------------------------------------------------------------

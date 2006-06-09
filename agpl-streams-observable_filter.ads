@@ -64,6 +64,6 @@ private
    type Stream_Type
    is abstract new Agpl.Streams.Observable.Stream_Type with record
       Back : Agpl.Streams.Stream_Access;
-   end Stream_Type;
+   end record;
 
 end Agpl.Streams.Observable_Filter;

@@ -45,14 +45,14 @@ package Dom.Core.Nodes.Output is
 
    package ASU renames Ada.Strings.Unbounded;
 
-   -- Based on functions from Xml/Ada: 
-   -- Doesn't perform encoding.
+   --  Based on functions from Xml/Ada:
+   --  Doesn't perform encoding.
    procedure Print
      (N              : Node;
       U              : in out ASU.Unbounded_string;
       Print_Comments : Boolean := False;
       Print_XML_PI   : Boolean := False;
-      With_URI       : Boolean := False; 
+      With_URI       : Boolean := False;
       Indent         : Natural := 0);
    --  Print the contents of Node and its children in XML format.
    --  If Print_Comments is True, then nodes associated with comments are

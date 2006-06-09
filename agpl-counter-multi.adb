@@ -44,12 +44,12 @@ package body Agpl.Counter.Multi is
    protected body Safe_Object is
       --  Creates it if doesn't exists with value Increment
       procedure Add (Key : in String; Increment : in Integer := 1) is
-         I : Iterator_Type := Find (Values, Key);
+         I : constant Cursor := Find (Values, Key);
          C : Counter.Object_Access;
       begin
-         if I = Back (Values) then
+         if I = No_Element then
             C := new Counter.Object;
-            Insert (Values, Key, C, I);
+            Insert (Values, Key, C);
          else
             C := Element (I);
          end if;
@@ -57,12 +57,12 @@ package body Agpl.Counter.Multi is
       end Add;
 
       procedure Reset (Key : in String; Val     : in Integer := 0) is
-         I : Iterator_Type := Find (Values, Key);
+         I : constant Cursor := Find (Values, Key);
          C : Counter.Object_Access;
       begin
-         if I = Back (Values) then
+         if I = No_Element then
             C := new Counter.Object;
-            Insert (Values, Key, C, I);
+            Insert (Values, Key, C);
          else
             C := Element (I);
          end if;
@@ -76,17 +76,17 @@ package body Agpl.Counter.Multi is
 
       function  Max_Key return String is
          Max : Integer := Integer'First;
-         Pos : Iterator_Type := Back (Values);
-         I   : Iterator_Type := First (Values);
+         Pos : Cursor := No_Element;
+         I   : Cursor := First (Values);
       begin
-         while I /= Back (Values) loop
+         while I /= No_Element loop
             if Element (I).Val >= Max then
                Pos := I;
                Max := Element (I).Val;
             end if;
-            I := Succ (I);
+            Next (I);
          end loop;
-         if Pos = Back (Values) then
+         if Pos = No_Element then
             return "";
          else
             return Key (Pos);
@@ -96,13 +96,13 @@ package body Agpl.Counter.Multi is
       procedure Destroy is
          procedure Free is new Unchecked_Deallocation (
             Counter.Object, Counter.Object_Access);
-         I   : Iterator_Type := First (Values);
+         I   : Cursor := First (Values);
          Aux : Counter.Object_Access;
       begin
-         while I /= Back (Values) loop
+         while I /= No_Element loop
             Aux := Element (I);
             Free (Aux);
-            I := Succ (I);
+            Next (I);
          end loop;
       end Destroy;
    end Safe_Object;

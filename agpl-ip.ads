@@ -32,30 +32,30 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-ip.ads,v 1.1 2004/01/25 22:55:08 Jano Exp $
 
--- Utilities for IP conversions
+--  Utilities for IP conversions
 
 package Agpl.Ip is
 
-   -- Named or dotted address:
+   --  Named or dotted address:
    subtype Any_address is String;
 
-   -- x.x.x.x[:port]
+   --  x.x.x.x[:port]
    subtype Dotted_address is String;
 
-   -- named address
+   --  named address
    subtype Named_address is String;
 
    ------------------------------------------------------------------------
    -- Strip_port                                                         --
    ------------------------------------------------------------------------
-   -- Removes the port portion, if present
+   --  Removes the port portion, if present
    function Strip_port (Address : in Any_address) return Any_address;
 
    ------------------------------------------------------------------------
    -- To_number                                                          --
    ------------------------------------------------------------------------
-   -- Returns a dotted_address as long long integer
-   -- w.x.y.z = w * 256**3 + x * 256**2 + y * 256**1 + z
-   function To_number (Address : in Dotted_address) return Long_long_integer;
+   --  Returns a dotted_address as long long integer
+   --  w.x.y.z = w * 256**3 + x * 256**2 + y * 256**1 + z
+   function To_number (Address : in Dotted_address) return Long_Long_Integer;
 
 end Agpl.Ip;

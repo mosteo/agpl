@@ -1,7 +1,4 @@
--- This object will force a delay if no enough time has elapsed.
-
-with Ada.Calendar;
-use  Ada;
+--  This object will force a delay if no enough time has elapsed.
 
 package body Agpl.Delayer is
 
@@ -13,10 +10,10 @@ package body Agpl.Delayer is
       -------------
       -- Request --
       -------------
-      -- Will return when the next slot of time has been reached.
+      --  Will return when the next slot of time has been reached.
       procedure Request is
          use Calendar;
-         Now : Time := Clock;
+         Now : constant Time := Clock;
       begin
          if Next_run > Now then
             delay until Next_run;

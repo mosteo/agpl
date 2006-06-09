@@ -39,12 +39,12 @@ package body Agpl.Bmp.Draw is
    ------------------------------------------------------------------------
    -- Box                                                                --
    ------------------------------------------------------------------------
-   -- Filled box
+   --  Filled box
    procedure Box (
       This : in out Object;
       R1, C1,
       R2, C2 : in     Integer;
-      Color  : in     Types.RGB_Triplet) 
+      Color  : in     Types.RGB_Triplet)
    is
    begin
       for Row in R1 .. R2 loop
@@ -53,7 +53,7 @@ package body Agpl.Bmp.Draw is
          end loop;
       end loop;
    end Box;
-      
+
    ------------------------------------------------------------------------
    -- Circ                                                               --
    ------------------------------------------------------------------------
@@ -63,7 +63,7 @@ package body Agpl.Bmp.Draw is
       Col    : in     Integer;
       Rad    : in     Natural;
       Color  : in     Types.RGB_triplet;
-      Fill   : in     Boolean := false;
+      Fill   : in     Boolean := False;
       FColor : in     Types.RGB_triplet := Types.Constants.Black)
    is
       procedure Plot_points (X, Y : in Integer) is
@@ -80,28 +80,28 @@ package body Agpl.Bmp.Draw is
       procedure Fill_scanline (X, Y : in Integer) is
       begin
          if Y > X then
-            Line (This, 
-               C1 => Col + Y - 1, R1 => Row + X, 
+            Line (This,
+               C1 => Col + Y - 1, R1 => Row + X,
                C2 => Col - Y + 1, R2 => Row + X,
                Color => FColor);
-            Line (This, 
-               C1 => Col + Y - 1, R1 => Row - X, 
+            Line (This,
+               C1 => Col + Y - 1, R1 => Row - X,
                C2 => Col - Y + 1, R2 => Row - X,
                Color => FColor);
-            Line (This, 
-               C1 => Col + X, R1 => Row - Y + 1, 
+            Line (This,
+               C1 => Col + X, R1 => Row - Y + 1,
                C2 => Col + X, R2 => Row - (Rad / 2),
                Color => FColor);
-            Line (This, 
-               C1 => Col + X, R1 => Row + (Rad / 2), 
+            Line (This,
+               C1 => Col + X, R1 => Row + (Rad / 2),
                C2 => Col + X, R2 => Row + Y - 1,
                Color => FColor);
-            Line (This, 
-               C1 => Col - X, R1 => Row - Y + 1, 
+            Line (This,
+               C1 => Col - X, R1 => Row - Y + 1,
                C2 => Col - X, R2 => Row - (Rad / 2),
                Color => FColor);
-            Line (This, 
-               C1 => Col - X, R1 => Row + (Rad / 2), 
+            Line (This,
+               C1 => Col - X, R1 => Row + (Rad / 2),
                C2 => Col - X, R2 => Row + Y - 1,
                Color => FColor);
          end if;
@@ -143,7 +143,7 @@ package body Agpl.Bmp.Draw is
       Color : in     Types.RGB_triplet;
       Fill  : in     Types.RGB_triplet) is
    begin
-      Circ (This, Row, Col, Rad, Color, true, Fill);
+      Circ (This, Row, Col, Rad, Color, True, Fill);
    end Circle;
 
    ------------------------------------------------------------------------
@@ -156,15 +156,15 @@ package body Agpl.Bmp.Draw is
       Rad   : in     Natural;
       Color : in     Types.RGB_triplet) is
    begin
-      Circ (This, Row, Col, Rad, Color, false);
+      Circ (This, Row, Col, Rad, Color, False);
    end Circunference;
 
    ------------------------------------------------------------------------
    -- Delete                                                             --
    ------------------------------------------------------------------------
-   -- Fills the full BMP
+   --  Fills the full BMP
    procedure Delete (
-      This  : in out Object; 
+      This  : in out Object;
       Color : in     Types.RGB_Triplet := Types.Constants.Black)
    is
    begin
@@ -178,7 +178,7 @@ package body Agpl.Bmp.Draw is
    ------------------------------------------------------------------------
    -- Line                                                               --
    ------------------------------------------------------------------------
-   -- Bresenham algorithm for line drawing
+   --  Bresenham algorithm for line drawing
    procedure Line (
       This   : in out Object;
       R1, C1,
@@ -188,7 +188,7 @@ package body Agpl.Bmp.Draw is
       InitialX : Integer := C1;
       InitialY : Integer := R1;
 
-      Steep  : Boolean := false;
+      Steep  : Boolean := False;
       DeltaX,
       DeltaY,
       Deltaa : Integer;
@@ -196,27 +196,27 @@ package body Agpl.Bmp.Draw is
       StepY  : Integer;
 
       procedure Swap (L, R : in out Integer) is
-         T : Integer := L;
+         T : constant Integer := L;
       begin
          L := R;
          R := T;
       end Swap;
 
    begin
-      DeltaX := Abs (C2 - C1);
+      DeltaX := abs (C2 - C1);
       if C2 - C1 > 0 then
          StepX := 1;
       else
          StepX := -1;
       end if;
-      DeltaY := Abs (R2 - R1);
+      DeltaY := abs (R2 - R1);
       if R2 - R1 > 0 then
          StepY := 1;
       else
          StepY := -1;
       end if;
       if DeltaY > DeltaX then
-         Steep := true;
+         Steep := True;
          Swap (InitialX, InitialY);
          Swap (DeltaX, DeltaY);
          Swap (StepX, StepY);

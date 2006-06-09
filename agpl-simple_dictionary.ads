@@ -36,12 +36,12 @@
 
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
-with Charles.Hash_String;
-with Charles.Maps.Hashed.Strings.Unbounded;
+with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Strings.Hash;
 
 generic
    type Element_Type is private;
-   with function Equal (L, R : in Element_Type) return boolean;
+   with function Equal (L, R : in Element_Type) return Boolean;
 package Agpl.Simple_Dictionary is
 
    pragma Elaborate_Body;
@@ -60,27 +60,27 @@ package Agpl.Simple_Dictionary is
    ------------------------------------------------------------------------
    -- Add_Word                                                           --
    ------------------------------------------------------------------------
-   -- Add a word with given index (key).
+   --  Add a word with given index (key).
    procedure Add_Word (This : in out Object; Key : in String; Element : in Element_Type);
 
    ------------------------------------------------------------------------
    -- Are_Compatible                                                     --
    ------------------------------------------------------------------------
-   -- True if elements in both containers are equal, extra are ignored.
-   -- At least one element must match.
-   -- Commutative.
+   --  True if elements in both containers are equal, extra are ignored.
+   --  At least one element must match.
+   --  Commutative.
    function Are_Compatible (L, R : in Object) return Boolean;
 
    ------------------------------------------------------------------------
    -- Contains_Key                                                       --
    ------------------------------------------------------------------------
-   -- True if the dictionary contains the given key
+   --  True if the dictionary contains the given key
    function Contains_Key (This : in Object; Key : in String) return Boolean;
 
    ------------------------------------------------------------------------
    -- Get_Contents                                                       --
    ------------------------------------------------------------------------
-   -- Return an array of contents in the dictionary
+   --  Return an array of contents in the dictionary
    function Get_Contents (This : in Object) return Pair_Array;
 
    ------------------------------------------------------------------------
@@ -91,16 +91,16 @@ package Agpl.Simple_Dictionary is
    ------------------------------------------------------------------------
    -- Merge                                                              --
    ------------------------------------------------------------------------
-   -- Adds elements not in Former from Later.
-   -- No compatibility check is performed
+   --  Adds elements not in Former from Later.
+   --  No compatibility check is performed
    procedure Merge (Former : in out Object; Later : in Object);
-      
+
 private
 
-   package Element_Map is new Charles.Maps.Hashed.Strings.Unbounded (
-      Element_Type, Charles.Hash_String, "=", Equal);
+   package Element_Map is new Ada.Containers.Indefinite_Hashed_Maps (
+      String, Element_Type, Ada.Strings.Hash, "=", Equal);
 
-   type Object is new Element_Map.Container_Type;
+   type Object is new Element_Map.Map with null record;
 
    pragma Inline (Add_Word);
 

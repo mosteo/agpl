@@ -3,7 +3,7 @@ with Text_Io; use Text_Io;
 with Ada.Exceptions; use Ada.Exceptions;
 
 procedure T020_Bag is
-   package Char_Bag is new Agpl.Bag (Character, Initial_Size => 2);
+   package Char_Bag is new Agpl.Bag (Character, Integer, Initial_Size => 2);
    use Char_Bag;
 
    B : Object (First => 1);
@@ -18,7 +18,11 @@ procedure T020_Bag is
 
    Flag : Boolean := True;
 
-   procedure Moving (C : in out Character; From, To : in Integer) is
+   procedure Moving (C        : in out Character;
+                     Context  : in out Integer;
+                     From, To : in Integer)
+   is
+      pragma Unreferenced (Context);
    begin
       Put_Line (C & ":" & From'Img & " ->" & To'Img);
       if Flag then

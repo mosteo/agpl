@@ -61,7 +61,7 @@ package Agpl.Stochastics.Mdp.State is
      Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class, "=");
 
    package Object_Maps is new
-     Ada.Containers.Indefinite_Hashed_Maps (Object_Id, Object'Class);
+     Ada.Containers.Indefinite_Hashed_Maps (Object_Id, Object'Class, Hash, "=");
 
    package Object_Sets is new
      Ada.Containers.Indefinite_Ordered_Sets (Object'Class, "<");

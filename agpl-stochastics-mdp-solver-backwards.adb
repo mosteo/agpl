@@ -18,7 +18,7 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
    use type SL.Cursor;
    use type State.Object'Class;
 
-   Debug : constant Boolean := false;
+   Debug : constant Boolean := False;
 
    -----------
    -- Solve --
@@ -132,14 +132,14 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                      end if;
 
                      --  Insert if needed the expanded state in Next_States.
-                     if false then
+                     if False then
                         null;
-                     elsif SS.Is_In (InS, Pending_States) then
+                     elsif SS.Contains (Pending_States, InS) then
                         if Verbose then
                            Put_Line
                              (Standard_Error, "      (Already pending)");
                         end if;
-                     elsif SIS.Is_In (State.Get_Id (InS), Expanded) then
+                     elsif SIS.Contains (Expanded, State.Get_Id (InS)) then
                         if Verbose then
                            Put_Line
                              (Standard_Error, "      (Already expanded)");
@@ -168,7 +168,7 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                            if Debug then
                            while I /= OL.No_Element loop
                               declare
-                                 Succ : SL.List := Outcome.Get_States
+                                 Succ : constant SL.List := Outcome.Get_States
                                    (OL.Element (I));
                                  J    : SL.Cursor := SL.First (Succ);
                               begin
@@ -237,11 +237,11 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
          declare
             Ini  : constant SL.List := Problem.Get_Initial_States (Pr);
             I    : SL.Cursor        := SL.First (Ini);
-            Fail : Boolean          := false;
+            Fail : Boolean          := False;
          begin
             while I /= SL.No_Element and then not Fail loop
                if not Value_Function.Contains (V, SL.Element (I)) then
-                  Fail := true;
+                  Fail := True;
                end if;
                SL.Next (I);
             end loop;

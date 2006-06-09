@@ -1,31 +1,31 @@
-with "gtkada.gpr";
-
 project Agpl is
 
+   Name    := "agpl";
+   Version := "20060308";
+
    for Object_Dir use "obj";
-   for Exec_Dir use "obj";
-   for Source_Dirs use (".", "mw", "tests", "xmlada", "concorde");
-      --  GTKADA must be in ADA_INCLUDE_PATH and ADA_OBJECTS_PATH
+   for Source_Dirs use (".", "mw", "xmlada");
 
-   for Main use ("htn1.adb", "htn2.adb", "htn3.adb", "smartest.adb",
-                 "t006_mtsp.adb",
-                 "t007_g2p.adb",
-                 "t008_poif.adb",
-                 "t009_tsp.adb",
-                 "t010_atsp.adb",
-                 "t012_mtsp.adb"
-                );
+   for Languages use ("Ada", "C");
 
-   type Build_Type is ("Release", "Debug");
-   Build : Build_Type := external ("Build", "Debug");
+   type Library_Kind_Type is ("Static", "Dynamic");
+   Kind : Library_Kind_Type := External ("Agpl_Link", "Static");
 
-   type Include_Concorde_Type is ("Yes", "No");
-   Include_Concorde : Include_Concorde_Type := external ("Concorde", "Yes");
+   type Build_Type is ("Debug", "Release");
+   Build : Build_Type := External ("Agpl_Build", "Debug");
 
-   type Include_Gtk_Type is ("Yes", "No");
-   Include_Gtk : Include_Gtk_Type := external ("Gtk", "No");
+   package Ide is
+      for Vcs_Kind use "Subversion";
+   end Ide;
 
-   for Languages use ("C", "Ada");
+   for Library_Name use Name;
+   for Library_Kind use Kind;
+   for Library_Version use Name & ".so." & Version;
+
+   case Kind is
+      when "Static"  => for Library_Dir use "libstatic";
+      when "Dynamic" => for Library_Dir use "libdynamic";
+   end case;
 
    package Pretty_Printer is
       for Default_Switches ("ada") use ("-A1", "-A2", "-A3", "-A4");
@@ -34,21 +34,22 @@ project Agpl is
    package Compiler is
 
       for Default_Switches ("c") use ("-g");
-      for Default_Switches ("ada") use ("-g", "-gnatf", "-gnat05", "-gnatwcfjkmoruvz", "-gnatyacehikn");
-      
+      for Default_Switches ("ada") use 
+         ("-g", "-s", "-gnatf", "-gnat05", "-gnatwcfjkmoruvz", "-gnatyacehikn", "-gnatQ");
 
       case Build is
 
          when "Debug" =>
 
-            for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-O2", "-gnato", "-fstack-check", "-gnata");
+            for Default_Switches ("ada") use 
+               Compiler'Default_Switches ("ada") & 
+               ("-O2", "-gnato", "-fstack-check", "-gnata");
 
          when "Release" =>
 
-            for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-O3", "-gnatN");
-
-	    --  Files that give problems when heavily inlining:
-	    for Switches ("agpl-cr-agent.adb") use Compiler'Default_Switches ("ada") & ("-O3", "-gnatn");
+            for Default_Switches ("ada") use 
+               Compiler'Default_Switches ("ada") & 
+               ("-O2", "-gnatN");
 
       end case;
 
@@ -64,49 +65,8 @@ project Agpl is
 
    package Linker is
 
-      for Default_Switches ("ada") use
-                                      ("-g");
-
-      case Include_Gtk is
-          when "No" => null;
-          when "Yes" =>
-             for Default_Switches ("ada") use Linker'Default_Switches ("ada") & (
-                                       "-L/usr/local/include/gtkada",
-                                       "-L/usr/local/lib",
-                                       "-lgtkada",
-                                       "-Wl,--export-dynamic",
-                                       "-lgtk-x11-2.0",
-                                       "-lgdk-x11-2.0",
-                                       "-latk-1.0",
-                                       "-lgdk_pixbuf-2.0",
-                                       "-lm",
-                                       "-lpangoxft-1.0",
-                                       "-lpangox-1.0",
-                                       "-lpango-1.0",
-                                       "-lgobject-2.0",
-                                       "-lgmodule-2.0",
-                                       "-ldl",
-                                       "-lglib-2.0");
-      end case;
-
-      case Include_Concorde is
-
-         when "No" =>
-            null;
-
-         when "Yes" =>
-            for Default_Switches ("ada") use Linker'Default_Switches ("ada") &
-              (
-               "-lm",
-               "-Lobj",
-               "-lagpl",
-               "-Lconcorde",
-               "-lconcorde",
-               "-lqsopt"
-              );
-      end case;
+      for Default_Switches ("ada") use ("-g");
 
    end Linker;
 
 end Agpl;
-

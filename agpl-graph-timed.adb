@@ -37,7 +37,7 @@
 --  multiple series are allowed. Values in multiple series should be normali-
 --  zed against a common scale.
 
---  Based in the Agpl.Average_Queue.Timed package, this allows to forget 
+--  Based in the Agpl.Average_Queue.Timed package, this allows to forget
 --  about timing concerns. You push data into the graph and it will automa-
 --  gically mix/average the data. The samples are added regularly as speci-
 --  fied for the timed average queue.
@@ -74,10 +74,10 @@ package body Agpl.Graph.Timed is
    ------------------------------------------------------------------------
    procedure Initialize (This : in out Controller) is
    begin
-      for I in This.Parent.Avgs'range loop
-         This.Parent.Avgs (I) := 
+      for I in This.Parent.Avgs'Range loop
+         This.Parent.Avgs (I) :=
             new Avg.Object (
-               Slots         => This.Parent.Sample_Averages, 
+               Slots         => This.Parent.Sample_Averages,
                Slot_Duration => This.Parent.Sample_Duration);
       end loop;
    end Initialize;
@@ -85,7 +85,7 @@ package body Agpl.Graph.Timed is
    procedure Finalize   (This : in out Controller) is
       procedure Free is new Unchecked_Deallocation (Avg.Object, Avg.Object_Access);
    begin
-      for I in This.Parent.Avgs'range loop
+      for I in This.Parent.Avgs'Range loop
          Free (This.Parent.Avgs (I));
       end loop;
    end Finalize;

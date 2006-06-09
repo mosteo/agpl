@@ -35,8 +35,6 @@
 --  Class for bandwidth throttling.
 --  Provides no arbitration; first come first served.
 
-with Agpl.Types; use Agpl.Types;
-
 with Ada.Streams;
 with Ada.Calendar;
 use  Ada;
@@ -45,25 +43,25 @@ package Agpl.Bandwidth_Throttle is
 
    pragma Elaborate_Body;
 
-   -- Bandwidth is the elements/second to allow
-   -- Period is the period for feedback. Longer ones allow the use
+   --  Bandwidth is the elements/second to allow
+   --  Period is the period for feedback. Longer ones allow the use
    --    of unused bandwidth for more time. (In milliseconds)
    protected type Object (
-      Bandwidth : Ada.Streams.Stream_Element_Count; 
-      Period    : Positive) 
+      Bandwidth : Ada.Streams.Stream_Element_Count;
+      Period    : Positive)
    is
-      -- Gives the available bandwidth at this moment (real + extra):
+      --  Gives the available bandwidth at this moment (real + extra):
       procedure Available (Bandwidth : out Ada.Streams.Stream_Element_Count);
 
-      -- Issue a bandwidth petition. Awarded can be less that solicited.
-      -- Awarded will never be more than Natural'Last / 2 so you can
+      --  Issue a bandwidth petition. Awarded can be less that solicited.
+      --  Awarded will never be more than Natural'Last / 2 so you can
       --    add Awarded + Awarded_Extra.
-      -- Extra flag requests bandwidth from unused past cycles.
-      -- Past cycles will faint in exponential fashion.
+      --  Extra flag requests bandwidth from unused past cycles.
+      --  Past cycles will faint in exponential fashion.
       procedure Commit (
-         Desired : in     Ada.Streams.Stream_Element_Count; 
+         Desired : in     Ada.Streams.Stream_Element_Count;
          Awarded :    out Ada.Streams.Stream_Element_Count;
-         Extra   : in     Boolean := false);
+         Extra   : in     Boolean := False);
 
    private
 

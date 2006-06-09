@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-safe_file.adb,v 1.3 2004/01/21 21:05:25 Jano Exp $
 
---  Facilities for saving/loading from a file in a way that it doesn't 
+--  Facilities for saving/loading from a file in a way that it doesn't
 --  overwrite the previous version.
 --  When opening for writing, a temporary is used. After completion, the
 --  original file is removed and the temporary renamed.
@@ -62,7 +62,7 @@ package body Agpl.Safe_file is
    ------------------------------------------------------------------------
    -- Get_Real_Name                                                      --
    ------------------------------------------------------------------------
-   -- Gets the real name found (i.e. the supplied or the backup one
+   --  Gets the real name found (i.e. the supplied or the backup one
    function Get_Real_Name (Name : in String) return String is
    begin
       if Os_Lib.Is_Regular_File (Name) then
@@ -77,23 +77,23 @@ package body Agpl.Safe_file is
    ------------------------------------------------------------------------
    -- Open                                                               --
    ------------------------------------------------------------------------
-   -- Accepts In_file and Out_file
+   --  Accepts In_file and Out_file
    procedure Open (
       File : in out Stream_IO.File_type;
       Mode : in     Stream_IO.File_mode;
       Name : in     String := "";
-      Form : in     String := "") 
+      Form : in     String := "")
    is
       Success : Boolean;
    begin
       case Mode is
          when In_file =>
-            if Os_lib.Is_regular_file (Name & ".tmp") and 
-               not Os_lib.Is_regular_file (Name) 
+            if Os_lib.Is_regular_file (Name & ".tmp") and
+               not Os_lib.Is_regular_file (Name)
             then
                Os_lib.Rename_file (Name & ".tmp", Name, Success);
                if not Success then
-                  raise Storage_error;
+                  raise Storage_Error;
                end if;
             end if;
             Stream_io.Open (File, Mode, Name, Form);
@@ -108,7 +108,7 @@ package body Agpl.Safe_file is
    -- Close                                                              --
    ------------------------------------------------------------------------
    procedure Close (File : in out Stream_IO.File_type) is
-      Filename : String := Stream_IO.Name (File);
+      Filename : constant String := Stream_IO.Name (File);
       Success  : Boolean;
    begin
       case Mode (File) is
@@ -116,23 +116,23 @@ package body Agpl.Safe_file is
             Stream_IO.Close (File);
          when Out_file =>
             Stream_IO.Close (File);
-            -- Delete previous, if exists:
+            --  Delete previous, if exists:
             if Os_lib.Is_regular_file (
                Filename (Filename'First .. Filename'Last - 4))
             then
                Os_lib.Delete_file (
                   Filename (Filename'First .. Filename'Last - 4), Success);
                if not Success then
-                  raise Storage_error;
+                  raise Storage_Error;
                end if;
             end if;
-            -- Rename file:
+            --  Rename file:
             Os_lib.Rename_file (
                Filename,
                Filename (Filename'First .. Filename'Last - 4),
                Success);
             if not Success then
-               raise Storage_error;
+               raise Storage_Error;
             end if;
          when Append_file =>
             raise Exceptions.Unimplemented;

@@ -41,9 +41,9 @@ package Agpl.Context_controllers is
    ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------
-   -- Declaring an object of this kind will cause the execution of the
-   -- Beginning and Ending code when the object is created and destroyed
-   -- respectively
+   --  Declaring an object of this kind will cause the execution of the
+   --  Beginning and Ending code when the object is created and destroyed
+   --  respectively
 
    type Code_access is access procedure;
 

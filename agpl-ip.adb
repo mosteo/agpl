@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl-ip.adb,v 1.1 2004/01/25 22:55:07 Jano Exp $
 
--- Utilities for IP conversions
+--  Utilities for IP conversions
 
 with Agpl.Strings.Fields;
 
@@ -41,7 +41,7 @@ package body Agpl.Ip is
    ------------------------------------------------------------------------
    -- Strip_port                                                         --
    ------------------------------------------------------------------------
-   -- Removes the port portion, if present
+   --  Removes the port portion, if present
    function Strip_port (Address : in Any_address) return Any_address is
       use Agpl.Strings.Fields;
    begin
@@ -51,15 +51,15 @@ package body Agpl.Ip is
    ------------------------------------------------------------------------
    -- To_number                                                          --
    ------------------------------------------------------------------------
-   -- Returns a dotted_address as long long integer
-   -- w.x.y.z = w * 256**3 + x * 256**2 + y * 256**1 + z
-   function To_number (Address : in Dotted_address) return Long_long_integer 
+   --  Returns a dotted_address as long long integer
+   --  w.x.y.z = w * 256**3 + x * 256**2 + y * 256**1 + z
+   function To_number (Address : in Dotted_address) return Long_Long_Integer
    is
-      Result : Long_long_integer := 0;
+      Result : Long_Long_Integer := 0;
       use Agpl.Strings.Fields;
    begin
       for N in 1 .. 4 loop
-         Result := Result + Long_long_integer'Value (
+         Result := Result + Long_Long_Integer'Value (
             Select_field (Address, N, '.')) * 256**(4 - N);
       end loop;
 

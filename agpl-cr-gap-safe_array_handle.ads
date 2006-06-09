@@ -25,9 +25,9 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Cr.Gap.Safe_Array;
-with Agpl.Smart_Access;
+with Agpl.Smart_Access_Limited;
 
 package Agpl.Cr.Gap.Safe_Array_Handle is new
-   Agpl.Smart_Access (Agpl.Cr.Gap.Safe_Array.Object,
-                      Agpl.Cr.Gap.Safe_Array.Object_Access);
+Agpl.Smart_Access_Limited (Agpl.Cr.Gap.Safe_Array.Object,
+                           Agpl.Cr.Gap.Safe_Array.Object_Access);
 

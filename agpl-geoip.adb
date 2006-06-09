@@ -42,9 +42,9 @@ package body Agpl.Geoip is
    ----------------
    -- Parse_line --
    ----------------
-   procedure Parse_line (Line : in String) is 
-      subtype LLInteger is Long_long_integer;
-      Lbound : Long_long_integer;
+   procedure Parse_line (Line : in String) is
+      subtype LLInteger is Long_Long_Integer;
+      Lbound : Long_Long_Integer;
       NEntry : Ip_entry;
       Name   : Ustring;
       use Agpl.Strings.Fields;
@@ -63,7 +63,7 @@ package body Agpl.Geoip is
    ------------------------------------------------------------------------
    -- Init                                                               --
    ------------------------------------------------------------------------
-   -- Path to database
+   --  Path to database
    procedure Init (Database : in String) is
       use Text_io;
       F    : File_type;
@@ -87,23 +87,23 @@ package body Agpl.Geoip is
    ------------------------------------------------------------------------
    -- Country_code_by_addr                                               --
    ------------------------------------------------------------------------
-   -- Addr in dot format
+   --  Addr in dot format
    function Country_code_from_addr (Addr : in String) return Country_code is
       use Ip_maps;
-      N : Long_long_integer := Ip.To_number (Ip.Strip_port (Addr));
-      I : Iterator_type := Lower_bound (Ip_table, N);
+      N : constant Long_Long_Integer := Ip.To_number (Ip.Strip_port (Addr));
+      I : Cursor := Floor (Ip_table, N);
    begin
-      if I /= Back (Ip_table) then
+      if Has_Element (I) then
          if Key (I) = N then
             return Element (I).Code; -- <-------- EXACT MATCH
          else
-            I := Pred (I);
+            Previous (I);
          end if;
       else
-         I := Pred (I);
+         Previous (I);
       end if;
 
-      if I = Back (Ip_table) then
+      if I = No_Element then
          return Unknown_country;
       elsif Element (I).Upper_bound < N then
          return Unknown_country;
@@ -115,7 +115,7 @@ package body Agpl.Geoip is
    ------------------------------------------------------------------------
    -- Country_name_from_addr                                             --
    ------------------------------------------------------------------------
-   -- Addr in dot format, port optional
+   --  Addr in dot format, port optional
    function Country_name_from_addr (Addr : in String) return String is
    begin
       return Country_name_from_code (Country_code_from_addr (Addr));
@@ -124,24 +124,24 @@ package body Agpl.Geoip is
    ------------------------------------------------------------------------
    -- Country_name_from_code                                             --
    ------------------------------------------------------------------------
-   -- Will work only for countries with existing IP ranges.
-   -- "Unknown" otherwise.
+   --  Will work only for countries with existing IP ranges.
+   --  "Unknown" otherwise.
    function Country_name_from_code (Code : in Country_code) return String is
       use Code_maps;
-      I : Iterator_type := Find (Code_table, Code);
+      I : constant Cursor := Find (Code_table, Code);
    begin
-      if I /= Back (Code_table) then
+      if Has_Element (I) then
          return S (Element (I));
       else
          return "Unknown";
       end if;
    end Country_name_from_code;
-   
+
    ------------------------------------------------------------------------
    -- Flag_code_from_country_code                                        --
    ------------------------------------------------------------------------
-   -- returns "unknown" instead of "??", else the code
-   function Flag_code_from_country_code (Code : in Country_code) 
+   --  returns "unknown" instead of "??", else the code
+   function Flag_code_from_country_code (Code : in Country_code)
       return String
    is
    begin

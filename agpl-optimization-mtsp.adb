@@ -64,7 +64,7 @@ package body Agpl.Optimization.Mtsp is
       --  Permutations goes from 2 .. Num_Cities, i.e. the unvisited cities.
 
       Num_Salesmen : constant Positive := Costs'Length (1);
-      Num_Cities   : constant Positive := Costs'Length (2);
+      --  Num_Cities   : constant Positive := Costs'Length (2);
 
       --------------
       -- Try_Perm --

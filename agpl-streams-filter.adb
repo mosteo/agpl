@@ -43,9 +43,9 @@ package body Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Create                                                             --
    ------------------------------------------------------------------------
-   -- The default creation procedure assigns the back filter to the stream.
+   --  The default creation procedure assigns the back filter to the stream.
    procedure Create (
-      This : in out Stream_Type; 
+      This : in out Stream_Type;
       Back : access Ada.Streams.Root_Stream_Type'Class) is
    begin
       This.Back := Agpl.Streams.Stream_Access (Back);
@@ -76,12 +76,12 @@ package body Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Prefetch                                                           --
    ------------------------------------------------------------------------
-   -- A "pull" procedure to get data into de filter from the "read" end, 
-   -- but without needing the data to be actually read from the filter.
-   -- Unimplemented for the default filter. (It hasn't caching capabilities).
+   --  A "pull" procedure to get data into de filter from the "read" end,
+   --  but without needing the data to be actually read from the filter.
+   --  Unimplemented for the default filter. (It hasn't caching capabilities).
    procedure Prefetch (
       This  : in out Stream_Type;
-      Count : in     Stream_Element_Count) 
+      Count : in     Stream_Element_Count)
    is
       pragma Unreferenced (This);
       pragma Unreferenced (Count);
@@ -92,10 +92,11 @@ package body Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Available_Read                                                     --
    ------------------------------------------------------------------------
-   -- Unlimited
-   function Available_Read (This : in Stream_Type) 
+   --  Unlimited
+   function Available_Read (This : in Stream_Type)
       return Stream_Element_Count
    is
+   pragma Unreferenced (This);
    begin
       return Stream_Element_Count'Last;
    end Available_Read;
@@ -103,9 +104,10 @@ package body Agpl.Streams.Filter is
    ------------------------------------------------------------------------
    -- Available_Write                                                    --
    ------------------------------------------------------------------------
-   -- Unlimited
-   function Available_Write (This: in Stream_Type) 
+   --  Unlimited
+   function Available_Write (This: in Stream_Type)
       return Stream_Element_Count is
+      pragma Unreferenced (This);
    begin
       return Stream_Element_Count'Last;
    end Available_Write;

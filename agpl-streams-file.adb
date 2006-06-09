@@ -68,8 +68,8 @@ package body Agpl.Streams.File is
       Last   : out Stream_Element_Offset)
    is
    begin
-      --Text_Io.Put_Line ("File remaining:" & Stream.Available_Read'Img);
-      --Text_Io.Put_Line ("Attempting read of:" & Item'Length'Img);
+      --  Text_Io.Put_Line ("File remaining:" & Stream.Available_Read'Img);
+      --  Text_Io.Put_Line ("Attempting read of:" & Item'Length'Img);
       Ada.Streams.Read (Stream.Back.all, Item, Last);
       Stream.Available_Read := Stream.Available_Read -
                                (Last - Item'First + 1);
@@ -86,7 +86,7 @@ package body Agpl.Streams.File is
    ------------------------------------------------------------------------
    -- Available_read                                                     --
    ------------------------------------------------------------------------
-   -- Says how many data has been written but not read:
+   --  Says how many data has been written but not read:
    function Available_read
      (Stream : in Stream_type)
       return   Stream_Element_Count
