@@ -1,0 +1,86 @@
+with "./gtkada.gpr";
+
+project Agpl is
+
+   for Object_Dir use "obj";
+   for Exec_Dir use "obj";
+   for Source_Dirs use (".", "mw", "tests", "xmlada", "concorde");
+
+   for Main use ("htn1.adb", "htn2.adb", "htn3.adb", "smartest.adb",
+                 "t006_mtsp.adb",
+                 "t007_g2p.adb",
+                 "t008_poif.adb",
+                 "t009_tsp.adb",
+                 "t010_atsp.adb",
+                 "t012_mtsp.adb"
+                );
+
+   type Build_Type is ("Release", "Debug");
+   Build : Build_Type := external ("Build", "Debug");
+
+   type Include_Concorde_Type is ("Yes", "No");
+   Include_Concorde : Include_Concorde_Type := external ("Concorde_Link", "No");
+
+   for Languages use ("C", "Ada");
+
+   package Pretty_Printer is
+      for Default_Switches ("ada") use ("-A1", "-A2", "-A3", "-A4");
+   end Pretty_Printer;
+
+   package Ide is
+      for Vcs_Kind use "Subversion";
+   end Ide;
+
+   package Compiler is
+
+      for Default_Switches ("c") use ("-g");
+      for Default_Switches ("ada") use ("-g", "-gnatf", "-gnat05", "-gnatwcfjkmoruvz", "-gnatyacehikn");
+
+      case Build is
+
+         when "Debug" =>
+
+            for Default_Switches ("ada") use 
+               Compiler'Default_Switches ("ada") & ("-O2", "-gnato", "-fstack-check", "-gnata");
+
+         when "Release" =>
+
+            for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-O3", "-gnatN");
+
+	    --  Files that give problems when heavily inlining:
+	    for Switches ("agpl-cr-agent.adb") use Compiler'Default_Switches ("ada") & ("-O3", "-gnatn");
+
+      end case;
+
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-a", "-g");
+   end Builder;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E", "-g");
+   end Binder;
+
+   package Linker is
+
+      for Default_Switches ("ada") use ("-g");
+
+      case Include_Concorde is
+
+         when "No" =>
+            null;
+
+         when "Yes" =>
+            for Linker_Options use
+              ("-lm",
+               "-Lconcorde",
+               "-lconcorde",
+               "-lqsopt"
+              );
+      end case;
+
+   end Linker;
+
+end Agpl;
+
