@@ -16,8 +16,9 @@ package Agpl.Protected_Datastore is
    subtype Object_Key is String;
    --  This is the indexing type
 
-   type Key_Listener is interface; -- Something that wants to be notified
-                                   --  when a key is stored
+   --  Should be an interface but GPL2006 still gives problems
+   type Key_Listener is abstract tagged limited null record;
+   --  Something that wants to be notified when a key is stored
    type Key_Listener_Access is access all Key_Listener'Class;
    procedure On_Key_Stored (This  : in out Key_Listener;
                             Key   : in     Object_Key;

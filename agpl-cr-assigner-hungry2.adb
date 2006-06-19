@@ -26,8 +26,8 @@
 
 with Agpl.Cr.Assignment;
 with Agpl.Htn.Tasks;
-with Agpl.Strings;
-with Agpl.Trace; use Agpl.Trace;
+--  with Agpl.Strings;
+--  with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Assigner.Hungry2 is
 
@@ -145,7 +145,7 @@ package body Agpl.Cr.Assigner.Hungry2 is
             Assignment.Add  (A,
                              Agent.Lists.Element (Best_Agent),
                              Task_Lists.Element (Best_Task));
-            Agent.Lists.Update_Element (Best_Agent, Assign'Access);
+            Agent.Lists.Update_Element (Agts, Best_Agent, Assign'Access);
          end;
 
          --  Remove assigned task.
