@@ -36,7 +36,7 @@
 with Agpl.Streams;
 with Agpl.Trace;
 
-with Ada.Streams;        use Ada;
+with Ada.Streams;
 
 package Agpl.G2.Packet.Parsing is
 

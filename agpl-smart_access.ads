@@ -31,6 +31,8 @@ with Agpl.Smart_Access_Limited;
 
 with Ada.Streams;
 
+pragma Elaborate_All (Agpl.Smart_Access_Limited);
+
 generic
    type Item (<>)   is private;         -- Type.
    type Item_access is access Item;     -- This is the access we want safe.
