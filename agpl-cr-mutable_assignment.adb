@@ -29,7 +29,7 @@
 
 --  This one strives to be a really general, problem-independent solution.
 
-with Agpl.Conversions;
+with Agpl.Conversions; pragma Elaborate_All (Agpl.Conversions);
 with Agpl.Cr.Agent.Dummy;
 with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Assigner.Hungry3;
@@ -162,6 +162,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Iterate (This.Contexts, Free'Access);
       This.Contexts.Clear;
       This.Bags.Clear;
+      This.Create_Empty_Bags;
    end Clear_Dynamic_Part;
 
    ----------------
@@ -172,6 +173,17 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       This.Last_Mutation_Undo.Ass.Clear;
    end Clear_Undo;
+
+   -----------------------
+   -- Create_Empty_Bags --
+   -----------------------
+
+   procedure Create_Empty_Bags (This : in out Object) is
+      Empty_Bag : Solution_Context_Bags.Object (First => 1);
+   begin
+      Empty_Bag.Set_Context ((Key => + String (All_Assigned_Tasks)));
+      This.Bags.Insert (All_Assigned_Tasks, Empty_Bag);
+   end Create_Empty_Bags;
 
    --------------------------
    -- Create_Some_Solution --
@@ -335,7 +347,11 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Initialize (This : in out Object) is
    begin
+      --  The static context
       This.Context.Bind (new Static_Context);
+
+      --  The bags
+      This.Create_Empty_Bags;
    end Initialize;
 
    -------------
@@ -424,6 +440,7 @@ package body Agpl.Cr.Mutable_Assignment is
          end if;
       end loop;
       Log ("Mutate: No mutation performed!", Error);
+      raise Program_Error;
    end Mutate;
 
    ---------------
@@ -681,21 +698,24 @@ package body Agpl.Cr.Mutable_Assignment is
          A : constant Cr.Agent.Object'Class  := Element (I);
          T : constant Htn.Tasks.Lists.List   := A.Get_Tasks;
          J :          Htn.Tasks.Lists.Cursor := First (T);
-         C : constant Task_Context_Access := new Task_Context;
       begin
          while Has_Element (J) loop
-            C.Job := Element (J).Get_Id;
-            if Has_Element (Previous (J)) then
-               C.Prev := Element (Previous (J)).Get_Id;
-            end if;
-            if Has_Element (Next (J)) then
-               C.Next := Element (Next (J)).Get_Id;
-            end if;
-            Set_Attribute (C.all'Access, Owner, Cr.Agent.Get_Name (A));
+            declare
+               C : constant Task_Context_Access := new Task_Context;
+            begin
+               C.Job := Element (J).Get_Id;
+               if Has_Element (Previous (J)) then
+                  C.Prev := Element (Previous (J)).Get_Id;
+               end if;
+               if Has_Element (Next (J)) then
+                  C.Next := Element (Next (J)).Get_Id;
+               end if;
+               Set_Attribute (C.all'Access, Owner, Cr.Agent.Get_Name (A));
 
-            This.Contexts.Insert (Task_Key (C.Job), Solution_Context_Access (C));
-            Add_To_Bag (This, Solution_Context_Access (C), All_Assigned_Tasks);
-            Next (J);
+               This.Contexts.Insert (Task_Key (C.Job), Solution_Context_Access (C));
+               Add_To_Bag (This, Solution_Context_Access (C), All_Assigned_Tasks);
+               Next (J);
+            end;
          end loop;
       end Process_Agent;
 
@@ -722,6 +742,10 @@ package body Agpl.Cr.Mutable_Assignment is
          Cr.Agent.Lists.Iterate (Agents, Remove_Agent_Tasks'Access);
       end;
 
+      --  At this point, the Pending_Tasks lists contains only tasks in the plan
+      --  that weren't in the assignment received. We are going to assign them
+      --  in some greedy fashion.
+
       --  Do something with unassigned plan tasks
       while not Pending_Tasks.Is_Empty loop
          declare
@@ -747,14 +771,25 @@ package body Agpl.Cr.Mutable_Assignment is
          end;
       end loop;
 
-      --  Add all agent tasks
+      --  At this point, we have inserted the new ones
+
+      Log ("Create_Some_Assignment: Unassigned tasks inserted", Always);
+
+      Log ("The assignment is:", Always);
+      New_Ass.Print_Assignment;
+
+      --  Create all contexts and things.
       declare
          Agents : constant Cr.Agent.Lists.List := New_Ass.Get_Agents;
       begin
          Cr.Agent.Lists.Iterate (Agents, Process_Agent'Access);
       end;
 
+      Log ("Create_Some_Assignment: Assigned tasks reinserted", Always);
+
       Reevaluate_Costs (This);
+
+      Log ("Create_Some_Assignment: Costs reevaluated", Always);
    end Set_Assignment;
 
    ---------------

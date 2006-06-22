@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------------
---                                   AGPL                                   --
+--                         ADAGIO - ADALID - AENEA.                         --
 --                                                                          --
 --                            Copyright (C) 2003                            --
 --                                 A. Mosteo.                               --
 --                                                                          --
---  Authors: A. Mosteo. (public@mosteo.com)                                 --
+--  Authors: A. Mosteo. (adagio@mosteo.com)                                 --
 --                                                                          --
 --  If you have any questions in regard to this software, please address    --
 --  them to the above email.                                                --
@@ -22,13 +22,30 @@
 --  You should have received a copy of the GNU General Public License       --
 --  along with this library; if not, write to the Free Software Foundation, --
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
+--                                                                          --
+--  You are not allowed to use any part of this code to develop a program   --
+--  whose output would be used to harass or prosecute other users of the    --
+--  networks Adagio connects with. All data collected with Adagio or a tool --
+--  containing Adagio code about other network users must remain            --
+--  confidential and cannot be made public by any mean, nor be used to      --
+--  harass or legally prosecute these users.                                --
 ------------------------------------------------------------------------------
+--  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
-with Agpl.Cr.Gap.Safe_Array;
-with Agpl.Smart_Access_Limited;
-pragma Elaborate_All (Agpl.Smart_Access_Limited);
+package Agpl.Conversions.Io is
 
-package Agpl.Cr.Gap.Safe_Array_Handle is new
-Agpl.Smart_Access_Limited (Agpl.Cr.Gap.Safe_Array.Object,
-                           Agpl.Cr.Gap.Safe_Array.Object_Access);
+   pragma Elaborate_Body;
 
+   ------------------------------------------------------------------------
+   -- To_string                                                          --
+   ------------------------------------------------------------------------
+   --  Works as 'Img but removes leading/trailing spaces
+   --  Performs rounding on floats
+   function To_string (N : Float; Decimals : Natural := 2) return String;
+   function To_string (N : Long_Long_Float; Decimals : Natural := 2) return String;
+
+   generic
+      type Real is digits <>;
+   function To_Str (N : Real; Decimals : Natural := 2) return String;
+
+end Agpl.Conversions.Io;

@@ -1,3 +1,5 @@
+with Ada.Text_Io; use Ada.Text_Io;
+
 package body Agpl.Htn.Tasks.Lists_Utils is
 
    use Lists;
@@ -16,6 +18,19 @@ package body Agpl.Htn.Tasks.Lists_Utils is
    begin
       Iterate (Src, Append'Access);
    end Concatenate;
+
+   -----------
+   -- Print --
+   -----------
+
+   procedure Print (This : in Lists.List) is
+      procedure X (I : in Lists.Cursor) is
+      begin
+         Put_Line (Element (I).To_String);
+      end X;
+   begin
+      This.Iterate (X'Access);
+   end Print;
 
    ---------------
    -- To_Vector --

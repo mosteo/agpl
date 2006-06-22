@@ -29,14 +29,14 @@
 
 --  This one strives to be a really general, problem-independent solution.
 
-with Agpl.Bag;
+with Agpl.Bag; pragma Elaborate_All (Agpl.Bag);
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Optimization.Annealing;
-with Agpl.Smart_Access;
+with Agpl.Smart_Access; pragma Elaborate_All (Agpl.Smart_Access);
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
@@ -167,7 +167,7 @@ package Agpl.Cr.Mutable_Assignment is
                              Criterion : in Assignment_Criteria);
    --  The assignment given will be used as current solution.
    --  Any unassigned tasks will be greedily inserted in arbitrary order.
-   --  The criterio is used only for previously unassigned tasks.
+   --  The criterion is used only for previously unassigned tasks.
    --  The dynamic structures will be prepared.
 
 private
@@ -351,6 +351,9 @@ private
    All_Assigned_Tasks : constant Bag_Key := "aat";
 
    --  Bags
+   procedure Create_Empty_Bags (This : in out Object);
+   --  Create the bags that have to be there, even if empty.
+
    procedure Add_To_Bag (This    : in out Object;
                          Context : in Solution_Context_Access;
                          Bag     : in Bag_Key);

@@ -38,28 +38,30 @@
 --  this first approach we'll leave it like that.
 
 with Agpl.Debug;
-with Agpl.Trace_Is;
+with Agpl.Containers.String_Sets;
+with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Exceptions;
+with Ada.Finalization;
 with Ada.Tags;         use Ada.Tags;
 use Ada;
 
-package Agpl.Trace is
+package Agpl.Trace.Console is
 
-   pragma Preelaborate;
-
-   Enabled : Boolean renames Trace_Is.Enabled;
-   --  I expect that inlining will cause no calls when this is false.
-
-   --  Root for logging facilities
-   --  This one does output to Stdout only.
+   pragma Elaborate_Body;
 
    --  Error level messages are shown even if its section is not enabled!!
 
    ------------------------------------------------------------------------
+   -- Exceptions                                                         --
+   ------------------------------------------------------------------------
+   --  Happens when trying to log to file:
+   File_Io_Error : exception;
+
+   ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------
-   type Object is synchronized interface;
+   type Object is tagged limited private;
    type Object_Access is access all Object'Class;
 
    type Levels is (
@@ -72,15 +74,44 @@ package Agpl.Trace is
    subtype All_Levels     is Levels     range Never .. Always;
    subtype Warning_levels is All_Levels range Debug .. Error;
 
-   Null_Object : constant Object_Access := null;
+   No_File     : constant String;
+   Null_Object : constant Object_Access;
+
+   ------------------------------------------------------------------------
+   -- Create                                                             --
+   ------------------------------------------------------------------------
+   --  If File_Name = "" then no output to file is performed. If Active is
+   --  false, no action is performed. If clear is true, the file will be
+   --  erased.
+   --  Minimum_Level says the minimum relevance a message has to have to be logged.
+   procedure Create
+     (This          : out Object;
+      Minimum_Level : in All_Levels := Informative;
+      Console_Echo  : in Boolean    := False;
+      File_Name     : in String     := "";
+      Active        : in Boolean    := True;
+      Clear         : in Boolean    := False);
+
+   ----------------
+   -- Custom_Log --
+   ----------------
+   procedure Custom_Log
+     (This    : in out Object;
+      Text    : in     String;
+      Level   : in     Levels;
+      Section : in     String;
+      Logged  : in     Boolean;
+      Force   :    out Boolean);
+   --  Called for descendent types. Logged says if the text complies with
+   --  the criteria of level and section to be logged.
+   --  Force will cause the opposite behavior at return.
+   --  This call is not thread safe.
 
    ---------------------
    -- Disable_Section --
    ---------------------
-   procedure Disable_Section (This : in out Object; Section : String)
-   is abstract;
-   procedure Enable_Section  (This : in out Object; Section : String)
-   is abstract;
+   procedure Disable_Section (This : in out Object; Section : String);
+   procedure Enable_Section  (This : in out Object; Section : String);
 
    ------------------------------------------------------------------------
    -- Log                                                                --
@@ -89,7 +120,7 @@ package Agpl.Trace is
      (This    : in out Object;
       Text    : in String;
       Level   : in Levels;
-      Section : in String := "") is abstract;
+      Section : in String := "");
 
    ------------------------------------------------------------------------
    -- Log                                                                --
@@ -100,7 +131,6 @@ package Agpl.Trace is
       Text    : in String;
       Level   : in Levels;
       Section : in String := "");
-   pragma Inline (Log);
 
    ------------------------------------------------------------------------
    -- Log                                                                --
@@ -110,7 +140,6 @@ package Agpl.Trace is
      (Text    : in String;
       Level   : in Levels;
       Section : in String := "");
-   pragma Inline (Log);
 
    ------------------
    -- External_Tag --
@@ -129,14 +158,22 @@ package Agpl.Trace is
    -- Set_Level                                                          --
    ------------------------------------------------------------------------
    --  The minimum!
-   procedure Set_Level (This : in out Object; Level : in All_Levels)
-   is abstract;
+   procedure Set_Level (This : in out Object; Level : in All_Levels);
 
    ------------------------------------------------------------------------
    -- Set_Active                                                         --
    ------------------------------------------------------------------------
-   procedure Set_Active (This : in out Object; Active : in Boolean := True)
-   is abstract;
+   procedure Set_Active (This : in out Object; Active : in Boolean := True);
+
+   ------------------------------------------------------------------------
+   -- Set_Echo                                                           --
+   ------------------------------------------------------------------------
+   procedure Set_Echo (This : in out Object; Echo : in Boolean := True);
+
+   ------------------------------------------------------------------------
+   -- Set_File                                                           --
+   ------------------------------------------------------------------------
+   procedure Set_File (This : in out Object; File : in String);
 
    ------------------------------------------------------------------------
    -- Default_Tracer                                                     --
@@ -147,4 +184,46 @@ package Agpl.Trace is
    procedure Set_Default_Tracer (This : in Object_Access := Null_Object);
    pragma Inline (Set_Default_Tracer);
 
-end Agpl.Trace;
+   ---------------
+   -- Auxiliary --
+   ---------------
+
+   Stdout : Text_IO.File_Type renames Text_IO.Standard_Output;
+   Stderr : Text_IO.File_Type renames Text_IO.Standard_Error;
+
+private
+
+   No_File     : constant String        := "";
+   Null_Object : constant Object_Access := null;
+
+   protected type Protected_Object (Parent : access Object) is
+      procedure Add_Section (Section : String);
+      procedure Close;
+      function  Contains_Section (Section : String) return Boolean;
+      procedure Log (Text : in String; Level : in All_Levels);
+      procedure Open;
+      procedure Remove_Section (Section : String);
+      procedure Set_File (File : in String);
+   private
+      File     : UString := Null_Ustring;
+      F        : Text_IO.File_Type;
+      Sections : Containers.String_Sets.Set;
+   end Protected_Object;
+
+   type Object is new Finalization.Limited_Controlled with record
+      Active : Boolean := True;
+      pragma Atomic (Active);
+      Echo : Boolean := False;
+      pragma Atomic (Echo);
+      Level : All_Levels := Informative;
+      pragma Atomic (Level);
+
+      Safe : Protected_Object (Object'Access);
+   end record;
+
+   ------------------------------------------------------------------------
+   -- Finalize                                                           --
+   ------------------------------------------------------------------------
+   procedure Finalize (This : in out Object);
+
+end Agpl.Trace.Console;

@@ -39,7 +39,7 @@ with Ada.Strings.Unbounded;
 
 package Agpl.Types.Ustrings is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    ------------------------------------------------------------------------
    -- Unbounded String Facilities                                        --

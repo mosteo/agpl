@@ -36,7 +36,7 @@ with Agpl.Conversions;
 
 package Agpl.Strings is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    ------------------------------------------------------------------------
    -- Contains                                                           --
@@ -93,11 +93,6 @@ package Agpl.Strings is
    ------------------------------------------------------------------------
    function To_String (N : Integer) return String
                        renames Conversions.To_String;
-
-   function To_String (N : Float; Decimals : Natural := 2) return String
-                       renames Conversions.To_String;
-   function S (N : Float; Decimals : Natural := 2) return String
-               renames To_String;
 
    ------------------------------------------------------------------------
    -- Trim                                                               --

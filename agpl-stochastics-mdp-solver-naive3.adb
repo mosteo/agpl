@@ -2,13 +2,14 @@ with Agpl.Command_Line;
 with Agpl.Stochastics.Mdp.Bellman;
 with Agpl.Stochastics.Mdp.Containers;
 with Agpl.Stochastics.Mdp.Solver.Common;
-with Agpl.Trace;
 
 with Text_Io;
 
 package body Agpl.Stochastics.Mdp.Solver.Naive3 is
 
    package CSO renames Containers.State_Outcomes_Maps;
+
+   Stderr : Text_Io.File_Type renames Text_Io.Standard_Error;
 
    -----------
    -- Solve --
@@ -30,7 +31,7 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
    begin
       --  Obtain reachable states
       Common.Reachable_States (Problem.Get_Initial_States (Pr), E, Reachable);
-      Text_Io.Put_Line (Trace.Stderr, "# Reachable states:" &
+      Text_Io.Put_Line (Stderr, "# Reachable states:" &
                         Natural'Image (Natural (State.Object_Lists.Length
                                                   (Reachable))));
 
@@ -39,7 +40,7 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
         (Reachable,
          A, AE,
          Outcomes);
-      Text_Io.Put_Line (Trace.Stderr, "Created outcome table");
+      Text_Io.Put_Line (Stderr, "Created outcome table");
 
       --  Perform value iteration over reachable states
       loop
@@ -81,16 +82,16 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
          end;
 
          exit when Iterations = It;
-         Text_Io.Put_Line (Trace.Stderr, "Iteration" & Iterations'Img);
+         Text_Io.Put_Line (Stderr, "Iteration" & Iterations'Img);
 
       end loop;
 
       if Iterations = It then
-         Text_Io.Put_Line (Trace.Stderr,
+         Text_Io.Put_Line (Stderr,
                            "Convergence not reached after" & It'Img &
                            " iterations");
       else
-         Text_Io.Put_Line (Trace.Stderr,
+         Text_Io.Put_Line (Stderr,
                            "Converged in" & Iterations'Img &
                            " iterations");
       end if;

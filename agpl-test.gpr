@@ -9,24 +9,22 @@ project Agpl.Test is
    for Source_Dirs use ("tests");
    for Object_Dir use "obj";
 
+   for Main use ("t021_trace_zero_overhead.adb");
+
    package Builder is
       for Default_Switches ("ada") use ("-j2", "-g");
    end Builder;
 
    package Compiler is
-      for Default_Switches ("ada") use 
-         ("-O2", "-gnatn", "-gnatQ", "-gnatf", "-gnato", "-fstack-check", 
-          "-g", "-s", "-gnata", "-gnat05", "-gnatwc", "-gnatwf", "-gnatwj", 
-          "-gnatwk", "-gnatwm", "-gnatwo", "-gnatwp", "-gnatwr", "-gnatwu", "-gnatwv", 
-          "-gnatwz", "-gnatya", "-gnatyc", "-gnatye", "-gnatyh", "-gnatyi", "-gnatyk");
+      for Default_Switches ("ada") use Agpl.Compiler'Default_Switches ("ada");
    end Compiler;
 
    package Binder is
-      for Default_Switches ("ada") use ("-E");
+      for Default_Switches ("ada") use Agpl.Binder'Default_Switches ("ada");
    end Binder;
 
    package Linker is
-      for Default_Switches ("ada") use ("-g", "-Wl,--gc-sections");
+      for Default_Switches ("ada") use Agpl.Linker'Default_Switches ("ada");
    end Linker;
 
 end Agpl.Test;

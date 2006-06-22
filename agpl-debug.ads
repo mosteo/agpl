@@ -38,13 +38,13 @@ with Ada.Exceptions;
 with Ada.Streams;
 use  Ada;
 
-with Gnat.Debug_Pools;
+--  with Gnat.Debug_Pools;
 
 package Agpl.Debug is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
-   Pool : Gnat.Debug_Pools.Debug_Pool;
+--   Pool : Gnat.Debug_Pools.Debug_Pool;
 
    ------------------------------------------------------------------------
    -- Report                                                             --

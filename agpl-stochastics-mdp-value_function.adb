@@ -1,8 +1,8 @@
-with Agpl.Trace;
-
 with Text_Io;
 
 package body Agpl.Stochastics.Mdp.Value_Function is
+
+   Stderr : Text_Io.File_Type renames Text_Io.Standard_Error;
 
    --------------
    -- Contains --
@@ -130,10 +130,10 @@ package body Agpl.Stochastics.Mdp.Value_Function is
       --  Float_Printer
       use Text_Io;
    begin
-      Text_Io.Put_Line (Trace.Stderr, "Value function summary: ");
+      Text_Io.Put_Line (Stderr, "Value function summary: ");
       while I /= No_Element loop
          Text_Io.Put_Line
-           (Trace.Stderr,
+           (Stderr,
             "State " & String (Key (I)) & " x " &
             Action.To_String
               (Action_Maps.Element

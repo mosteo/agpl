@@ -38,16 +38,8 @@ with Ada.Strings;
 with Ada.Strings.fixed;
 
 with Interfaces;
-with Text_IO;
 
 package body Agpl.Conversions is
-
-   ------------------------------------------------------------------------
-   -- Forward Declarations                                               --
-   ------------------------------------------------------------------------
-   --  Removes leading/ending blanks
-   function Trim (This : in String) return String;
-   pragma Inline (Trim);
 
    ------------------------------------------------------------------------
    -- From_Hex                                                           --
@@ -117,49 +109,14 @@ package body Agpl.Conversions is
       return Rpad (Result (Pos + 1 .. Result'Last), Length, '0');
    end To_Hex;
 
-   ------------------------------------------------------------------------
-   -- To_string                                                          --
-   ------------------------------------------------------------------------
+   ---------------
+   -- To_String --
+   ---------------
+
    function To_String (N : Integer) return String is
    begin
       return Trim (Integer'Image (N));
    end To_string;
-
-   function To_String (N : Float; Decimals : Natural := 2) return String is
-      package f_io is new Text_IO.Float_IO (Float);
-      S    : String (1 .. 100);
-   begin
-      if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
-      else
-         return To_String (Integer (N));
-      end if;
-   end To_string;
-
-   function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
-      package f_io is new Text_IO.Float_IO (Long_Long_Float);
-      S    : String (1 .. 100);
-   begin
-      if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
-      else
-         return To_String (Integer (N));
-      end if;
-   end To_string;
-
-   function To_Str (N : Real; Decimals : Natural := 2) return String is
-      package F_Io is new Text_Io.Float_Io (Real);
-      S    : String (1 .. 100);
-   begin
-      if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
-      else
-         return To_String (Integer (N));
-      end if;
-   end To_Str;
 
    ------------------------------------------------------------------------
    -- Trim                                                               --

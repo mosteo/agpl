@@ -1,6 +1,6 @@
 with Agpl.Command_Line;
+with Agpl.Conversions.Io; use Agpl.Conversions.Io;
 with Agpl.Stochastics.Mdp.Outcome;
-with Agpl.Strings;
 
 with Text_Io; use Text_Io;
 
@@ -84,9 +84,9 @@ package body Agpl.Stochastics.Mdp.Bellman is
                            "Action: " &
                            Action.To_String (Action.Object_lists.Element (A)) &
                            "; Prob: " &
-                           Agpl.Strings.To_String (Float (Prob), 8) &
+                           To_String (Float (Prob), 8) &
                            "; Total: " &
-                           Agpl.Strings.To_String (Float (Total_Prob), 8));
+                           To_String (Float (Total_Prob), 8));
                   end;
 
                   Rew_A_S := R (Ini,
@@ -122,7 +122,7 @@ package body Agpl.Stochastics.Mdp.Bellman is
             Ada.Exceptions.Raise_Exception
               (Wrong_Data'Identity,
                "Action: " & Action.To_String (Action.Object_lists.Element (A)) &
-               "; Total_Prob: " & Agpl.Strings.To_String (Float (Total_Prob), 8));
+               "; Total_Prob: " & To_String (Float (Total_Prob), 8));
          end if;
 
          --  See if this action is better:

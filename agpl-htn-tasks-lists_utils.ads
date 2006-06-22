@@ -37,4 +37,7 @@ package Agpl.Htn.Tasks.Lists_Utils is
 
    function To_Vector (Src : in Maps.Map) return Vectors.Vector;
 
+   procedure Print (This : in Lists.List);
+   --  Stdout dump
+
 end Agpl.Htn.Tasks.Lists_Utils;

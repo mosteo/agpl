@@ -26,11 +26,14 @@
 
 with Agpl.Debug;
 with Agpl.Random;
+with Agpl.Sequence;
 with Agpl.Trace;  use Agpl.Trace;
 
-with System.Address_Image;
+with Interfaces;
 
 package body Agpl.Htn.Plan_Node is
+
+   package Unsigned_Sequences is new Sequence (Interfaces.Unsigned_32);
 
    ------------------
    -- Append_Child --
@@ -92,6 +95,7 @@ package body Agpl.Htn.Plan_Node is
    begin
       Node.Parent   := Parent;
       Node.The_Task := new Tasks.Object'Class'(From);
+
       return Node;
    end Create;
 
@@ -376,7 +380,7 @@ package body Agpl.Htn.Plan_Node is
 
    function Get_Id (This : not null Node_Access) return String is
    begin
-      return System.Address_Image (This.all'Address);
+      return +This.Id;
    end Get_Id;
 
    ---------------
@@ -518,6 +522,19 @@ package body Agpl.Htn.Plan_Node is
          Random.Get_Integer (First_Index (This.Parent.Children),
                              Last_Index  (This.Parent.Children)));
    end Get_Random_Sibling;
+
+   ----------------
+   -- Initialize --
+   ----------------
+
+   Seq : Unsigned_Sequences.Object;
+
+   procedure Initialize (This : in out Object) is
+      Next : Interfaces.Unsigned_32;
+   begin
+      Seq.Get_Next (Next);
+      This.Id := + Interfaces.Unsigned_32'Image (Next);
+   end Initialize;
 
    -------------
    -- Is_Sane --

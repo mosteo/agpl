@@ -32,67 +32,49 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
---  Objects for tracing with disc dump optional.
---  This first implementation uses a protected object but not queuing.
---  Writing is done within the protected, which is theoretically illega.
---  Gnat's implementation of I/O allows it so in this first approach we'll
---  leave it like that.
+with Ada.Text_IO;
 
-package body Agpl.Trace is
+package body Agpl.Conversions.Io is
 
    ------------------------------------------------------------------------
-   -- Log                                                                --
+   -- To_string                                                          --
    ------------------------------------------------------------------------
-   --  In purpose, This can be null to allow the passing of Null_Object.
-   procedure Log
-     (This    : in     Object_Access;
-      Text    : in     String;
-      Level   : in     Levels;
-      Section : in String := "") is
+
+
+   function To_String (N : Float; Decimals : Natural := 2) return String is
+      package f_io is new Ada.Text_IO.Float_IO (Float);
+      S    : String (1 .. 100);
    begin
-      if Enabled then
-         if This /= null then
-            Log (This.all, Text, Level, Section);
-         end if;
+      if Decimals > 0 then
+         f_io.Put (S, N, Aft => Decimals, Exp => 0);
+         return Trim (S);
+      else
+         return To_String (Integer (N));
       end if;
-   end Log;
+   end To_string;
 
-   ------------------------------------------------------------------------
-   -- Log                                                                --
-   ------------------------------------------------------------------------
-   --  Logs to the default log object.
-   procedure Log
-     (Text    : in String;
-      Level   : in Levels;
-      Section : in String := "") is
+   function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
+      package f_io is new Ada.Text_IO.Float_IO (Long_Long_Float);
+      S    : String (1 .. 100);
    begin
-      if Enabled then
-         Log (Get_Default_Tracer, Text, Level, Section);
+      if Decimals > 0 then
+         f_io.Put (S, N, Aft => Decimals, Exp => 0);
+         return Trim (S);
+      else
+         return To_String (Integer (N));
       end if;
-   end Log;
+   end To_string;
 
-   ------------------------------------------------------------------------
-   -- Default_Tracer                                                     --
-   ------------------------------------------------------------------------
-   Default_Tracer : Object_Access := null;
-   pragma Atomic (Default_Tracer);
-
-   ------------------------
-   -- Get_Default_Tracer --
-   ------------------------
-
-   function Get_Default_Tracer return Object_Access is
+   function To_Str (N : Real; Decimals : Natural := 2) return String is
+      package F_Io is new Ada.Text_Io.Float_Io (Real);
+      S    : String (1 .. 100);
    begin
-      return Default_Tracer;
-   end Get_Default_Tracer;
+      if Decimals > 0 then
+         f_io.Put (S, N, Aft => Decimals, Exp => 0);
+         return Trim (S);
+      else
+         return To_String (Integer (N));
+      end if;
+   end To_Str;
 
-   ------------------------
-   -- Set_Default_Tracer --
-   ------------------------
-
-   procedure Set_Default_Tracer (This : in Object_Access := Null_Object) is
-   begin
-      Default_Tracer := This;
-   end Set_Default_Tracer;
-
-end Agpl.Trace;
+end Agpl.Conversions.Io;

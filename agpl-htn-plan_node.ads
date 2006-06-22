@@ -156,7 +156,9 @@ package Agpl.Htn.Plan_Node is
    procedure Set_Finished (This : Node_Access; Finished : Boolean := True);
 
    function Get_Id (This : not null Node_Access) return String;
-   --  Basicly, the address as string.
+   --  The id depends on the tasks
+   --  So if the tasks keep the id across plans, the node ids should also
+   --  be consistent.
 
    function Get_Owner (This : in Node_Access) return String;
    procedure Set_Owner (This : in Node_Access; Owner : in String);
@@ -198,6 +200,7 @@ private
    type Object (Kind : Node_Kind) is new Ada.Finalization.Limited_Controlled
    with record
       Parent   : Node_Access; -- Will be null for the root.
+      Id       : Ustring;     -- Assigned on initialization.
 
       case Kind is
          when Task_Node =>
@@ -214,7 +217,8 @@ private
       end case;
    end record;
 
-   procedure Finalize (This : in out Object);
+   procedure Initialize (This : in out Object);
+   procedure Finalize   (This : in out Object);
 
    procedure Delete_Internal is new Ada.Unchecked_Deallocation
      (Object, Node_Access);

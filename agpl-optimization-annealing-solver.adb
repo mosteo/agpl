@@ -25,8 +25,8 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Chronos;
+with Agpl.Conversions.Io; use Agpl.Conversions.Io;
 with Agpl.Cr;
-with Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Optimization.Annealing.Solver is
@@ -198,8 +198,8 @@ package body Agpl.Optimization.Annealing.Solver is
       Best_Cost := This.Best_Cost;
 
       Log ("(Startup) Initial solution cost is " &
-                    Strings.To_String (Float (Best_Cost)), Debug,
-                    Section => Log_Section);
+           To_String (Float (Best_Cost)), Debug,
+           Section => Log_Section);
 
       while Continue and then
             Remaining_Iter > 0 and then
@@ -220,10 +220,10 @@ package body Agpl.Optimization.Annealing.Solver is
                Converge_Timer.Reset;
                Log ("(Iteration" & This.Iterations'Img &
                     " at " & Image (Global_Timer) & ") " &
-                    "(speed: " & Strings.To_String
+                    "(speed: " & To_String
                       (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
                     " i/s)" &" Best solution: " &
-                    Strings.To_String (Float (Best_Cost)) &
+                    To_String (Float (Best_Cost)) &
                     " obtained via " & Last_Mutation (This.Best_Solution),
                     Debug,
                     Section => Log_Section);
@@ -247,10 +247,10 @@ package body Agpl.Optimization.Annealing.Solver is
          end if;
       end loop;
 
-      Log ("Best cost found: " & Strings.To_String (Float (Best_Cost)) &
+      Log ("Best cost found: " & To_String (Float (Best_Cost)) &
            " in" & This.Iterations'Img & " iterations run (" &
            Image (Global_Timer) & ", " &
-           Strings.To_String
+           To_String
              (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
            " i/s) (" &
            Integer'Image (This.Wasted * 100 / This.Iterations) & "% wasted moves)" &

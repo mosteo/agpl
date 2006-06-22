@@ -24,11 +24,6 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Cr.Gap.Safe_Array;
-with Agpl.Smart_Access_Limited;
-pragma Elaborate_All (Agpl.Smart_Access_Limited);
+with Gnat.Io;
 
-package Agpl.Cr.Gap.Safe_Array_Handle is new
-Agpl.Smart_Access_Limited (Agpl.Cr.Gap.Safe_Array.Object,
-                           Agpl.Cr.Gap.Safe_Array.Object_Access);
-
+package Agpl.Text_Io renames Gnat.Io;

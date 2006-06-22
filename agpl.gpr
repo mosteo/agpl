@@ -6,12 +6,22 @@ project Agpl is
    for Object_Dir use "obj";
    for Source_Dirs use (".", "mw", "xmlada");
 
+   type Trace_Enabled_Type is ("Enabled", "Disabled");
+   Trace_Enabled : Trace_Enabled_Type := External ("Agpl_Trace", "Enabled");
+
+   case Trace_Enabled is
+      when "Enabled" =>
+         for Source_Dirs use Project'Source_Dirs & ("trace_true");
+      when "Disabled" =>
+         for Source_Dirs use Project'Source_Dirs & ("trace_false");
+   end case;
+
    for Languages use ("Ada", "C");
 
    type Library_Kind_Type is ("Static", "Dynamic");
    Kind : Library_Kind_Type := External ("Agpl_Link", "Static");
 
-   type Build_Type is ("Debug", "Release");
+   type Build_Type is ("Debug", "Release", "No_Options");
    Build : Build_Type := External ("Agpl_Build", "Debug");
 
    package Ide is
@@ -35,7 +45,7 @@ project Agpl is
 
       for Default_Switches ("c") use ("-g");
       for Default_Switches ("ada") use 
-         ("-g", "-s", "-gnatf", "-gnat05", "-gnatwcfjkmoruvz", "-gnatyacehikn", "-gnatQ");
+         ("-g", "-s", "-gnatf", "-gnat05", "-gnatwcfjklmoruvz", "-gnatyacehikn", "-gnatQ");
 
       case Build is
 
@@ -49,7 +59,12 @@ project Agpl is
 
             for Default_Switches ("ada") use 
                Compiler'Default_Switches ("ada") & 
-               ("-O2", "-gnatN");
+               ("-O2", "-gnatn", "-gnatN");
+            --  Could use O3 and see the difference.
+
+         when "No_Options" =>
+            for Default_Switches ("ada") use 
+               ("-gnat05");
 
       end case;
 
@@ -64,9 +79,7 @@ project Agpl is
    end Binder;
 
    package Linker is
-
-      for Default_Switches ("ada") use ("-g");
-
+      for Default_Switches ("ada") use ("-g", "-Wl,--gc-sections");
    end Linker;
 
 end Agpl;
