@@ -29,7 +29,8 @@
 
 --  This one strives to be a really general, problem-independent solution.
 
-with Agpl.Conversions; pragma Elaborate_All (Agpl.Conversions);
+with Agpl.Conversions.Io; pragma Elaborate_All (Agpl.Conversions.Io);
+use  Agpl.Conversions.Io;
 with Agpl.Cr.Agent.Dummy;
 with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Assigner.Hungry3;
@@ -53,7 +54,8 @@ package body Agpl.Cr.Mutable_Assignment is
 
    No_Task : Htn.Tasks.Task_Id renames Htn.Tasks.No_Task;
 
-   function S is new Conversions.To_Str (Optimization.Annealing.Probability);
+   function S is new
+     Conversions.Io.To_Str (Optimization.Annealing.Probability);
 
    function "<" (L, R : Minimax_Key) return Boolean is
       use Asu;

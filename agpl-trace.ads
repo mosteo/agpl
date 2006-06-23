@@ -22,20 +22,8 @@
 --  You should have received a copy of the GNU General Public License       --
 --  along with this library; if not, write to the Free Software Foundation, --
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
---                                                                          --
---  You are not allowed to use any part of this code to develop a program   --
---  whose output would be used to harass or prosecute other users of the    --
---  networks Adagio connects with. All data collected with Adagio or a tool --
---  containing Adagio code about other network users must remain            --
---  confidential and cannot be made public by any mean, nor be used to      --
---  harass or legally prosecute these users.                                --
-------------------------------------------------------------------------------
---  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
---  Objects for tracing with disc dump optional. This first implementation uses
---  a protected object but not queuing. Writing is done within the protected,
---  which is theoretically illega. Gnat's implementation of I/O allows it so in
---  this first approach we'll leave it like that.
+------------------------------------------------------------------------------
 
 with Agpl.Debug;
 with Agpl.Trace_Is;
@@ -44,22 +32,24 @@ with Ada.Exceptions;
 with Ada.Tags;         use Ada.Tags;
 use Ada;
 
+--  Root for logging facilities
+--  By default, a console logger is created. If you don't want it, disable it
+--  via the access that you can get with the function Console_Tracer
+
 package Agpl.Trace is
 
    pragma Preelaborate;
 
    Enabled : Boolean renames Trace_Is.Enabled;
-   --  I expect that inlining will cause no calls when this is false.
-
-   --  Root for logging facilities
-   --  This one does output to Stdout only.
+   --  Inlining shall cause no calls when this is false.
+   --  I have tested this; if this doesn't work something has gone wrong.
 
    --  Error level messages are shown even if its section is not enabled!!
 
-   ------------------------------------------------------------------------
-   -- Object                                                             --
-   ------------------------------------------------------------------------
-   type Object is synchronized interface;
+   --  This object is not thread safe.
+   --  type Object is limited interface;
+   type Object is abstract tagged limited null record;
+   --  Should be an interface but the gnat bug with containers prevents it
    type Object_Access is access all Object'Class;
 
    type Levels is (
@@ -72,79 +62,72 @@ package Agpl.Trace is
    subtype All_Levels     is Levels     range Never .. Always;
    subtype Warning_levels is All_Levels range Debug .. Error;
 
+   type Decorator is access function (Text    : in String;
+                                      Level   : in Levels;
+                                      Section : in String) return String;
+
    Null_Object : constant Object_Access := null;
 
-   ---------------------
-   -- Disable_Section --
-   ---------------------
-   procedure Disable_Section (This : in out Object; Section : String)
-   is abstract;
-   procedure Enable_Section  (This : in out Object; Section : String)
+   procedure Enable_Section  (This    : in out Object;
+                              Section : in     String;
+                              Enabled : in     Boolean := True)
    is abstract;
 
-   ------------------------------------------------------------------------
-   -- Log                                                                --
-   ------------------------------------------------------------------------
    procedure Log
      (This    : in out Object;
       Text    : in String;
       Level   : in Levels;
       Section : in String := "") is abstract;
 
-   ------------------------------------------------------------------------
-   -- Log                                                                --
-   ------------------------------------------------------------------------
-   --  In purpose, This can be null to allow the passing of Null_Object.
    procedure Log
      (This    : in Object_Access;
       Text    : in String;
       Level   : in Levels;
       Section : in String := "");
+   --  In purpose, This can be null to allow the passing of Null_Object.
+   --  This call *is* thread safe
    pragma Inline (Log);
 
-   ------------------------------------------------------------------------
-   -- Log                                                                --
-   ------------------------------------------------------------------------
-   --  Logs to the default log object.
+   procedure Set_Level (This : in out Object; Level : in All_Levels)
+   is abstract;
+   --  Minimum for a message to be logged.
+
+   procedure Set_Active (This : in out Object; Active : in Boolean := True)
+   is abstract;
+
+   procedure Set_Decorator (This : in out Object; Decor : in Decorator)
+   is abstract;
+
+   function Decorate (This    : in Object;
+                      Text    : in String;
+                      Level   : in Levels;
+                      Section : in String) return String
+   is abstract;
+   --  Apply the decorator.
+
    procedure Log
      (Text    : in String;
       Level   : in Levels;
       Section : in String := "");
+   --  This call *Is* thread safe.
    pragma Inline (Log);
 
-   ------------------
-   -- External_Tag --
-   ------------------
+   procedure Add_Tracer (This : not null Object_Access);
+   --  Add a tracer that will be used for all traces.
+   --  Call not thread safe.
+
+   procedure Enable_Section (Section : in String; Enabled : in Boolean := True);
+   --  Apply to all tracers registered.
+
+   function Console_Tracer return Object_Access;
+   --  Reference to the default tracer.
+
+   --  Exception helpers:
+
    function External_Tag (Tag : in Ada.Tags.Tag) return String renames
      Ada.Tags.External_Tag;
 
-   ------------------------------------------------------------------------
-   -- Report                                                             --
-   ------------------------------------------------------------------------
-   --  Constructs a error string upon exception:
    function Report (E : Ada.Exceptions.Exception_Occurrence) return String
-      renames Agpl.Debug.Report;
-
-   ------------------------------------------------------------------------
-   -- Set_Level                                                          --
-   ------------------------------------------------------------------------
-   --  The minimum!
-   procedure Set_Level (This : in out Object; Level : in All_Levels)
-   is abstract;
-
-   ------------------------------------------------------------------------
-   -- Set_Active                                                         --
-   ------------------------------------------------------------------------
-   procedure Set_Active (This : in out Object; Active : in Boolean := True)
-   is abstract;
-
-   ------------------------------------------------------------------------
-   -- Default_Tracer                                                     --
-   ------------------------------------------------------------------------
-   function Get_Default_Tracer return Object_Access;
-   pragma Inline (Get_Default_Tracer);
-
-   procedure Set_Default_Tracer (This : in Object_Access := Null_Object);
-   pragma Inline (Set_Default_Tracer);
+                    renames Agpl.Debug.Report;
 
 end Agpl.Trace;

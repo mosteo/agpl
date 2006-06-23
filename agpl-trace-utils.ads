@@ -32,55 +32,33 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
---  Just implements sections but still doesn't trace.
+--  Objects for tracing with disc dump optional. This first implementation uses
+--  a protected object but not queuing. Writing is done within the protected,
+--  which is theoretically illega. Gnat's implementation of I/O allows it so in
+--  this first approach we'll leave it like that.
 
-with Agpl.Containers.String_Sets;
+package Agpl.Trace.Utils is
 
-package Agpl.Trace.Root is
+   pragma Elaborate_Body;
 
-   pragma Preelaborate;
+   --  Prependers:
 
-   type Object is limited new Trace.Object with private;
-   type Object_Access is access all Object'Class;
+   function Prepend_Level (Text    : in String;
+                           Level   : in Levels;
+                           Section : in String) return String;
+   --  Adds a marker of message level
+   pragma Inline (Prepend_Level);
 
-   overriding
-   procedure Log (This    : in out Object;
-                  Text    : in     String;
-                  Level   : in     Levels;
-                  Section : in     String := "") is null;
+   function Prepend_Timestamp (Text    : in String;
+                               Level   : in Levels;
+                               Section : in String) return String;
+   --  Add a timestamp.
+   pragma Inline (Prepend_Timestamp);
 
-   not overriding
-   function Must_Log (This    : in Object;
-                      Level   : in Levels;
-                      Section : in String) return Boolean;
+   function Prepend_Level_Timestamp (Text    : in String;
+                                     Level   : in Levels;
+                                     Section : in String) return String;
+   --  Add level & timestamp
+   pragma Inline (Prepend_Level_Timestamp);
 
-   overriding
-   procedure Enable_Section  (This    : in out Object;
-                              Section : in     String;
-                              Enabled : in     Boolean := True);
-
-   overriding
-   procedure Set_Active (This : in out Object; Active : in Boolean := True);
-
-   overriding
-   procedure Set_Level  (This : in out Object; Level : in All_Levels);
-
-   overriding
-   procedure Set_Decorator (This : in out Object; Decor : in Decorator);
-
-   overriding
-   function Decorate (This    : in Object;
-                      Text    : in String;
-                      Level   : in Levels;
-                      Section : in String) return String;
-
-private
-
-   type Object is limited new Trace.Object with record
-      Active   : Boolean    := True;
-      Level    : All_Levels := Informative;
-      Sections : Containers.String_Sets.Set;
-      Decor    : Decorator;
-   end record;
-
-end Agpl.Trace.Root;
+end Agpl.Trace.Utils;

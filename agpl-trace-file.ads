@@ -34,53 +34,48 @@
 
 --  Just implements sections but still doesn't trace.
 
-with Agpl.Containers.String_Sets;
+with Agpl.Calendar.Format;
+with Agpl.Command_Line;
+with Agpl.Trace.Root;
 
-package Agpl.Trace.Root is
+private with Ada.Finalization;
+with Ada.Text_Io;
 
-   pragma Preelaborate;
+package Agpl.Trace.File is
 
-   type Object is limited new Trace.Object with private;
+   pragma Elaborate_Body;
+
+   type Object is new Root.Object with private;
    type Object_Access is access all Object'Class;
+
+   type Modes is (Append, Reset);
 
    overriding
    procedure Log (This    : in out Object;
-                  Text    : in     String;
-                  Level   : in     Levels;
-                  Section : in     String := "") is null;
+                  Text    : in String;
+                  Level   : in Levels;
+                  Section : in String := "");
 
    not overriding
-   function Must_Log (This    : in Object;
-                      Level   : in Levels;
-                      Section : in String) return Boolean;
-
-   overriding
-   procedure Enable_Section  (This    : in out Object;
-                              Section : in     String;
-                              Enabled : in     Boolean := True);
-
-   overriding
-   procedure Set_Active (This : in out Object; Active : in Boolean := True);
-
-   overriding
-   procedure Set_Level  (This : in out Object; Level : in All_Levels);
-
-   overriding
-   procedure Set_Decorator (This : in out Object; Decor : in Decorator);
-
-   overriding
-   function Decorate (This    : in Object;
-                      Text    : in String;
-                      Level   : in Levels;
-                      Section : in String) return String;
+   procedure Set_File
+     (This : in out Object;
+      Name : in     String := Command_Line.Program_Name & "." &
+                              Calendar.Format.Datestamp & "." &
+                              Calendar.Format.Timestamp & ".log";
+      Mode : in     Modes  := Append);
 
 private
 
-   type Object is limited new Trace.Object with record
-      Active   : Boolean    := True;
-      Level    : All_Levels := Informative;
-      Sections : Containers.String_Sets.Set;
-      Decor    : Decorator;
+   type Destructor_Type (Parent : access Object) is new
+     Ada.Finalization.Limited_Controlled with null record;
+
+   type Object is new Root.Object with record
+      File       : Ada.Text_Io.File_Type;
+      Opened     : Boolean := False;
+
+      Destructor : Destructor_Type (Object'Access);
    end record;
 
-end Agpl.Trace.Root;
+   procedure Finalize (This : in out Destructor_Type);
+
+end Agpl.Trace.File;

@@ -34,6 +34,7 @@
 
 with Agpl.Dynamic_vector;
 with Agpl.Smart_Access_Limited;
+pragma Elaborate_All (Agpl.Smart_Access_Limited);
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Calendar;

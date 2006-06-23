@@ -1,5 +1,5 @@
+with Agpl.Conversions.Io; use Agpl.Conversions.Io;
 with Agpl.Cr.Tasks.Starting_Pose;
-with Agpl.Strings; use Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Agent is
