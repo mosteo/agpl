@@ -313,6 +313,7 @@ private
       Last_Mutation_Description : Ustring := +"None";
       Last_Mutation_Index       : Positive;
       Last_Mutation_Undo        : Undo_Info;
+      Last_Mutation_Exists      : Boolean := False;
    end record;
 
    --  Controlling...

@@ -36,6 +36,7 @@ with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Assigner.Hungry3;
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
+with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Tasks.Lists;
 with Agpl.Htn.Tasks.Maps;
 with Agpl.Random;
@@ -434,7 +435,10 @@ package body Agpl.Cr.Mutable_Assignment is
          if Luck <= M.Vector (I).Prob then
             Log ("Performing mutation" & I'Img,
                  Debug, Section => Detail_Section);
-            This.Last_Mutation_Index := I;
+            Log ("Performing mutation" & I'Img,
+                 Always);
+            This.Last_Mutation_Index  := I;
+            This.Last_Mutation_Exists := True;
             M.Vector (I).Doer (This,
                                This.Last_Mutation_Description,
                                This.Last_Mutation_Undo);
@@ -442,7 +446,7 @@ package body Agpl.Cr.Mutable_Assignment is
          end if;
       end loop;
       Log ("Mutate: No mutation performed!", Error);
-      raise Program_Error;
+      raise Program_Error with "No mutation performed";
    end Mutate;
 
    ---------------
@@ -685,9 +689,11 @@ package body Agpl.Cr.Mutable_Assignment is
       New_Ass       : Cr.Assignment.Object := Ass;
       Pending_Tasks : Htn.Tasks.Maps.Map;
       L             : constant Htn.Tasks.Lists.List :=
-                        Htn.Plan.Enumerate_Tasks (This.Context.Ref.Plan,
-                                                  Primitive => True,
-                                                  Pending   => True);
+                        Htn.Plan.Enumerate_Tasks
+                          (Htn.Plan.Utils.Get_Any_Expansion
+                             (Ass.Freeze_Plan (This.Context.Ref.Plan)),
+                           Primitive => True,
+                           Pending   => True);
       procedure Ins (I : Htn.Tasks.Lists.Cursor) is
          use Htn.Tasks.Lists;
       begin
@@ -733,7 +739,11 @@ package body Agpl.Cr.Mutable_Assignment is
             Next (J);
          end loop;
       end Remove_Agent_Tasks;
+
+
    begin
+      Clear_Dynamic_Part (This);
+
       --  Keep mapped tasks
       Htn.Tasks.Lists.Iterate (L, Ins'Access);
 
@@ -775,10 +785,8 @@ package body Agpl.Cr.Mutable_Assignment is
 
       --  At this point, we have inserted the new ones
 
-      Log ("Create_Some_Assignment: Unassigned tasks inserted", Always);
-
-      Log ("The assignment is:", Always);
-      New_Ass.Print_Assignment;
+      Log ("Create_Some_Assignment: Unassigned tasks inserted",
+           Debug, Section => Detail_Section);
 
       --  Create all contexts and things.
       declare
@@ -787,11 +795,13 @@ package body Agpl.Cr.Mutable_Assignment is
          Cr.Agent.Lists.Iterate (Agents, Process_Agent'Access);
       end;
 
-      Log ("Create_Some_Assignment: Assigned tasks reinserted", Always);
+      Log ("Create_Some_Assignment: Assigned tasks reinserted",
+           Debug, Section => Detail_Section);
 
       Reevaluate_Costs (This);
 
-      Log ("Create_Some_Assignment: Costs reevaluated", Always);
+      Log ("Create_Some_Assignment: Costs reevaluated",
+           Debug, Section => Detail_Section);
    end Set_Assignment;
 
    ---------------
@@ -905,9 +915,13 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Undo (This : in out Object) is
    begin
-      This.Context.Ref.Mutations.Vector
-        (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
-      Clear_Undo (This);
+      if This.Last_Mutation_Exists then
+         This.Context.Ref.Mutations.Vector
+           (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
+         Clear_Undo (This);
+      else
+         raise Constraint_Error with "No mutation performed to be undone";
+      end if;
    end Undo;
 
    -----------------------

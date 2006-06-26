@@ -1,7 +1,7 @@
 with Agpl.Cr.Agent.Lists;
-with Agpl.Htn.Tasks.Lists_Utils;
+--  with Agpl.Htn.Tasks.Lists_Utils;
 
-with Ada.Text_Io; use Ada.Text_Io;
+--  with Ada.Text_Io; use Ada.Text_Io;
 
 package body Agpl.Cr.Tasks.Insertions is
 
@@ -308,9 +308,9 @@ package body Agpl.Cr.Tasks.Insertions is
          New_Cost  : Cr.Costs;
          Success   : Boolean;
       begin
-         Put_Line ("Trying insertion of " & T.To_String & " at agent " &
-                   Agent.Lists.Element (I).Get_Name & " with tasks:");
-         Htn.Tasks.Lists_Utils.Print (Agent.Lists.Element (I).Get_Tasks);
+--           Put_Line ("Trying insertion of " & T.To_String & " at agent " &
+--                     Agent.Lists.Element (I).Get_Name & " with tasks:");
+--           Htn.Tasks.Lists_Utils.Print (Agent.Lists.Element (I).Get_Tasks);
 
          Greedy (Agent.Lists.Element (I),
                  T,
@@ -340,7 +340,7 @@ package body Agpl.Cr.Tasks.Insertions is
       if Best_Agent.Is_Valid then
          Success := True;
          New_Ass.Set_Agent (Best_Agent.Get);
-         Put_Line ("Assigned to " & Best_Agent.Get.Get_Name);
+--           Put_Line ("Assigned to " & Best_Agent.Get.Get_Name);
       else
          Success := False;
       end if;

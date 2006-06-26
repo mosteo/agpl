@@ -28,6 +28,7 @@
 
 with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Agent.Maps;
+with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Lists;
@@ -76,12 +77,19 @@ package Agpl.Cr.Assignment is
    --  Says the tasks assigned to a particular agent.
 
    function Get_Max_Min_Cost (This : in Object) return Costs;
+   function Get_Max_Min_Cost (This : in Object;
+                              C    : in Cost_Matrix.Object) return Costs;
    --  Says the worst of all the agent total costs.
 
    function Get_Cummulative_Cost (This : in Object) return Costs;
+   function Get_Cummulative_Cost (This : in Object;
+                                  C    : in Cost_Matrix.Object) return Costs;
    --  Says the sum of all agent costs.
 
    function Get_Cost (This      : in Object;
+                      Criterion : in Assignment_Criteria) return Costs;
+   function Get_Cost (This      : in Object;
+                      C         : in Cost_Matrix.Object;
                       Criterion : in Assignment_Criteria) return Costs;
    --  Uses one of the two previous according to the Criterion
 
@@ -91,6 +99,16 @@ package Agpl.Cr.Assignment is
    function Is_Valid (This : in Object) return Boolean;
 
    procedure Set_Valid (This : in out Object; Valid : in Boolean := True);
+
+   function Freeze_Plan (This : in Object;
+                         P    : in Htn.Plan.Object)
+                         return    Htn.Plan.Object;
+   --  This will take a plan that contains a superset of the tasks in the
+   --  assignment. If the plan contains OR nodes, these will be replaced with
+   --  the branches used by the assignment.
+   --  If some incompability is detected (tasks in This but not in P, or
+   --  sibling tasks used in This), an exception will be raised.
+   --  Note that if P > This, the plan can be just partially frozen.
 
    --  DEBUG
 

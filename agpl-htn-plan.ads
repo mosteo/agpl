@@ -42,7 +42,7 @@ package Agpl.Htn.Plan is
    Log_Section    : constant String := "Htn.Plan";
    Detail_Section : constant String := "Htn.Plan.detail";
 
-   type Object is private;
+   type Object is tagged private;
 
    Empty_Plan : constant Object;
 

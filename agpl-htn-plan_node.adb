@@ -35,6 +35,8 @@ package body Agpl.Htn.Plan_Node is
 
    package Unsigned_Sequences is new Sequence (Interfaces.Unsigned_32);
 
+   Seq : Unsigned_Sequences.Object;
+
    ------------------
    -- Append_Child --
    ------------------
@@ -242,7 +244,11 @@ package body Agpl.Htn.Plan_Node is
       else
          declare
             Fresh : constant Node_Access := new Object (This.Kind);
+            use type Interfaces.Unsigned_32;
          begin
+            Fresh.Id     := This.Id;
+            Seq.Set_Next (Seq.Peek_Next - 1); -- Trick not to waste ids...
+
             Fresh.Parent := Parent;
             if This.Kind = Task_Node then
                Set_Child (Fresh,
@@ -527,14 +533,30 @@ package body Agpl.Htn.Plan_Node is
    -- Initialize --
    ----------------
 
-   Seq : Unsigned_Sequences.Object;
-
    procedure Initialize (This : in out Object) is
       Next : Interfaces.Unsigned_32;
    begin
       Seq.Get_Next (Next);
       This.Id := + Interfaces.Unsigned_32'Image (Next);
    end Initialize;
+
+   -----------------
+   -- Is_Ancestor --
+   -----------------
+
+   function Is_Ancestor (This    : in Node_Access;
+                         Of_This : in Node_Access) return Boolean
+   is
+      Current : Node_Access := Of_This;
+   begin
+      while Current /= null loop
+         if Current = This then
+            return True;
+         end if;
+         Current := Get_Parent (Current);
+      end loop;
+      return False;
+   end Is_Ancestor;
 
    -------------
    -- Is_Sane --

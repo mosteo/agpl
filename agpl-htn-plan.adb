@@ -739,10 +739,10 @@ package body Agpl.Htn.Plan is
          else
             case Get_Kind (X) is
                when And_Node =>
-                  Log (Whites & "AND", Always);
+                  Log (Whites & "AND [" & Get_Id (X) & "]", Always);
                   Print_Children (Get_Children (X));
                when Or_Node =>
-                  Log (Whites & "OR", Always);
+                  Log (Whites & "OR [" & Get_Id (X) & "]", Always);
                   Print_Children (Get_Children (X));
                when Task_Node =>
                   declare

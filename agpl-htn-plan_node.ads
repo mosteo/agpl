@@ -182,6 +182,10 @@ package Agpl.Htn.Plan_Node is
    function Get_Parent (This : in Node_Access) return Node_Access;
    --  Get immediate parent node.
 
+   function Is_Ancestor (This    : in Node_Access;
+                         Of_This : in Node_Access) return Boolean;
+   --  Says if a node is child of another at any distance.
+
    function Get_Parent_Task (This : in Node_Access) return Node_Access;
    --  Get first ancestor that is a task node or null if none.
 

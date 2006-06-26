@@ -40,6 +40,8 @@ package Agpl.Cr.Cost_Matrix is
    --  Here we store a mapping of Agent x Start Task x End Task --> Costs
    --  This structure will be later used by assigners to compute an assignation.
 
+   Empty_Object : constant Object;
+
    function Add_Starting_Tasks
      (Agents : in Cr.Agent.Lists.List;
       Tasks  : in Htn.Tasks.Lists.List) return Htn.Tasks.Lists.List;
@@ -105,5 +107,7 @@ private
                  Fin   : in Htn.Tasks.Task_Id) return String;
    pragma Inline (Key);
    --  Construct a suitable key for indexing.
+
+   Empty_Object : constant Object := (others => <>);
 
 end Agpl.Cr.Cost_Matrix;

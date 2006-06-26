@@ -27,6 +27,7 @@
 with Agpl.Trace; use Agpl.Trace;
 
 --  with Agpl.Cr.Agent.Handle;
+with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Tasks.Lists_Utils;
 
 package body Agpl.Cr.Assignment is
@@ -123,6 +124,36 @@ package body Agpl.Cr.Assignment is
    begin
       This.Agents.Include (Agent.Get_Name, Agent);
    end Set_Agent;
+
+   -----------------
+   -- Freeze_Plan --
+   -----------------
+
+   function Freeze_Plan (This : in Object;
+                         P    : in Htn.Plan.Object)
+                         return    Htn.Plan.Object
+   is
+      Result : Htn.Plan.Object := P;
+
+      procedure Check (I : in Agent.Maps.Cursor) is
+         TL : constant Htn.Tasks.Lists.List := Agent.Maps.Element (I).Get_Tasks;
+
+         procedure Check_Tasks (T : in Htn.Tasks.Lists.Cursor) is
+         begin
+            Htn.Plan.Utils.Trim_Or_Siblings
+              (Result, Htn.Tasks.Lists.Element (T).Get_Id);
+         end Check_Tasks;
+      begin
+         Tl.Iterate (Check_Tasks'Access);
+      end Check;
+   begin
+--        Log ("About to freeze plan: ", Always);
+--        Result.Print_Tree_Summary;
+--        Log ("With assignment: ", Always);
+--        This.Print_Assignment;
+      This.Agents.Iterate (Check'Access);
+      return Result;
+   end Freeze_Plan;
 
    ----------------
    -- Get_Agents --
@@ -255,6 +286,23 @@ package body Agpl.Cr.Assignment is
       return Worst;
    end Get_Max_Min_Cost;
 
+   function Get_Max_Min_Cost (This : in Object;
+                              C    : in Cost_Matrix.Object) return Costs
+   is
+      Worst : Costs := 0.0;
+      use Agent.Maps;
+      I : Cursor := First (This.Agents);
+   begin
+      while I /= No_Element loop
+         Worst := Costs'Max
+           (Worst,
+            Cost_Matrix.Get_Plan_Cost (C, Element (I)));
+         Next (I);
+      end loop;
+
+      return Worst;
+   end Get_Max_Min_Cost;
+
    --------------------------
    -- Get_Cummulative_Cost --
    --------------------------
@@ -272,6 +320,21 @@ package body Agpl.Cr.Assignment is
       return Cost;
    end Get_Cummulative_Cost;
 
+   function Get_Cummulative_Cost (This : in Object;
+                                  C    : in Cost_Matrix.Object) return Costs
+   is
+      Cost : Costs := 0.0;
+      use Agent.Maps;
+      I : Cursor := First (This.Agents);
+   begin
+      while I /= No_Element loop
+         Cost := Cost + Cost_Matrix.Get_Plan_Cost (C, Element (I));
+         Next (I);
+      end loop;
+
+      return Cost;
+   end Get_Cummulative_Cost;
+
    --------------
    -- Get_Cost --
    --------------
@@ -283,6 +346,17 @@ package body Agpl.Cr.Assignment is
       case Criterion is
          when Minimax  => return Get_Max_Min_Cost (This);
          when Totalsum => return Get_Cummulative_Cost (This);
+      end case;
+   end Get_Cost;
+
+   function Get_Cost (This      : in Object;
+                      C         : in Cost_Matrix.Object;
+                      Criterion : in Assignment_Criteria) return Costs
+   is
+   begin
+      case Criterion is
+         when Minimax  => return Get_Max_Min_Cost (This, C);
+         when Totalsum => return Get_Cummulative_Cost (This, C);
       end case;
    end Get_Cost;
 

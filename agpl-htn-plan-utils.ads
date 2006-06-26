@@ -28,6 +28,8 @@ with Agpl.Htn.Tasks.Lists;
 
 package Agpl.Htn.Plan.Utils is
 
+   Log_Section : constant String := "agpl.htn.plan.utils";
+
    --  function Get_Any_Expansion (This : in Plan.Object) return Plan.Object;
    --  Given a plan which will trigger OR expansions, return the first one
    --  found.
@@ -48,5 +50,20 @@ package Agpl.Htn.Plan.Utils is
    --  Given a plan with OR nodes, return a random plan expansion.
    --  This is truly random and memory efficient, so don't worry about the
    --  number of OR nodes
+
+   procedure Replace_Child (This        : in out Plan.Object;
+                            Parent_Node,
+                            New_Child,
+                            Old_Child   : in     Subplan);
+   --  Replace the Old_Child (whose parent is Parent_Node) by a new one.
+   --  The Old is freed! The New is deep copied (because the entire branch
+   --  is freed) but no extra memory is left dangling.
+
+   procedure Trim_OR_Siblings (This : in out Plan.Object;
+                               Job  : in     Tasks.Task_Id);
+   --  Given a plan and a task id, will replace an OR branch containing the
+   --  Task by the task proper.
+   --  This is useful for example to merge an assignment with a plan and ob-
+   --  tain a plan compatible
 
 end Agpl.Htn.Plan.Utils;
