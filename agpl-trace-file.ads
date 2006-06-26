@@ -60,7 +60,7 @@ package Agpl.Trace.File is
    procedure Set_File
      (This : in out Object;
       Name : in     String := Command_Line.Program_Name & "." &
-                              Calendar.Format.Datestamp & "." &
+                              Calendar.Format.Datestamp (Separator =>'.') &"."&
                               Calendar.Format.Timestamp & ".log";
       Mode : in     Modes  := Append);
 

@@ -43,7 +43,9 @@ package body Agpl.Trace.File is
 
    procedure Set_File
      (This : in out Object;
-      Name : in     String := Calendar.Format.Timestamp & ".log";
+      Name : in     String := Command_Line.Program_Name & "." &
+                              Calendar.Format.Datestamp (Separator =>'.') &"."&
+                              Calendar.Format.Timestamp & ".log";
       Mode : in     Modes  := Append)
    is
    begin

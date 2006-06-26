@@ -65,7 +65,7 @@ package body Agpl.Calendar.Format is
       Put (S (5 .. 6), (Seconds rem 3600) / 60);
       Put (S (9 .. 10), Seconds rem 60);
       Put (S (13 .. 15),
-           Integer (D * 1000.0 - Duration (Seconds * 1000)));
+           Integer (1000.0 * D - Duration (Seconds * 1000)));
       if Seconds / 3600 > 99 then
          Put (S2, Seconds / 3600);
          return Trim (S2, Both) & "h " & S (5 .. S'Last);
@@ -119,5 +119,29 @@ package body Agpl.Calendar.Format is
       when others =>
          return "??:??:??.??";
    end Timestamp;
+
+   function Datestamp (H         : in Ada.Calendar.Time := Ada.Calendar.Clock;
+                       Separator : in Character := '/')
+                       return String
+   is
+      --  yyyy.mm.dd
+      use Ada.Calendar;
+      package Int_Io is new Text_IO.Integer_IO (Integer);
+      use Int_Io;
+      s   : String (1 .. 10) := (5 => Separator, 8 => Separator, others => <>);
+   begin
+      Put (s (1 .. 4), Year (H));
+      Put (s (6 .. 7), Month (H));
+      Put (s (9 .. 10), Day (H));
+      for i in  s'Range loop
+         if s (i) = ' ' then
+            s (i) := '0';
+         end if;
+      end loop;
+      return s;
+   exception
+      when others =>
+         return "????" & Separator & "??" & Separator & "?";
+   end Datestamp;
 
 end Agpl.Calendar.Format;
