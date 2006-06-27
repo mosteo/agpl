@@ -149,11 +149,13 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo_Identity (This : in out Object; Undo : in  Undo_Info);
    --  Test mutation, does nothing!
 
-   procedure Do_Heuristic_All (This : in out Object;
-                               Desc :    out Ustring;
-                               Undo :    out Undo_Info);
-   procedure Undo_Heuristic_All (This : in out Object; Undo : in  Undo_Info);
+   procedure Do_Heuristic_1 (This : in out Object;
+                             Desc :    out Ustring;
+                             Undo :    out Undo_Info);
+   procedure Undo_Heuristic_1 (This : in out Object; Undo : in  Undo_Info);
    --  Will consider all agents and tasks to provide some "good" assignment.
+   --  The current tasks are re-assigned in a "best pair" greedy fashion.
+   --  So no OR node switchings happen.
 
    -----------------
    -- CONVERSIONS --
@@ -217,6 +219,8 @@ private
    end record;
    type Solution_Context_Access is access all Solution_Context'Class;
    --  Root for all partial info structures we will need to keep in a solution.
+
+   procedure Debug_Dump (This : in Solution_Context) is abstract;
 
    type Bag_Context is record
       Key : Ustring; -- A bag_key
@@ -333,6 +337,8 @@ private
    -- Inner utilities --
    ---------------------
 
+   procedure Debug_Dump_Contexts (This : in Object);
+
    function Is_Sane (This : in Object) return Boolean;
    --  Check for data structures sanity
    --  Can be expensive, use it only for debugging.
@@ -402,5 +408,11 @@ private
       Next_To_Be_Kept    : in     Task_Context_Access);
    --  Update the costs of removing the Curr task.
    --  Prev or Next can be null
+
+   overriding
+   procedure Debug_Dump (This : in Task_Context);
+
+   overriding
+   procedure Debug_Dump (This : in Or_Node_Context);
 
 end Agpl.Cr.Mutable_Assignment;

@@ -119,6 +119,9 @@ package Agpl.Trace is
    procedure Enable_Section (Section : in String; Enabled : in Boolean := True);
    --  Apply to all tracers registered.
 
+   procedure Set_Level (Level : in All_Levels);
+   --  Apply to all tracers registered.
+
    function Console_Tracer return Object_Access;
    --  Reference to the default tracer.
 

@@ -114,6 +114,7 @@ package body Agpl.Optimization.Annealing.Solver is
             --  Keep best solution seen:
             if New_Cost < This.Best_Cost then
                This.Best_Cost := New_Cost;
+               Log ("Solver: Replacing best solution.", Debug, Log_Section);
                This.Best_Sol.Set (This.Curr_Sol.Get);
             end if;
 
@@ -121,6 +122,7 @@ package body Agpl.Optimization.Annealing.Solver is
          else
             This.Discarded := This.Discarded + 1;
             Undo (This.Curr_Sol.Ref.all);
+            Log ("Solver: UNDOINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG!", Always);
          end if;
 
          This.Curr_Temp := Anneal (This.Curr_Temp);
@@ -150,6 +152,9 @@ package body Agpl.Optimization.Annealing.Solver is
       This.Discarded  := 0;
       This.Iterations := 0;
       This.Wasted     := 0;
+
+      Log ("Annealing: Setting initial solution with cost " &
+           To_String (Float (This.Best_Cost)), Debug, Section => Log_Section);
    end Set_Initial_Solution;
 
    -----------------------
@@ -163,6 +168,10 @@ package body Agpl.Optimization.Annealing.Solver is
       This.Best_Sol.Set (Sol);
       This.Best_Cost := Evaluate (Sol);
    end Set_Best_Solution;
+
+   --------------------------
+   -- Set_Current_Solution --
+   --------------------------
 
    procedure Set_Current_Solution (This : in out Object;
                                    Sol  : in     Solution)
@@ -232,19 +241,23 @@ package body Agpl.Optimization.Annealing.Solver is
 
          Remaining_Iter := Remaining_Iter - 1;
 
-         if Elapsed (Info_Timer) >= 1.0 then
-            Reset (Info_Timer);
+         if Progress /= null then
+            Progress.all (Continue);
+         end if;
 
-            if Progress /= null then
-               Progress.all (Continue);
-            end if;
+--           if Elapsed (Info_Timer) >= 1.0 then
+--              Reset (Info_Timer);
+
+--              if Progress /= null then
+--                 Progress.all (Continue);
+--              end if;
 
 --              Log ("Iteration" & This.Iterations'Img &
 --                   "; Curr_Cost: " & Strings.To_String (Float (Current_Cost (This))) &
 --                   "; Curr_Temp: " & Strings.To_String (Float (Current_Temperature (This))) &
 --                   "; Curr_Move: " & Last_Mutation (Current_Solution (This)),
 --                   Debug, Section => Log_Section);
-         end if;
+--           end if;
       end loop;
 
       Log ("Best cost found: " & To_String (Float (Best_Cost)) &

@@ -148,4 +148,19 @@ package body Agpl.Trace is
       end if;
    end Log;
 
+   ---------------
+   -- Set_Level --
+   ---------------
+
+   procedure Set_Level (Level : in All_Levels) is
+   procedure Do_It (X : in out Object_Access) is
+      begin
+         X.Set_Level (Level);
+      end Do_It;
+   begin
+      for I in Tracers.First_Index .. Tracers.Last_Index loop
+         Tracers.Update_Element (I, Do_It'Access);
+      end loop;
+   end Set_Level;
+
 end Agpl.Trace;

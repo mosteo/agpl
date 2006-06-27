@@ -56,6 +56,8 @@ package Agpl.Optimization.Annealing.Solver is
 
    pragma Elaborate_Body;
 
+   Log_Section : constant String := "agpl.optimization.annealing.solver";
+
    type Object is tagged limited private;
    --  The object used to perform the annealing
 

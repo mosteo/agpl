@@ -47,6 +47,8 @@ with Ada.Unchecked_Deallocation;
 
 package body Agpl.Cr.Mutable_Assignment is
 
+   File : constant String := "[Mutable_Assignment] ";
+
    use type Htn.Tasks.Task_Id;
    use type Optimization.Cost;
    use type Optimization.Annealing.Probability;
@@ -213,17 +215,55 @@ package body Agpl.Cr.Mutable_Assignment is
       --  occur with all tasks in the plan.
    end Create_Some_Solution;
 
-   ----------------------
-   -- Do_Heuristic_All --
-   ----------------------
+   ----------------
+   -- Debug_Dump --
+   ----------------
 
-   procedure Do_Heuristic_All (This : in out Object;
-                               Desc :    out Ustring;
-                               Undo :    out Undo_Info)
+   procedure Debug_Dump (This : in Task_Context) is
+   begin
+      Log ("Task Id:" & This.Job'Img, Always);
+   end Debug_Dump;
+
+   procedure Debug_Dump (This : in Or_Node_Context)
+   is
+   begin
+      Log ("Selected branch:" & This.Current_Task'Img, Always);
+   end Debug_Dump;
+
+   -------------------------
+   -- Debug_Dump_Contexts --
+   -------------------------
+
+   procedure Debug_Dump_Contexts (This : in Object) is
+      procedure Debug_Dump_Context (I : Solution_Context_Maps.Cursor) is
+         C : Solution_Context_Access renames Solution_Context_Maps.Element (I);
+         procedure Debug_Dump_Attrs (I : Attribute_Maps.Cursor) is
+         begin
+            Log (Attribute_Maps.Key (I)'Img & " = " &
+                 Attribute_Maps.Element (I), Always);
+         end Debug_Dump_Attrs;
+      begin
+         Log ("Tag: " & External_Tag (C.all'Tag), Always);
+         C.Debug_Dump;
+         C.Attributes.Iterate (Debug_Dump_Attrs'Access);
+      end Debug_Dump_Context;
+   begin
+      Log ("************ CONTEXTS DUMP FOLLOWS *****************", Always);
+      This.Contexts.Iterate (Debug_Dump_Context'Access);
+      Log ("************ CONTEXTS DUMP END     *****************", Always);
+   end Debug_Dump_Contexts;
+
+   --------------------
+   -- Do_Heuristic_1 --
+   --------------------
+
+   procedure Do_Heuristic_1 (This : in out Object;
+                             Desc :    out Ustring;
+                             Undo :    out Undo_Info)
    is
       A : Cr.Assignment.Object := This.To_Assignment;
    begin
-      Undo.Ass := To_Assignment (This);
+      Undo.Ass := A;
       Desc := +"Heuristic - All";
       declare
          use Cr.Assignment;
@@ -234,10 +274,16 @@ package body Agpl.Cr.Mutable_Assignment is
                                Get_All_Tasks (A),
                                This.Context.Ref.Costs);
       begin
-         Set_Assignment (This, New_Assignment, Minimax);
+ --        New_Assignment.Print_Assignment;
+
+         if New_Assignment.Is_Valid then
+            Set_Assignment (This, New_Assignment, Minimax);
+         else
+            Log (File & "Hungry3 failed!", Warning);
+         end if;
          --  Note: here Minimax will not be used since there are no new tasks.
       end;
-   end Do_Heuristic_All;
+   end Do_Heuristic_1;
 
    -----------------
    -- Do_Identity --
@@ -435,8 +481,6 @@ package body Agpl.Cr.Mutable_Assignment is
          if Luck <= M.Vector (I).Prob then
             Log ("Performing mutation" & I'Img,
                  Debug, Section => Detail_Section);
-            Log ("Performing mutation" & I'Img,
-                 Always);
             This.Last_Mutation_Index  := I;
             This.Last_Mutation_Exists := True;
             M.Vector (I).Doer (This,
@@ -624,7 +668,7 @@ package body Agpl.Cr.Mutable_Assignment is
          Log ("Remove_Agent: No remaining agents!", Warning);
       else
          Reassign_Tasks (This, Name, Agent_Sets.First_Element (C.Agents));
-         Do_Heuristic_All (This, Dummy_Desc, Dummy_Undo);
+         Do_Heuristic_1 (This, Dummy_Desc, Dummy_Undo);
       end if;
    end Remove_Agent;
 
@@ -785,7 +829,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
       --  At this point, we have inserted the new ones
 
-      Log ("Create_Some_Assignment: Unassigned tasks inserted",
+      Log ("Set_Assignment: Unassigned tasks inserted",
            Debug, Section => Detail_Section);
 
       --  Create all contexts and things.
@@ -795,12 +839,12 @@ package body Agpl.Cr.Mutable_Assignment is
          Cr.Agent.Lists.Iterate (Agents, Process_Agent'Access);
       end;
 
-      Log ("Create_Some_Assignment: Assigned tasks reinserted",
+      Log ("Set_Assignment: Assigned tasks reinserted",
            Debug, Section => Detail_Section);
 
       Reevaluate_Costs (This);
 
-      Log ("Create_Some_Assignment: Costs reevaluated",
+      Log ("Set_Assignment: Costs reevaluated",
            Debug, Section => Detail_Section);
    end Set_Assignment;
 
@@ -905,6 +949,7 @@ package body Agpl.Cr.Mutable_Assignment is
          end loop;
       end Assign_Agent;
    begin
+--      This.Debug_Dump_Contexts;
       Agent_Sets.Iterate (This.Context.Ref.Agents, Assign_Agent'Access);
       return Result;
    end To_Assignment;
@@ -919,6 +964,7 @@ package body Agpl.Cr.Mutable_Assignment is
          This.Context.Ref.Mutations.Vector
            (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
          Clear_Undo (This);
+         This.Last_Mutation_Exists := False;
       else
          raise Constraint_Error with "No mutation performed to be undone";
       end if;
@@ -932,17 +978,18 @@ package body Agpl.Cr.Mutable_Assignment is
                                 Undo : in     Undo_Info)
    is
    begin
+      Log ("Undoing from scratch", Debug, Section => Detail_Section);
       Set_Assignment (This, Undo.Ass, Minimax);
    end Undo_From_Scratch;
 
-   ------------------------
-   -- Undo_Heuristic_All --
-   ------------------------
+   ----------------------
+   -- Undo_Heuristic_1 --
+   ----------------------
 
-   procedure Undo_Heuristic_All (This : in out Object; Undo : in  Undo_Info) is
+   procedure Undo_Heuristic_1 (This : in out Object; Undo : in  Undo_Info) is
    begin
       Undo_From_Scratch (This, Undo);
-   end Undo_Heuristic_All;
+   end Undo_Heuristic_1;
 
    -------------------
    -- Undo_Identity --
