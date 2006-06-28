@@ -187,9 +187,10 @@ package body Agpl.Htn.Plan.Utils is
                                Job  : in     Tasks.Task_Id)
    is
       use Plan_Node;
-      Node : Subplan := This.Get_Node (Job);
+      Node           : Subplan := This.Get_Node (Job);
       Prev,
-      Parent : Subplan;
+      Parent         : Subplan;
+      Reindex_Needed : Boolean := False;
    begin
       pragma Assert (Get_Kind (Node) = Task_Node);
       loop
@@ -198,6 +199,8 @@ package body Agpl.Htn.Plan.Utils is
             --  Replace the OR node by the branch we were arriving from.
             Log ("Calling Replace_Child with Old_Child of OR kind",
                  Debug, Section => Log_Section);
+            Reindex_Needed :=
+              Reindex_Needed or else Is_Ancestor (Node, Of_This => Prev);
             Replace_Child (This,
                            Parent_Node => Parent,
                            New_Child   => Prev,
@@ -214,6 +217,10 @@ package body Agpl.Htn.Plan.Utils is
          exit when Node = null;
       end loop;
       Log ("End of branch trimming", Debug, Section => Log_Section);
+
+      if Reindex_Needed then
+         This.Build_Index;
+      end if;
    end Trim_Or_Siblings;
 
 end Agpl.Htn.Plan.Utils;

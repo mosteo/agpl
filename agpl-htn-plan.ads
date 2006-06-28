@@ -158,6 +158,8 @@ private
    Expansion_Failed : exception;
    --  Raised when a plan is not viable.
 
+   procedure Build_Index (This : in out Object);
+
    procedure Set_Tasks (This : in out Object; Root : in Subplan);
    --  Set the new tasks in this plan and does maintenance:
    --  Release of previous tasks memory.

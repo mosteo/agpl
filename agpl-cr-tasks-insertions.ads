@@ -105,4 +105,14 @@ package Agpl.Cr.Tasks.Insertions is
    --  Insert a task in the best place of the best agent of an assignment
    --  The results are given in New_Ass, with Success true.
 
+   procedure Greedy (Ass       : in     Assignment.Object;
+                     Tasks     : in     Htn.Tasks.Lists.List;
+                     Costs     : in     Cost_Matrix.Object;
+                     Criterion : in     Assignment_Criteria;
+                     New_Ass   :    out Assignment.Object;
+                     Inserted  :    out Htn.Tasks.Task_Id);
+   --  Insert the best task of the list in the best agent.
+   --  Just *one* task is inserted.
+   --  Inserted can be No_Task if failure.
+
 end Agpl.Cr.Tasks.Insertions;

@@ -56,8 +56,6 @@ package body Agpl.Cr.Assigner.Hungry3 is
       Costs  : in Cr.Cost_Matrix.Object)
       return Assignment.Object
    is
-      pragma Unreferenced (Costs);
-
       A : Assignment.Object;
       --  The result we'll return.
 
@@ -111,6 +109,7 @@ package body Agpl.Cr.Assigner.Hungry3 is
                Cr.Tasks.Insertions.Greedy
                  (Ag,
                   Element (T),
+                  Costs,
                   Int_Maps.Element (Not_Before.Find (Ag.Get_Name)),
                   Try_Agent,
                   Cost_Delta => Dummy,

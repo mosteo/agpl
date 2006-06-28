@@ -48,7 +48,6 @@ package Agpl.Smart_access is
    --  Get an uninitialized access.
 
    --  Get value
-   --  Of course, if the access value is copied outside, error can occur.
    function Val (This : in Object) return Item;
    function "+" (This : in Object) return Item renames Val;
 

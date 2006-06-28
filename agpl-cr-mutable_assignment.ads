@@ -157,6 +157,14 @@ package Agpl.Cr.Mutable_Assignment is
    --  The current tasks are re-assigned in a "best pair" greedy fashion.
    --  So no OR node switchings happen.
 
+   procedure Do_Heuristic_2 (This : in out Object;
+                             Desc :    out Ustring;
+                             Undo :    out Undo_Info);
+   procedure Undo_Heuristic_2 (This : in out Object; Undo : in  Undo_Info)
+                               renames Undo_Heuristic_1; -- Undo from scratch
+   --  This heuristic will consider the best of *all* tasks in every possible
+   --  expansion; freeze the plan with the chosen task; repeat until no more T.
+
    -----------------
    -- CONVERSIONS --
    -----------------
@@ -193,6 +201,8 @@ private
       Costs     : Cr.Cost_Matrix.Object;
       Plan      : Htn.Plan.Object;
 
+      Criterion : Assignment_Criteria := Minimax;
+
       Mutations : Mutation_Vectors.Object (First => 1);
    end record;
    type Static_Context_Access is access all Static_Context;
@@ -217,10 +227,14 @@ private
       Bag_Indexes : Index_Maps.Map;
       --  A table with all the indexes in bags this thing belongs to.
    end record;
-   type Solution_Context_Access is access all Solution_Context'Class;
+   type Solution_Context_Pointer is access all Solution_Context'Class;
    --  Root for all partial info structures we will need to keep in a solution.
 
    procedure Debug_Dump (This : in Solution_Context) is abstract;
+
+   package Context_Pointers is new Smart_Access (Solution_Context'Class,
+                                                 Solution_Context_Pointer);
+   subtype Solution_Context_Access is Context_Pointers.Object;
 
    type Bag_Context is record
       Key : Ustring; -- A bag_key
@@ -237,7 +251,7 @@ private
    type Solution_Context_Key is new String;
 
    package Solution_Context_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Solution_Context_Key, Solution_Context_Access);
+     (Solution_Context_Key, Solution_Context_Access, "<", Context_Pointers."=");
 
    --  Contains all variable information that is unique to a solution
    type Task_Context is new Solution_Context with record
@@ -344,10 +358,10 @@ private
    --  Can be expensive, use it only for debugging.
 
    --  Attributes
-   function Get_Attribute (This : in Solution_Context_Access;
+   function Get_Attribute (This : in Solution_Context_Pointer;
                            Attr : in Solution_Context_Attributes) return String;
 
-   procedure Set_Attribute (This : in Solution_Context_Access;
+   procedure Set_Attribute (This : in Solution_Context_Pointer;
                             Attr : in Solution_Context_Attributes;
                             Val  : in String);
 
@@ -366,16 +380,16 @@ private
                          Bag     : in Bag_Key);
 
    procedure Remove_From_Bag (This    : in out Object;
-                              Context : in     Solution_Context_Access;
+                              Context : in     Solution_Context_Pointer;
                               Bag     : in     Bag_Key);
 
    procedure Remove_From_Bag
      (This    : in out Object;
-      Context : in     Solution_Context_Access;
+      Context : in     Solution_Context_Pointer;
       Bag     : in     Solution_Context_Bag_Maps.Cursor);
 
    procedure Remove_From_All_Bags (This    : in out Object;
-                                   Context : in     Solution_Context_Access);
+                                   Context : in     Solution_Context_Pointer);
 
    procedure Do_Remove_Task (This : in out Object;
                              Job  : not null Task_Context_Access);

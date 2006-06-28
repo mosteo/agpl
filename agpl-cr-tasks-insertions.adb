@@ -1,7 +1,6 @@
 with Agpl.Cr.Agent.Lists;
---  with Agpl.Htn.Tasks.Lists_Utils;
-
---  with Ada.Text_Io; use Ada.Text_Io;
+with Agpl.Htn.Tasks.Lists_Utils;
+with Agpl.Htn.Tasks.Vectors;
 
 package body Agpl.Cr.Tasks.Insertions is
 
@@ -344,6 +343,50 @@ package body Agpl.Cr.Tasks.Insertions is
       else
          Success := False;
       end if;
+   end Greedy;
+
+   ------------
+   -- Greedy --
+   ------------
+
+   procedure Greedy (Ass       : in     Assignment.Object;
+                     Tasks     : in     Htn.Tasks.Lists.List;
+                     Costs     : in     Cost_Matrix.Object;
+                     Criterion : in     Assignment_Criteria;
+                     New_Ass   :    out Assignment.Object;
+                     Inserted  :    out Htn.Tasks.Task_Id)
+   is
+      Pending : constant Htn.Tasks.Vectors.Vector :=
+                  Htn.Tasks.Lists_Utils.To_Vector (Tasks);
+      Best_Cost     : Cr.Costs := Infinite;
+      pragma Optimization_Opportunity
+        ("The new cost could be known without recomputing in full for each",
+         "tried assignment, if the Greedy we are using passed more info out.");
+   begin
+      Inserted := Htn.Tasks.No_Task;
+
+      for I in Pending.First_Index .. Pending.Last_Index loop
+         declare
+            Temp_Ass        : Assignment.Object;
+            Partial_Success : Boolean;
+            Temp_Cost       : Cr.Costs;
+         begin
+            Greedy (Ass,
+                    Pending.Element (I),
+                    Costs,
+                    Criterion,
+                    Temp_Ass,
+                    Partial_Success);
+            if Partial_Success then
+               Temp_Cost := Temp_Ass.Get_Cost (Costs, Criterion);
+               if Temp_Cost < Best_Cost then
+                  New_Ass   := Temp_Ass;
+                  Best_Cost := Temp_Cost;
+                  Inserted  := Pending.Element (I).Get_Id;
+               end if;
+            end if;
+         end;
+      end loop;
    end Greedy;
 
 end Agpl.Cr.Tasks.Insertions;

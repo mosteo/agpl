@@ -31,8 +31,7 @@ package Agpl.Cr.Assigner.Hungry3 is
    type Object (Keep_Order : Boolean) is new Assigner.Object with null record;
    --  If Keep_Order, any tasks in an Agent passed to Agents will be kept in
    --  that position (at plan start).
-   --  If Keep_Order is false, any new tasks will be planned after these tasks
-   --  already assigned.
+   --  If Keep_Order is false, all tasks will be planned in equal conditions.
 
    function Assign
      (This   : in Object;

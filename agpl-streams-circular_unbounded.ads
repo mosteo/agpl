@@ -43,7 +43,7 @@ with Agpl.Streams.Observable;
 
 package Agpl.Streams.Circular_Unbounded is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    Memory_Limit_Reached : exception;
 

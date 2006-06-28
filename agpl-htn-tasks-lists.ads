@@ -27,4 +27,6 @@
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Agpl.Htn.Tasks.Lists is
-   new Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class, Same_Id);
+new Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class, Same_Id);
+
+pragma Preelaborate (Agpl.Htn.Tasks.Lists);

@@ -36,7 +36,7 @@ with Ada.Streams;
 
 package Agpl.Htn.Tasks is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    Id_Error : exception;
 

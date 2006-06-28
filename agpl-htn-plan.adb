@@ -109,10 +109,10 @@ package body Agpl.Htn.Plan is
    begin
       Plan_Node.Enumerate_Tasks (This.Get_Root,
                                  Tasks,
-                                 Compound,
-                                 Primitive,
-                                 Finished,
-                                 Pending);
+                                 Compound  => Compound,
+                                 Primitive => Primitive,
+                                 Finished  => Finished,
+                                 Pending   => Pending);
    end Enumerate_Tasks;
 
    ---------------------
@@ -647,6 +647,15 @@ package body Agpl.Htn.Plan is
    begin
       Plan_Node.Set_Owner (Get_Node (This, T), Owner);
    end Set_Task_Owner;
+
+   -----------------
+   -- Build_Index --
+   -----------------
+
+   procedure Build_Index (This : in out Object) is
+   begin
+      Plan_Node.Build_Index (This.Tasks, This.Index);
+   end Build_Index;
 
    --------------------
    -- Copy_But_Tasks --

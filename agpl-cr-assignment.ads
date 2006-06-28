@@ -28,6 +28,7 @@
 
 with Agpl.Cr.Agent.Lists;
 with Agpl.Cr.Agent.Maps;
+with Agpl.Cr.Agent.Vectors;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
@@ -68,6 +69,9 @@ package Agpl.Cr.Assignment is
 
    function Get_Agents_Without_Tasks (This : in Object)
                                       return    Agent.Lists.List;
+
+   function Get_Agents_Without_Tasks (This : in Object)
+                                      return    Agent.Vectors.Vector;
 
    function Get_All_Tasks (This : in Object) return Htn.Tasks.Lists.List;
    --  Return all tasks in the assignment, regardless of owner agent.

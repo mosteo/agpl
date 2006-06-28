@@ -185,10 +185,35 @@ package body Agpl.Cr.Assignment is
    function Get_Agents_Without_Tasks (This : in Object)
                                       return    Agent.Lists.List
    is
-   use Agent.Lists;
+      use Agent.Lists;
       use Agent.Maps;
 
       Result : Agent.Lists.List;
+
+      procedure Add (X : in Agent.Maps.Cursor) is
+         A : Cr.Agent.Object'Class := Element (X);
+      begin
+         A.Clear_Tasks;
+         Append (Result, A);
+      end Add;
+
+   begin
+      Iterate (This.Agents, Add'Access);
+
+      return Result;
+   end Get_Agents_Without_Tasks;
+
+   ------------------------------
+   -- Get_Agents_Without_Tasks --
+   ------------------------------
+
+   function Get_Agents_Without_Tasks (This : in Object)
+                                      return    Agent.Vectors.Vector
+   is
+      use Agent.Vectors;
+      use Agent.Maps;
+
+      Result : Agent.Vectors.Vector;
 
       procedure Add (X : in Agent.Maps.Cursor) is
          A : Cr.Agent.Object'Class := Element (X);
