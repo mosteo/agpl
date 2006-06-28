@@ -26,12 +26,9 @@
 
 with Agpl.Trace;
 
-with Ada.Exceptions;
 with Ada.Unchecked_Deallocation;
 
 package body Agpl.Smart_Access_Limited is
-
-   use Ada.Exceptions;
 
    ----------
    -- Free --
@@ -41,6 +38,77 @@ package body Agpl.Smart_Access_Limited is
 
    procedure Free is new
       Unchecked_deallocation (Tracker_type, Tracker_access);
+
+
+   protected body Tracker_Type is
+      procedure Add (I : in Integer) is
+      begin
+         Count := Count + I;
+      end Add;
+
+      procedure Discount is
+      begin
+         --  Special check for finalization when uninitialized.
+         if Count > 0 then
+            Add (-1);
+         end if;
+
+         if Count = 0 then
+            Free;  -- Could be null, no problem.
+         end if;
+      end Discount;
+
+      procedure Free is
+      begin
+         Free (Data);
+      end Free;
+
+      function Get_Count return Natural is
+      begin
+         return Count;
+      end Get_Count;
+
+      function Get_Data return Item_Access is
+      begin
+         return Data;
+      end Get_Data;
+
+      procedure Rebind_Data (This : in Item_Access; Force : in Boolean) is
+      begin
+         if Count = 1 or else Force then
+            Free;
+            Data := This;
+         else
+            raise Allocated_Access with Item_Id;
+         end if;
+      end Rebind_Data;
+
+      procedure Set_Data (This : in Item_Access) is
+      begin
+         if Data /= null then
+            raise Allocated_Access with Item_Id;
+         else
+            Data  := This;
+            Count := 1;
+            Alloc := True;
+         end if;
+      end Set_Data;
+
+      procedure Unbind (Force : in Boolean) is
+      begin
+         if Count = 1 or else Force then
+            Data  := null;
+            Count := 0;
+            Alloc := True; -- So deallocation could be notified in Val.
+
+            --  Free (this.Tracker.Data);
+            --  This was like that for some time after migrating from Adagio to
+            --  Agpl, but I'm 99% it was wrong.
+         else
+            raise Allocated_Access with Item_Id;
+         end if;
+      end Unbind;
+   end Tracker_Type;
 
    --------------
    -- Discount --
@@ -52,26 +120,16 @@ package body Agpl.Smart_Access_Limited is
          raise Tracker_Already_Deallocated;
       end if;
 
-      --  Special check for finalization when uninitialized.
-      if This.Count > 0 then
-         this.Count := this.Count - 1;
-      end if;
+      This.Discount;
 
-      if this.Count = 0 then
-         Free (this.Data); -- Could be null, no problem.
-         Free (this);      -- Last one going out of scope.
+      --  Race condition here?
+      --  I don't think it's possible but not very thought of.
+      pragma Race_Condition;
+
+      if This.Get_Count = 0 then
+         Free (This); -- Last one going out of scope.
       end if;
    end Discount;
-
-   --------------
-   -- Addcount --
-   --------------
-   --  Helper decrement function:
-   procedure Addcount (this : in out Tracker_access) is
-   begin
-      this.Count := this.Count + 1;
-   end Addcount;
-
 
    -------------
    -- Is_Null --
@@ -79,7 +137,7 @@ package body Agpl.Smart_Access_Limited is
    --  Is null?
    function Is_Null (this : in Object) return Boolean is
    begin
-      return this.Tracker.Data = null;
+      return this.Tracker.Get_Data = null;
    end Is_Null;
 
    ----------
@@ -87,14 +145,8 @@ package body Agpl.Smart_Access_Limited is
    ----------
    --  Association:
    procedure Bind (this : in out Object; Data : in Item_access) is
-      M : Monitor.Object (Mutex'Access);
-      pragma Unreferenced (M);
    begin
-      if This.Tracker.Data /= null then
-         Raise_Exception (Allocated_Access'Identity, Item_Id);
-      else
-         this.Tracker.all := (Data => Data, Count => 1, Alloc => True);
-      end if;
+      This.Tracker.Set_Data (Data);
    end Bind;
 
    ----------
@@ -117,15 +169,8 @@ package body Agpl.Smart_Access_Limited is
       Data  : in     Item_Access;
       Force : in     Boolean := False)
    is
-      M : Monitor.Object (Mutex'Access);
-      pragma Unreferenced (M);
    begin
-      if this.Tracker.Count = 1 or else Force then
-         Free (this.Tracker.Data);
-         This.Tracker.Data := Data;
-      else
-         Raise_Exception (Allocated_Access'Identity, Item_Id);
-      end if;
+      This.Tracker.Rebind_Data (Data, Force);
    end Rebind;
 
    ------------
@@ -133,37 +178,10 @@ package body Agpl.Smart_Access_Limited is
    ------------
    --  Unbinding:
    --  The value is no longer controlled
-   procedure Unbind (this : in out Object; Force : in Boolean := False) is
-      M : Monitor.Object (Mutex'Access);
-      pragma Unreferenced (M);
+   procedure Unbind (This : in out Object; Force : in Boolean := False) is
    begin
-      if this.Tracker.Count = 1 or else Force then
-         This.Tracker.all := (Data  => null,
-                              Count => 0,
-                              Alloc => True); -- So deallocation could be notified in Val.
-         --  Free (this.Tracker.Data);
-         --  This was like that for some time after migrating from Adagio to
-         --  Agpl, but I'm 99% it was wrong.
-      else
-         Raise_Exception (Allocated_Access'Identity, Item_Id);
-      end if;
+      This.Tracker.Unbind (Force);
    end Unbind;
-
-   ---------
-   -- Val --
-   ---------
-   --  Get value
-   --  Of course, if the access value is copied outside, error can occur.
---     function Val (this : in Object) return Item is
---     begin
---        if this.Tracker.Data /= null then
---           return this.Tracker.Data.all;
---        elsif This.Tracker.Alloc then
---           Raise_Exception (Deallocated_Access'Identity, Item_Id);
---        else
---           Raise_Exception (Uninitialized_Access'Identity, Item_Id);
---        end if;
---     end Val;
 
    ---------
    -- Ref --
@@ -171,7 +189,7 @@ package body Agpl.Smart_Access_Limited is
 
    function Ref (this : in Object) return Item_access is
    begin
-      return this.Tracker.Data;
+      return this.Tracker.Get_Data;
    end Ref;
 
    ------------
@@ -179,16 +197,14 @@ package body Agpl.Smart_Access_Limited is
    ------------
 
    procedure Adjust   (this : in out Object) is
-      M : Monitor.Object (Mutex'Access);
-      pragma Unreferenced (M);
    begin
-      Addcount (this.Tracker);
+      This.Tracker.Add (1);
    exception
       when E : others =>
          Trace.Log ("Smart_Access " & Item_Id & " Adjust exception: " &
                     Trace.Report (E),
                     Trace.Error);
-         raise;
+         --  raise; -- It's illegal to propagate exceptions from adjust?
    end Adjust;
 
    --------------
@@ -196,43 +212,14 @@ package body Agpl.Smart_Access_Limited is
    --------------
 
    procedure Finalize (this : in out Object) is
-      M : Monitor.Object (Mutex'Access);
-      pragma Unreferenced (M);
    begin
-      Discount (this.Tracker);
+      This.Tracker.Discount;
    exception
       when E : others =>
          Trace.Log ("Smart_Access " & Item_Id & " Finalize exception: " &
                     Trace.Report (E),
                     Trace.Error);
-         raise;
+         --  raise; -- It's illegal to propagate exceptions from finalize?
    end Finalize;
-
-   --  Can't work because the item is limited and can't be 'inputed
-
---     function Input (S : access Ada.Streams.Root_Stream_Type'Class) return Object
---     is
---        Valid : constant Boolean := Boolean'Input (S);
---        This  : Object;
---     begin
---        if Valid then
---           declare
---              Data : constant Item_Access := new Item'(Item'Input (S));
---           begin
---              This.Bind (Data);
---           end;
---        end if;
---        return This;
---     end Input;
---
---     procedure Output (S    : access Ada.Streams.Root_Stream_Type'Class;
---                       This : in Object)
---     is
---     begin
---        Boolean'Output (S, Is_Null (This));
---        if not Is_Null (This) then
---           Item'Output (S, Val (This));
---        end if;
---     end Output;
 
 end Agpl.Smart_Access_Limited;

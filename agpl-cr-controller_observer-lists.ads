@@ -28,3 +28,5 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Agpl.Cr.Controller_Observer.Lists is
    new Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class);
+
+pragma Preelaborate (Agpl.Cr.Controller_Observer.Lists);

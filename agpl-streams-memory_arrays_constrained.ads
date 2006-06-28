@@ -41,7 +41,7 @@ generic
    Size : Stream_Element_Count;
 package Agpl.Streams.Memory_arrays_constrained is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    subtype Sized_Array is Stream_Element_Array (1 .. Size);
 

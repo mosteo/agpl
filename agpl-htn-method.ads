@@ -32,7 +32,7 @@ with Agpl.Htn.Tasks;
 
 package Agpl.Htn.Method is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object is abstract tagged null record;
 

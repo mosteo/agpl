@@ -36,6 +36,8 @@ with Ada.Calendar;
 
 package Agpl.Calendar.Format is
 
+   pragma Elaborate_Body;
+
    --  Returns a beautified duration in hours, minutes, seconds, ms
    function Image (D : in Duration) return String;
 

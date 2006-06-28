@@ -26,7 +26,7 @@
 
 package Agpl.Endian is
 
-   pragma Elaborate_body;
+   pragma Elaborate_Body;
 
    --  Auxiliary types for later functions:
    type Byte is mod 2 ** 8;
@@ -48,7 +48,7 @@ package Agpl.Endian is
    function Convert_L (
       From        : Byte_array;
       Big_endian  : Boolean := True) return Long_Long_Integer;
-   pragma Inline (Convert);
+   pragma Inline (Convert_L);
 
    --  Converts an integer to an array of bytes, in the desired endianness.
    --  Optimally returns the shortest possible array:

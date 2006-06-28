@@ -28,3 +28,5 @@ with Ada.Containers.Indefinite_Vectors;
 
 package Agpl.Cr.Agent.Vectors is new
 Ada.Containers.Indefinite_Vectors (Positive, Object'Class);
+
+pragma Preelaborate (Agpl.Cr.Agent.Vectors);

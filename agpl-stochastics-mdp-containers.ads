@@ -36,6 +36,8 @@ with Ada.Containers.Indefinite_Hashed_Maps;
 
 package Agpl.Stochastics.Mdp.Containers is
 
+   pragma Preelaborate;
+
    package State_Actions_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (State.Object_Id,
       Action.Object_Lists.List,

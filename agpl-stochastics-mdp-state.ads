@@ -34,6 +34,8 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 
 package Agpl.Stochastics.Mdp.State is
 
+   pragma Preelaborate;
+
    type Object is abstract tagged null record;
 
    type Object_Id is new String;

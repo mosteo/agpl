@@ -32,7 +32,7 @@ with Ada.Task_identification;
 
 package Agpl.Monitor is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    use Ada;
    use Ada.Task_identification;

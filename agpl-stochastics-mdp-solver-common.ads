@@ -31,6 +31,8 @@ with Agpl.Stochastics.Mdp.Value_Function;
 
 package Agpl.Stochastics.Mdp.Solver.Common is
 
+   pragma Preelaborate;
+
    procedure Appliable_Actions
      (States  : in     State.Object_Lists.List;
       A       : in     Action_Function;

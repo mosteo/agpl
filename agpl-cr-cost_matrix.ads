@@ -34,7 +34,7 @@ with Agpl.Htn.Tasks.Lists;
 
 package Agpl.Cr.Cost_Matrix is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object is private;
    --  Here we store a mapping of Agent x Start Task x End Task --> Costs

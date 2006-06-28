@@ -31,7 +31,7 @@ with Agpl.Cv;
 
 package Agpl.Cr.Gap is
 
-   pragma Elaborate_Body; -- Pure;
+   pragma Preelaborate;
 
    type Kinds is (Occlusive, Out_of_range);
    --  Occlusive gaps are formed because some vertex prevents vision.

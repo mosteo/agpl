@@ -26,7 +26,7 @@
 
 with Permutations;
 
-with Text_IO; use Text_IO;
+with Agpl.Text_IO; use Agpl.Text_IO;
 
 package body Agpl.Optimization.Mtsp is
 

@@ -56,6 +56,8 @@ with Agpl.Stochastics.Mdp.Value_Function;
 
 package Agpl.Stochastics.Mdp.Solver.Backwards is
 
+   pragma Preelaborate;
+
    procedure Solve
      (Pr  : in     Problem.Object;
       I   : in     Involution_Function;

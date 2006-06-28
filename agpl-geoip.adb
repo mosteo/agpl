@@ -35,7 +35,7 @@
 with Agpl.Ip;
 with Agpl.Strings.Fields;
 
-with Text_io;
+with Ada.Text_io;
 
 package body Agpl.Geoip is
 
@@ -65,7 +65,7 @@ package body Agpl.Geoip is
    ------------------------------------------------------------------------
    --  Path to database
    procedure Init (Database : in String) is
-      use Text_io;
+      use Ada.Text_io;
       F    : File_type;
       Line : String (1 .. 255);
       Last : Natural;

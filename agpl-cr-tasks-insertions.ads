@@ -37,7 +37,7 @@ use  Agpl;
 
 package Agpl.Cr.Tasks.Insertions is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Insertion_Procedures is access
      procedure (A          : in     Agent.Object'Class;

@@ -33,3 +33,5 @@ new Ada.Containers.Indefinite_Hashed_Maps
    Vector.Object,
    Ada.Strings.Hash,
    "=");
+
+pragma Preelaborate (Agpl.Cr.Gap.Vector.Map);

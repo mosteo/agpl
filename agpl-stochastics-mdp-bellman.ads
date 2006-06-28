@@ -35,6 +35,8 @@ with Agpl.Stochastics.Mdp.Value_Function;
 
 package Agpl.Stochastics.Mdp.Bellman is
 
+   pragma Preelaborate;
+
    Wrong_Data : exception;
    --  Raised when the action probabilities don't add to 1.0
 

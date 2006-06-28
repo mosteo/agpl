@@ -36,7 +36,7 @@ with Ada.Finalization;
 
 package Agpl.Gdk.Palette is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    type Object is tagged private;
 

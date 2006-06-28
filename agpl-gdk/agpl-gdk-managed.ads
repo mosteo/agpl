@@ -31,7 +31,7 @@
 
 package Agpl.Gdk.Managed is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    type Gtk_Code is abstract tagged null record;
    --  This type must be extended to provide code to be executed.

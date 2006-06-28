@@ -40,6 +40,8 @@ with Ada.Streams;                use Ada.Streams;
 
 package Agpl.Streams.Memory_arrays is
 
+   pragma Preelaborate;
+
    --  New stream type:
    --  Takes an access to an element array. It should remain allocated
    --  during the life of this stream.

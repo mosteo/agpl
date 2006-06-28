@@ -12,6 +12,7 @@ generic
    type Item (<>) is private;
 procedure Exchange (X, Y : in out Item);
 ------------------
-   --  Exchanges X and Y.
+--  Exchanges X and Y.
 
+pragma Preelaborate (Exchange);
 pragma Inline(Exchange);

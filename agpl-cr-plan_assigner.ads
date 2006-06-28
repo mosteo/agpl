@@ -34,6 +34,8 @@ with Agpl.Htn.Plan;
 
 package Agpl.Cr.Plan_Assigner is
 
+   pragma Preelaborate;
+
    type Object is abstract tagged null record;
 
    function Assign

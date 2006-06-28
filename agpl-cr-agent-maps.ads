@@ -30,3 +30,5 @@ with Ada.Strings.Hash;
 package Agpl.Cr.Agent.Maps is new
 Ada.Containers.Indefinite_Hashed_Maps
   (String, Object'Class, Ada.Strings.Hash, "=");
+
+pragma Preelaborate (Agpl.Cr.Agent.Maps);

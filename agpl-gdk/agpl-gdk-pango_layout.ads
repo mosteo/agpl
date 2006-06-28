@@ -32,7 +32,7 @@ private with Ada.Finalization;
 
 package Agpl.Gdk.Pango_Layout is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    type Object (Layout : Pango.Layout.Pango_Layout) is tagged limited private;
 

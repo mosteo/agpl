@@ -27,3 +27,5 @@
 with Agpl.Generic_Handle;
 
 package Agpl.Htn.Tasks.Handle is new Agpl.Generic_Handle (Tasks.Object'Class);
+
+pragma Preelaborate (Agpl.Htn.Tasks.Handle);

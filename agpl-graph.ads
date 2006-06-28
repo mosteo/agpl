@@ -46,6 +46,8 @@ with Ada.Containers.Doubly_Linked_Lists;
 
 package Agpl.Graph is
 
+   --  pragma Elaborate_Body;
+
    ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------

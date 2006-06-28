@@ -32,6 +32,8 @@ with Agpl.Stochastics.Mdp.State;
 
 package Agpl.Stochastics.Mdp.Outcome is
 
+   pragma Preelaborate;
+
    type Object is tagged private;
 
    function Create

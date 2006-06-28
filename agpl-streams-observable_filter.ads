@@ -44,6 +44,8 @@ with Ada.Streams;
 
 package Agpl.Streams.Observable_Filter is
 
+   pragma Preelaborate;
+
    ------------------------------------------------------------------------
    -- Stream_type                                                        --
    ------------------------------------------------------------------------

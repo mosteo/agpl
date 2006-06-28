@@ -29,7 +29,7 @@
 
 package Agpl.Cr.Agent.Dummy is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object is new Agent.Object with private;
 

@@ -37,6 +37,8 @@ with Ada.Calendar;
 
 package Agpl.Chronos is
 
+   pragma Elaborate_Body;
+
    type Object is tagged private;
    type Object_Access is access Object'Class;
 

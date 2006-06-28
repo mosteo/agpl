@@ -27,3 +27,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
 
 package Agpl.Htn.Plan.Lists is new Ada.Containers.Doubly_Linked_Lists (Object);
+
+pragma Preelaborate (Agpl.Htn.Plan.Lists);

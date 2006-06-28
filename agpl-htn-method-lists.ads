@@ -27,4 +27,6 @@
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Agpl.Htn.Method.Lists is
-   new Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class);
+new Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class);
+
+pragma Preelaborate (Agpl.Htn.Method.Lists);

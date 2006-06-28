@@ -33,6 +33,8 @@ with Agpl.Stochastics.Mdp.State;
 
 package Agpl.Stochastics.Mdp.Problem is
 
+   pragma Preelaborate;
+
    type Object is private;
 
    procedure Create

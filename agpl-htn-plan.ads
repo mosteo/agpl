@@ -37,14 +37,15 @@ with Ada.Streams;
 
 package Agpl.Htn.Plan is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    Log_Section    : constant String := "Htn.Plan";
    Detail_Section : constant String := "Htn.Plan.detail";
 
    type Object is tagged private;
 
-   Empty_Plan : constant Object;
+   function Empty_Plan return Object;
+   pragma Inline (Empty_Plan);
 
    subtype Node_Kind is Plan_Node.Node_Kind;
    subtype Subplan   is Plan_Node.Node_Access;
@@ -197,12 +198,5 @@ private
       This   : in     Object);
    for Object'Write use Write;
    --  Serialize pointers and such.
-
-   Empty_Plan : constant Object :=
-                  (Ada.Finalization.Controlled with
-                   Methods => Method.Vectors.Empty_Vector,
-                   Index   => Plan_Node.Task_Id_To_Node.Empty_Map,
-                   Tasks   => null,
-                   Dirty   => False);
 
 end Agpl.Htn.Plan;

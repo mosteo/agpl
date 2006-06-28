@@ -27,3 +27,5 @@
 with Agpl.Dynamic_Vector;
 
 package Agpl.Cr.Gap.Vector is new Dynamic_Vector (Object);
+
+pragma Preelaborate (Agpl.Cr.Gap.Vector);

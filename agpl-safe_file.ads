@@ -46,6 +46,8 @@ use  Ada;
 
 package Agpl.Safe_file is
 
+   --  pragma Elaborate_Body;
+
    File_Not_Found : exception;
 
    ------------------------------------------------------------------------

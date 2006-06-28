@@ -28,3 +28,5 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Agpl.Cr.Agent.Lists is new
 Ada.Containers.Indefinite_Doubly_Linked_Lists (Object'Class);
+
+pragma Preelaborate (Agpl.Cr.Agent.Lists);

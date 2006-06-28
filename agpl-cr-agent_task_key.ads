@@ -34,7 +34,7 @@ with Ada.Containers;
 
 package Agpl.Cr.Agent_Task_Key is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object (<>) is private;
 

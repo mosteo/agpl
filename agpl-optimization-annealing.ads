@@ -30,7 +30,7 @@ with Ada.Calendar;
 
 package Agpl.Optimization.Annealing is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    Log_Section    : constant String := "agpl.optimization.annealing";
    Detail_Section : constant String := "agpl.optimization.annealing.detail";

@@ -34,6 +34,8 @@ with Ada.Containers.Indefinite_Hashed_Maps;
 
 package Agpl.Stochastics.Mdp.Value_Function is
 
+   pragma Preelaborate;
+
    Unknown_Value : exception;
 
    type Object is private;

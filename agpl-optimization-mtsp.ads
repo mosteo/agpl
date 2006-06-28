@@ -26,7 +26,7 @@
 
 package Agpl.Optimization.Mtsp is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    No_Solution : exception;
 

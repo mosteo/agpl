@@ -36,7 +36,7 @@
 --  The instantaneous data rate averaging can be configured.
 
 with Agpl.Average_Queue;
-with Agpl.Average_Queue.Timed;
+with Agpl.Average_Queue.Timed; pragma Elaborate_All (Agpl.Average_Queue.Timed);
 with Agpl.Bandwidth_Throttle;
 with Agpl.Streams.Circular_Unbounded;
 with Agpl.Streams.Filter;
@@ -47,7 +47,7 @@ use  Ada;
 
 package Agpl.Streams.Filter.Bandwidth_Throttle is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    ------------------------------------------------------------------------
    -- Exceptions                                                         --

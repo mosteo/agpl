@@ -4,7 +4,7 @@
 --                            Copyright (C) 2003                            --
 --                                 A. Mosteo.                               --
 --                                                                          --
---  Authors: A. Mosteo. (adagio@mosteo.com)                                 --
+--  Authors: A. Mosteo. (public@mosteo.com)                                 --
 --                                                                          --
 --  If you have any questions in regard to this software, please address    --
 --  them to the above email.                                                --
@@ -23,50 +23,26 @@
 --  along with this library; if not, write to the Free Software Foundation, --
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
---  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
---  Root package for MDP solvers.
+with Agpl.Random;
+with Agpl.Trace; use Agpl.Trace;
 
-with Agpl.Stochastics.Mdp.Action;
-with Agpl.Stochastics.Mdp.State;
+function Agpl.Htn.Plan_Node.Get_Random_Sibling (This : in Node_Access)
+                                                return    Node_Access
+is
+   use Node_Vectors;
+begin
+   --  If this is not an OR node...
+   if This.Parent = null or else Get_Kind (This.Parent) /= Or_Node then
+      Log ("Plan_Node.Get_Random_Sibling: Parent node is " &
+           Node_Kind'Image (Get_Kind (This.Parent)),
+           Warning);
+      return This;
+   end if;
 
-package Agpl.Stochastics.Mdp.Solver is
+   return Element
+     (This.Parent.Children,
+      Random.Get_Integer (First_Index (This.Parent.Children),
+        Last_Index  (This.Parent.Children)));
+end Agpl.Htn.Plan_Node.Get_Random_Sibling;
 
-   pragma Preelaborate;
-
-   type Action_Function is access function
-     (Initial : in State.Object'Class)
-      return       Action.Object_Lists.List;
-   --  This function must return all appliable actions to some state.
-
-   type Action_Evolution_Function is access function
-     (Initial : in State.Object'Class;
-      Action  : in Mdp.Action.Object'Class)
-      return       State.Object_Lists.List;
-   --  All states reachable from a single state, given an action.
-
-   type Evolution_Function is access function
-     (Initial : in State.Object'Class)
-      return       State.Object_Lists.List;
-   --  This function must return all reachable states from another given one.
-
-   type Involution_Function is access function
-     (Final : in State.Object'Class)
-      return     State.Object_Lists.List;
-   --  Gives states from where the Final state is reachable.
-
-   type Reward_Function is access function
-     (Initial : in State.Object'Class;
-      Doing   : in Action.Object'Class;
-      Final   : in State.Object'Class)
-      return       Rewards;
-   --  This function is the typical reward function for MDPs
-
-   type Transition_Function is access function
-     (Initial : in State.Object'Class;
-      Doing   : in Action.Object'Class;
-      Final   : in State.Object'Class)
-      return       Probabilities;
-   --  This function is the typical transition function for MDPs
-
-end Agpl.Stochastics.Mdp.Solver;

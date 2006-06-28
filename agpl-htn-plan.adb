@@ -94,6 +94,15 @@ package body Agpl.Htn.Plan is
       This.Dirty := True;
    end Add_Task;
 
+   ----------------
+   -- Empty_Plan --
+   ----------------
+
+   function Empty_Plan return Object is
+   begin
+      return (Ada.Finalization.Controlled with others => <>);
+   end Empty_Plan;
+
    ---------------------
    -- Enumerate_Tasks --
    ---------------------

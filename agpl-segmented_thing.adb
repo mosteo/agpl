@@ -39,7 +39,7 @@
 --  Equal data adjacent segments are merged automatically.
 --  No position is without segment.
 
-with Text_IO;
+with Agpl.Text_IO;
 
 package body Agpl.Segmented_Thing is
 

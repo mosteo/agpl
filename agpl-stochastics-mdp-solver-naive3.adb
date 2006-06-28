@@ -1,15 +1,11 @@
-with Agpl.Command_Line;
 with Agpl.Stochastics.Mdp.Bellman;
 with Agpl.Stochastics.Mdp.Containers;
 with Agpl.Stochastics.Mdp.Solver.Common;
-
-with Text_Io;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Stochastics.Mdp.Solver.Naive3 is
 
    package CSO renames Containers.State_Outcomes_Maps;
-
-   Stderr : Text_Io.File_Type renames Text_Io.Standard_Error;
 
    -----------
    -- Solve --
@@ -31,16 +27,16 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
    begin
       --  Obtain reachable states
       Common.Reachable_States (Problem.Get_Initial_States (Pr), E, Reachable);
-      Text_Io.Put_Line (Stderr, "# Reachable states:" &
-                        Natural'Image (Natural (State.Object_Lists.Length
-                                                  (Reachable))));
+      Log ("# Reachable states:" & Natural'Image
+           (Natural (State.Object_Lists.Length (Reachable))),
+           Debug, Section => Log_Section);
 
       --  Construct the outcome list
       Common.Appliable_Outcomes
         (Reachable,
          A, AE,
          Outcomes);
-      Text_Io.Put_Line (Stderr, "Created outcome table");
+      Log ("Created outcome table", Debug, Log_Section);
 
       --  Perform value iteration over reachable states
       loop
@@ -72,7 +68,7 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
                Next (S);
             end loop;
 
-            if Command_Line.Exists ("--summary-value") then
+            if Verbose then
                Value_Function.Summary (Vi);
             end if;
 
@@ -82,18 +78,15 @@ package body Agpl.Stochastics.Mdp.Solver.Naive3 is
          end;
 
          exit when Iterations = It;
-         Text_Io.Put_Line (Stderr, "Iteration" & Iterations'Img);
+         Log ("Iteration" & Iterations'Img, Debug, Log_Section);
 
       end loop;
 
       if Iterations = It then
-         Text_Io.Put_Line (Stderr,
-                           "Convergence not reached after" & It'Img &
-                           " iterations");
+         Log ("Convergence not reached after" & It'Img & " iterations",
+              Warning);
       else
-         Text_Io.Put_Line (Stderr,
-                           "Converged in" & Iterations'Img &
-                           " iterations");
+         Log ("Converged in" & Iterations'Img & " iterations", Informative);
       end if;
 
    end Solve;

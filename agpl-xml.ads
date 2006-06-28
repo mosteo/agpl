@@ -39,7 +39,7 @@ with DOM.Core.Nodes;
 
 package Agpl.Xml is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    subtype Node is DOM.Core.Node;
    subtype Document is Node; --  NOT the document but the ROOT element.

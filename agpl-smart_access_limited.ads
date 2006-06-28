@@ -27,8 +27,6 @@
 --  This package provides smart access pointers.
 --  Thread *safe*.
 
-with Agpl.Monitor;
-
 with Ada.Finalization;  use Ada;
 
 generic
@@ -37,7 +35,7 @@ generic
    Item_id : String := "Anonymous";     -- For debug and error reporting.
 package Agpl.Smart_access_Limited is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    Allocated_Access     : exception;
    --  Raised when trying to bind an already binded access.
@@ -52,9 +50,6 @@ package Agpl.Smart_access_Limited is
 
    --  Is null?
    function Is_Null (This : in Object) return Boolean;
-
-   Null_Access : constant Object;
-   --  Get an uninitialized access.
 
    --  Initialization.
    --  May raise Allocated_Access.
@@ -83,6 +78,7 @@ package Agpl.Smart_access_Limited is
    --  Note that unbinding forcefully a pointer with more references will also
    --  nullify the other instances!
    procedure Unbind (This : in out Object; Force : in Boolean := False);
+   pragma Inline (Unbind);
 
 --     --  Serialization...
 --     function Input (S : access Ada.Streams.Root_Stream_Type'Class) return Object;
@@ -98,20 +94,27 @@ private
    Tracker_Already_Deallocated : exception;
 
    pragma Inline (Is_Null, Ref);
-                  --  Val);
 
    --  Auxiliary type to do the counting.
-   type Tracker_Type is record
-      Data  : Item_access;          pragma Atomic (Data);
+   protected type Tracker_Type is
+      procedure Discount;
+      function Get_Count return Natural;
+      function Get_Data  return Item_Access;
+      procedure Rebind_Data (This : in Item_Access; Force : in Boolean);
+      procedure Set_Data (This : in Item_Access);
+      procedure Unbind (Force : in Boolean);
+
+      procedure Add (I : in Integer);
+      procedure Free;
+   private
+      Data  : Item_access;
       Count : Natural     := 1;
       Alloc : Boolean     := False; -- To keep track of unalloc/dealloc status.
-   end record;
+   end Tracker_Type;
 
    type Tracker_access is access Tracker_type;
 
    procedure Discount (This : in out Tracker_access);
-   procedure Addcount (This : in out Tracker_access);
-   pragma Inline (Discount, Addcount);
 
    --  The tracker is always allocated, even for null handlers, for simplicity
    --  and speed reasons.
@@ -123,18 +126,5 @@ private
    procedure Adjust   (this : in out Object);
    procedure Finalize (this : in out Object);
    pragma Inline (Adjust, Finalize);
-
-   Mutex : aliased Monitor.Semaphore;
-   --  Global monitor for each operation.
-   --  This means that there is only *one* mutex for every instantiation.
-   --  This can cause slow down in multithreaded environment but...
-   --  It is placed here because the finalization order will cause P_E if
-   --  it is after the following Null_Access:
-
-   Null_Access : constant Object :=
-                   (Finalization.Controlled with
-                    Tracker => new Tracker_Type'(Data  => null,
-                                                 Count => 1,
-                                                 Alloc => False));
 
 end Agpl.Smart_access_Limited;

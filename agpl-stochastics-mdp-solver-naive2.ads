@@ -34,6 +34,8 @@ with Agpl.Stochastics.Mdp.Value_Function;
 
 package Agpl.Stochastics.Mdp.Solver.Naive2 is
 
+   pragma Preelaborate;
+
    procedure Solve
      (Pr : in     Problem.Object;
       E  : in     Evolution_Function;

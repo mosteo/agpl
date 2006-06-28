@@ -31,3 +31,5 @@ new Ada.Containers.Indefinite_Vectors
   (Positive,
    Object'Class,
    Same_Id);
+
+pragma Preelaborate (Agpl.Htn.Tasks.Vectors);

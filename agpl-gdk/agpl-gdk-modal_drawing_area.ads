@@ -36,6 +36,8 @@ with Ada.Finalization;
 
 package Agpl.Gdk.Modal_Drawing_Area is
 
+   --  pragma Elaborate_Body;
+
    type Object is tagged limited private;
 
    procedure Show (This  : in out Object;

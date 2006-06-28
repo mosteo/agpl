@@ -27,4 +27,6 @@
 with Ada.Containers.Indefinite_Vectors;
 
 package Agpl.Htn.Method.Vectors is
-   new Ada.Containers.Indefinite_Vectors (Positive, Object'Class);
+new Ada.Containers.Indefinite_Vectors (Positive, Object'Class);
+
+pragma Preelaborate (Agpl.Htn.Method.Vectors);

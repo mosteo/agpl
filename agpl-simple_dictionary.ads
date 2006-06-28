@@ -44,7 +44,7 @@ generic
    with function Equal (L, R : in Element_Type) return Boolean;
 package Agpl.Simple_Dictionary is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    ------------------------------------------------------------------------
    -- Object                                                             --

@@ -32,3 +32,4 @@ package Agpl.Cr.Gap.Safe_Array_Handle is new
 Agpl.Smart_Access_Limited (Agpl.Cr.Gap.Safe_Array.Object,
                            Agpl.Cr.Gap.Safe_Array.Object_Access);
 
+pragma Preelaborate (Agpl.Cr.Gap.Safe_Array_Handle);

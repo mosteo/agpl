@@ -24,13 +24,26 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  The C (cond ? <exp> : <exp>) triple operator.
+with Agpl.Htn.Tasks.Lists;
 
-generic
-   type Value (<>) is private;
-function Agpl.If_Function (Condition : in Boolean;
-                           If_True   : in Value;
-                           If_False  : in Value) return Value;
+package Agpl.Htn.Plan.Utils.Random is
 
-pragma Inline (Agpl.If_Function);
-pragma Preelaborate (Agpl.If_Function);
+   --  pragma Elaborate_Body;
+
+   Log_Section : constant String := "agpl.htn.plan.utils";
+
+   function Get_Any_Expansion (This : in Plan.Object;
+                               Jobs : in Tasks.Lists.List)
+                               return    Tasks.Lists.List;
+   --  Given a list of tasks, and a plan with some methods for expansion,
+   --  will return the tasks in some arbitrary expansion.
+   --  Tasks are expanded one by one so no exponential problem can occur
+   --  with OR expansions.
+   --  May raise constraint error if some task fails to expand
+
+   function Get_Any_Expansion (This : in Plan.Object) return Plan.Object;
+   --  Given a plan with OR nodes, return a random plan expansion.
+   --  This is truly random and memory efficient, so don't worry about the
+   --  number of OR nodes
+
+end Agpl.Htn.Plan.Utils.Random;

@@ -1,7 +1,7 @@
 with Agpl.Strings;
+with Agpl.Text_Io; use Agpl.Text_Io;
 
 with Ada.Containers; use Ada.Containers;
-with Ada.Text_Io; use Ada.Text_Io;
 
 package body Agpl.Graphs.Bellman_Ford is
 

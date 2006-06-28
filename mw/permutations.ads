@@ -13,7 +13,8 @@ generic
    type Discrete is (<>);    -- Must have at least two values
    type Count is range <>;
 package Permutations is
---------------------
+
+   pragma Preelaborate;
 
    subtype Positive_Count is Count range 1..Count'Last;
 

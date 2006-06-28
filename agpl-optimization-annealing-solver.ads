@@ -54,7 +54,7 @@ generic
    --  Must undo the last mutation. Only one level of undo is required.
 package Agpl.Optimization.Annealing.Solver is
 
-   pragma Elaborate_Body;
+--   pragma Elaborate_Body;
 
    Log_Section : constant String := "agpl.optimization.annealing.solver";
 

@@ -46,6 +46,8 @@ with Ada.Finalization;
 
 package Agpl.Cr.Mutable_Assignment is
 
+   --  pragma Elaborate_Body;
+
    Log_Section    : constant String := "agpl.cr.mutable_assignment";
    Detail_Section : constant String := "agpl.cr.mutable_assignment.detail";
 

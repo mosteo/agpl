@@ -24,32 +24,11 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Htn.Tasks.Lists;
-
 package Agpl.Htn.Plan.Utils is
 
+   pragma Preelaborate;
+
    Log_Section : constant String := "agpl.htn.plan.utils";
-
-   --  function Get_Any_Expansion (This : in Plan.Object) return Plan.Object;
-   --  Given a plan which will trigger OR expansions, return the first one
-   --  found.
-   --  Current implementation will generate all plans anyway, so it's not
-   --  more efficient really.
-   --  May return an Empty_Plan if expansion fails.
-
-   function Get_Any_Expansion (This : in Plan.Object;
-                               Jobs : in Tasks.Lists.List)
-                               return    Tasks.Lists.List;
-   --  Given a list of tasks, and a plan with some methods for expansion,
-   --  will return the tasks in some arbitrary expansion.
-   --  Tasks are expanded one by one so no exponential problem can occur
-   --  with OR expansions.
-   --  May raise constraint error if some task fails to expand
-
-   function Get_Any_Expansion (This : in Plan.Object) return Plan.Object;
-   --  Given a plan with OR nodes, return a random plan expansion.
-   --  This is truly random and memory efficient, so don't worry about the
-   --  number of OR nodes
 
    procedure Replace_Child (This        : in out Plan.Object;
                             Parent_Node,

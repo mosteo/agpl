@@ -39,7 +39,7 @@ with Agpl.Streams.Filter;
 
 package Agpl.Streams.Filter.Buffered_Unbounded is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    --  These parameters affect new instances (a-la Float_Io).
    Max_Buffer_Size : Stream_Element_Count := Stream_Element_Count'Last;

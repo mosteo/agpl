@@ -45,7 +45,7 @@ package Agpl.Htn.Plan_Node is
    --  we'll omit that. Clients not using it via Plan can't do anything with it
    --  anyway.
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object (<>) is limited private;
    --  To prevent creation outside of our control.
@@ -188,11 +188,6 @@ package Agpl.Htn.Plan_Node is
 
    function Get_Parent_Task (This : in Node_Access) return Node_Access;
    --  Get first ancestor that is a task node or null if none.
-
-   function Get_Random_Sibling (This : in Node_Access) return Node_Access;
-   --  For a task node, child of an OR node, will return any of the other
-   --  task nodes under the parent OR. If no siblings, of no OR parent,
-   --  itself will be returned.
 
    function Is_Sane (This   : in Node_Access;
                      Parent : in Node_Access := null) return Boolean;

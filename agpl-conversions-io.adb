@@ -32,7 +32,7 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
-with Ada.Text_IO;
+with System.Img_Real; use System.Img_Real;
 
 package body Agpl.Conversions.Io is
 
@@ -42,36 +42,27 @@ package body Agpl.Conversions.Io is
 
 
    function To_String (N : Float; Decimals : Natural := 2) return String is
-      package f_io is new Ada.Text_IO.Float_IO (Float);
-      S    : String (1 .. 100);
    begin
       if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
+         return To_String (Long_Long_Float (N), Decimals);
       else
          return To_String (Integer (N));
       end if;
    end To_string;
 
    function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
-      package f_io is new Ada.Text_IO.Float_IO (Long_Long_Float);
-      S    : String (1 .. 100);
    begin
       if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
+         return Trim (Image_Ordinary_Fixed_Point (N, Decimals));
       else
          return To_String (Integer (N));
       end if;
    end To_string;
 
    function To_Str (N : Real; Decimals : Natural := 2) return String is
-      package F_Io is new Ada.Text_Io.Float_Io (Real);
-      S    : String (1 .. 100);
    begin
       if Decimals > 0 then
-         f_io.Put (S, N, Aft => Decimals, Exp => 0);
-         return Trim (S);
+         return To_String (Long_Long_Float (N), Decimals);
       else
          return To_String (Integer (N));
       end if;

@@ -25,8 +25,7 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Stochastics.Mdp.Outcome;
-
-with Text_Io;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Stochastics.Mdp.Solver.Common is
 
@@ -273,11 +272,10 @@ package body Agpl.Stochastics.Mdp.Solver.Common is
 
       declare
          use State.Object_Lists;
-         use Text_Io;
          I : Cursor := First (States);
       begin
          while I /= No_Element loop
-            Put_Line (State.To_String (Element (I)));
+            Log (State.To_String (Element (I)), Debug, Section => Log_Section);
             declare
                Id : constant State.Object_Id := State.Get_Id (Element (I));
                Ac : constant AL.List := CSA.Element (CSA.Find (Acts, Id));
@@ -285,7 +283,8 @@ package body Agpl.Stochastics.Mdp.Solver.Common is
                use type AL.Cursor;
             begin
                while J /= AL.No_Element loop
-                  Put_Line ("   " & Action.To_String (AL.Element (J)));
+                  Log ("   " & Action.To_String (AL.Element (J)),
+                       Debug, Section => Log_Section);
                   AL.Next (J);
                end loop;
             end;

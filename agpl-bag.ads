@@ -41,7 +41,7 @@ generic
    Grow_factor  : Float   := 1.5;
 package Agpl.Bag is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    package Bag_Vectors is new Agpl.Dynamic_Vector (Item_Type,
                                                    Initial_Size,

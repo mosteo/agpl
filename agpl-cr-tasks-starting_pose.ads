@@ -29,7 +29,7 @@ with Agpl.Htn.Tasks.Primitive;
 
 package Agpl.Cr.Tasks.Starting_Pose is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object (<>) is new Htn.Tasks.Primitive.Object with private;
    --  This special task is used to simplify the manipulation of task lists

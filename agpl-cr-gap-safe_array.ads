@@ -28,3 +28,5 @@ with Agpl.Indefinite_Protected_Value;
 
 package Agpl.Cr.Gap.Safe_Array is new
   Agpl.Indefinite_Protected_Value (Object_Array);
+
+pragma Preelaborate (Agpl.Cr.Gap.Safe_Array);

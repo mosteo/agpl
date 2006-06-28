@@ -1,8 +1,6 @@
-with Text_Io;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Stochastics.Mdp.Value_Function is
-
-   Stderr : Text_Io.File_Type renames Text_Io.Standard_Error;
 
    --------------
    -- Contains --
@@ -128,17 +126,16 @@ package body Agpl.Stochastics.Mdp.Value_Function is
       I : Value_Maps.Cursor := First (This.Values);
       type FP is delta 0.00001 digits 18;
       --  Float_Printer
-      use Text_Io;
    begin
-      Text_Io.Put_Line (Stderr, "Value function summary: ");
+      Log ("Value function summary: ", Debug, Section => Log_Section);
       while I /= No_Element loop
-         Text_Io.Put_Line
-           (Stderr,
-            "State " & String (Key (I)) & " x " &
+         Log
+           ("State " & String (Key (I)) & " x " &
             Action.To_String
               (Action_Maps.Element
                  (Action_Maps.Find (This.Actions, Key (I)))) &
-            " --> " & FP'Image (FP (Element (I))));
+            " --> " & FP'Image (FP (Element (I))),
+            Debug, Section => Log_Section);
 
          Next (I);
       end loop;

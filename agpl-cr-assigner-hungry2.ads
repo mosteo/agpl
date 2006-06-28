@@ -28,6 +28,8 @@ with Agpl.Cr.Cost_Matrix;
 
 package Agpl.Cr.Assigner.Hungry2 is
 
+   pragma Preelaborate;
+
    type Object is new Assigner.Object with null record;
 
    function Assign

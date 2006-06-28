@@ -36,6 +36,8 @@
 
 package Agpl.Ip is
 
+   pragma Preelaborate;
+
    --  Named or dotted address:
    subtype Any_address is String;
 

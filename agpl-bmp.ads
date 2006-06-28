@@ -44,6 +44,8 @@ with Ada.Streams;
 
 package Agpl.Bmp is
 
+   pragma Preelaborate;
+
    --  Mime_type
    Mime_type : constant String := "image/bmp";
 

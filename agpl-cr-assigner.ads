@@ -35,6 +35,8 @@ with Agpl.Htn.Tasks.Lists;
 
 package Agpl.Cr.Assigner is
 
+   pragma Preelaborate;
+
    type Object is abstract tagged null record;
 
 --     function Assign

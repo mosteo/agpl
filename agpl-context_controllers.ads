@@ -38,6 +38,8 @@ with Ada.Finalization;
 
 package Agpl.Context_controllers is
 
+   pragma Preelaborate;
+
    ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------

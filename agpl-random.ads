@@ -34,7 +34,7 @@ with Ada.Numerics.Float_Random;
 
 package Agpl.Random is
 
-   pragma Elaborate_Body;
+   --  pragma Elaborate_Body;
 
    subtype Uniformly_Distributed is
      Ada.Numerics.Float_Random.Uniformly_Distributed;

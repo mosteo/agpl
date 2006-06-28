@@ -30,6 +30,8 @@ with Agpl.Htn.Tasks.Vectors;
 
 package Agpl.Htn.Tasks.Lists_Utils is
 
+   pragma Preelaborate;
+
    procedure Concatenate (Dest : in out Lists.List; Src : in Lists.List);
    --  Append Src to Dest
 

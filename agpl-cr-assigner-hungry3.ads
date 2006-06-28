@@ -28,6 +28,8 @@ with Agpl.Cr.Cost_Matrix;
 
 package Agpl.Cr.Assigner.Hungry3 is
 
+   pragma Preelaborate;
+
    type Object (Keep_Order : Boolean) is new Assigner.Object with null record;
    --  If Keep_Order, any tasks in an Agent passed to Agents will be kept in
    --  that position (at plan start).

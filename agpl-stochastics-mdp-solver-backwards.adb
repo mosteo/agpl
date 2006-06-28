@@ -3,8 +3,7 @@ with Agpl.Stochastics.Mdp.Containers;
 with Agpl.Stochastics.Mdp.Outcome;
 with Agpl.Stochastics.Mdp.Solver.Common;
 with Agpl.Stochastics.Mdp.State;
-
-with Text_Io; use Text_Io;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Stochastics.Mdp.Solver.Backwards is
 
@@ -86,13 +85,13 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
       Iterations       : Natural := 0;
    begin
       if Debug then
-         Put_Line (Standard_Error, "** Warning ** Debug mode is active");
+         Log ("** Warning ** Debug mode is active", Always);
       end if;
 
       Main :
       loop
-         Put_Line (Standard_Error,
-                   "Iteration" & Natural'Image (Iterations + 1));
+         Log ("Iteration" & Natural'Image (Iterations + 1),
+              Trace.Debug, Log_Section);
 
          Loop_Pending_States :
          while not Pending_States.Is_Empty loop
@@ -106,10 +105,9 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                --  The precedent states in closer first order.
             begin
                if Verbose then
-                  Put_Line
-                    (Standard_Error,
-                     " Expanding " & State.To_String (FiS) & " with distance" &
-                     Duration'Image (Duration (FiS.Distance)));
+                  Log (" Expanding " & State.To_String (Fis) & " with distance" &
+                       Duration'Image (Duration (Fis.Distance)),
+                       Trace.Debug, Log_Section);
                end if;
 
                Pending_States.Delete_First; -- Already used.
@@ -125,10 +123,10 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                      Prev.Delete_First; -- Already used
 
                      if Verbose then
-                        Put_Line (Standard_Error,
-                                  "   Initial state: " & State.To_String (InS) &
-                                  " with distance" & Duration'Image
-                                    (Duration (InS.Distance)));
+                        Log ("   Initial state: " & State.To_String (Ins) &
+                             " with distance" & Duration'Image
+                               (Duration (Ins.Distance)),
+                             Trace.Debug, Log_Section);
                      end if;
 
                      --  Insert if needed the expanded state in Next_States.
@@ -136,18 +134,16 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                         null;
                      elsif SS.Contains (Pending_States, InS) then
                         if Verbose then
-                           Put_Line
-                             (Standard_Error, "      (Already pending)");
+                           Log ("      (Already pending)", Always);
                         end if;
                      elsif SIS.Contains (Expanded, State.Get_Id (InS)) then
                         if Verbose then
-                           Put_Line
-                             (Standard_Error, "      (Already expanded)");
+                           Log ("      (Already expanded)", Always);
                         end if;
                      else
                         Append (Next_States, InS);
                         if Verbose then
-                           Put_Line (Standard_Error, "      (Queued)");
+                           Log ("      (Queued)", Always);
                         end if;
                      end if;
 
@@ -214,13 +210,13 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
                         end Outcomes_Checking;
 
                         if Verbose then
-                           Put_Line (Standard_Error, "      Best action found: " &
-                                     Action.To_String
-                                       (Value_Function.Get_Action (V, InS)) &
-                                     " [" & Duration'Image
-                                       (Duration
-                                          (Value_Function.Get_Value (V, InS))) &
-                                     " ]");
+                           Log ("      Best action found: " &
+                             Action.To_String
+                               (Value_Function.Get_Action (V, Ins)) &
+                             " [" & Duration'Image
+                               (Duration
+                                  (Value_Function.Get_Value (V, Ins))) &
+                             " ]", Always);
                         end if;
 
                      end if;
@@ -247,10 +243,11 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
             end loop;
 
             if not Fail then
-               Put_Line (Standard_Error, "Solution found in" &
-                         Natural'Image (Iterations + 1) & " iterations");
-               Put_Line (Standard_Error, "States expanded:" &
-                         Natural'Image (Natural (SIS.Length (Expanded))));
+               Log ("Solution found in" &
+                    Natural'Image (Iterations + 1) &" iterations", Informative);
+               Log ("States expanded:" &
+                    Natural'Image (Natural (Sis.Length (Expanded))),
+                    Informative);
                exit Main; -- <-- Exit due to resolution
             end if;
          end;
@@ -258,10 +255,10 @@ package body Agpl.Stochastics.Mdp.Solver.Backwards is
          --  Verify backteracy counter for early exit
          Iterations := Iterations + 1;
          if Iterations = It then
-            Put_Line (Standard_Error, "No solution found in" &
-                      Natural'Image (Iterations + 1) & " iterations");
-            Put_Line (Standard_Error, "States expanded:" &
-                      Natural'Image (Natural (SIS.Length (Expanded))));
+            Log ("No solution found in" &
+                 Natural'Image (Iterations + 1) & " iterations", Warning);
+            Log ("States expanded:" &
+                 Natural'Image (Natural (Sis.Length (Expanded))), Warning);
             exit Main;
          end if;
 

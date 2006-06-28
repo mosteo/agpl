@@ -27,3 +27,5 @@
 with Agpl.Generic_Handle;
 
 package Agpl.Cr.Agent.Handle is new Agpl.Generic_Handle (Agent.Object'Class);
+
+pragma Preelaborate (Agpl.Cr.Agent.Handle);

@@ -39,6 +39,7 @@ with Agpl.Cr.Plan_Assigner.Greedy1;
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
+with Agpl.Htn.Plan.Utils.Random;
 with Agpl.Htn.Tasks.Lists;
 with Agpl.Htn.Tasks.Maps;
 with Agpl.Random;
@@ -761,7 +762,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Pending_Tasks : Htn.Tasks.Maps.Map;
       L             : constant Htn.Tasks.Lists.List :=
                         Htn.Plan.Enumerate_Tasks
-                          (Htn.Plan.Utils.Get_Any_Expansion
+                          (Htn.Plan.Utils.Random.Get_Any_Expansion
                              (Ass.Freeze_Plan (This.Context.Ref.Plan)),
                            Primitive => True,
                            Pending   => True);

@@ -43,12 +43,14 @@
 --  fied for the timed average queue.
 
 with Agpl.Average_Queue;
-with Agpl.Average_Queue.Timed;
+with Agpl.Average_Queue.Timed; pragma Elaborate_All (Agpl.Average_Queue.Timed);
 
 with Ada.Finalization;
 use  Ada;
 
 package Agpl.Graph.Timed is
+
+   --  pragma Elaborate_Body;
 
    --  Don't forget to check Agpl.Graph for all the functions available
 

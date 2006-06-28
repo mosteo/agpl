@@ -32,14 +32,14 @@ with Agpl.Htn.Tasks.Lists;
 with Agpl.Htn.Tasks.Primitive;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
-with Ada.Calendar;
+--  with Ada.Calendar;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Strings.Hash;
 with Ada.Tags;
 
 package Agpl.Cr.Agent is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object is abstract tagged private;
 
@@ -69,8 +69,8 @@ package Agpl.Cr.Agent is
    function Get_Cached_Cost (This : in Object) return Costs;
    --  Returns the cost that was estimated when starting execution.
 
-   function Get_Elapsed (This : in Object) return Duration;
-   --  Returns the elapsed time since starting execution (Mark_Start).
+--     function Get_Elapsed (This : in Object) return Duration;
+--     --  Returns the elapsed time since starting execution (Mark_Start).
 
    function Get_Cost (This : in Object; The_Task : in Htn.Tasks.Object'Class)
                       return Costs;
@@ -121,7 +121,7 @@ package Agpl.Cr.Agent is
    function Has_Tasks (This : in Object) return Boolean;
    --  Says if the TO DO list is not empty.
 
-   procedure Mark_Start (This : in out Object);
+--     procedure Mark_Start (This : in out Object);
    --  Marks the execution is starting now, and caches the estimated cost.
 
    procedure Remove_Task (This : in out Object; Id : in Htn.Tasks.Task_Id);
@@ -163,7 +163,7 @@ private
       --  Mnemonic for the agent.
 
       Cost  : Costs;
-      Start : Ada.Calendar.Time;
+--      Start : Ada.Calendar.Time;
 
       Tasks : Htn.Tasks.Lists.List;
       --  The TO DO list for this agent.

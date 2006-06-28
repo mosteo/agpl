@@ -1,8 +1,5 @@
-with Agpl.Command_Line;
-with Agpl.Conversions.Io; use Agpl.Conversions.Io;
 with Agpl.Stochastics.Mdp.Outcome;
-
-with Text_Io; use Text_Io;
+with Agpl.Trace; use Agpl.Trace;
 
 with Ada.Containers;
 with Ada.Exceptions;
@@ -10,6 +7,8 @@ with Ada.Exceptions;
 package body Agpl.Stochastics.Mdp.Bellman is
 
    use type State.Object'Class;
+
+   type Prob_Printer is delta 0.000000001 range 0.0 .. 1.0;
 
    ----------------
    -- Get_Action --
@@ -83,10 +82,8 @@ package body Agpl.Stochastics.Mdp.Bellman is
                           (Wrong_Data'Identity,
                            "Action: " &
                            Action.To_String (Action.Object_lists.Element (A)) &
-                           "; Prob: " &
-                           To_String (Float (Prob), 8) &
-                           "; Total: " &
-                           To_String (Float (Total_Prob), 8));
+                           "; Prob: " & Prob_Printer (Prob)'Img &
+                           "; Total: " & Prob_Printer (Total_Prob)'Img);
                   end;
 
                   Rew_A_S := R (Ini,
@@ -122,7 +119,7 @@ package body Agpl.Stochastics.Mdp.Bellman is
             Ada.Exceptions.Raise_Exception
               (Wrong_Data'Identity,
                "Action: " & Action.To_String (Action.Object_lists.Element (A)) &
-               "; Total_Prob: " & To_String (Float (Total_Prob), 8));
+               "; Total_Prob: " & Prob_Printer (Total_Prob)'Img);
          end if;
 
          --  See if this action is better:
@@ -130,13 +127,9 @@ package body Agpl.Stochastics.Mdp.Bellman is
             Res.Reward := Total_Rew;
             Res.Action.Clear;
             Res.Action.Append (Action.Object_Lists.Element (A));
-         elsif
-           Total_Rew = Res.Reward and then
-           Command_Line.Exists ("--warning")
-         then
-            Put_Line (Standard_Error,
-                      "** Warning ** [Bellman operator] Ambiguity: " &
-                      "Two actions give same reward.");
+         elsif Total_Rew = Res.Reward then
+            Log ("[Bellman operator] Ambiguity: Two actions give same reward.",
+                 Warning);
          end if;
 
          S := State.Object_Lists.First (Fin);
@@ -178,13 +171,9 @@ package body Agpl.Stochastics.Mdp.Bellman is
 
          if Local_Res.Reward > Res.Reward then
             Res := Local_Res;
-         elsif
-           Local_Res.Reward = Res.Reward and then
-           Command_Line.Exists ("--warning")
-         then
-            Put_Line (Standard_Error,
-                      "** Warning ** [Pruned Bellman operator] Ambiguity: " &
-                      "Two actions give same reward.");
+         elsif Local_Res.Reward = Res.Reward then
+            Log ("[Pruned Bellman operator] Ambiguity: " &
+                 "Two actions give same reward.", Warning);
          end if;
 
          Next (I);

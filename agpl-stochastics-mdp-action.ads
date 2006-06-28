@@ -31,6 +31,8 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Agpl.Stochastics.Mdp.Action is
 
+   pragma Preelaborate;
+
    type Object is abstract tagged null record;
 
    function To_String (This : in Object) return String is abstract;

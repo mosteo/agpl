@@ -31,7 +31,7 @@ with Gdk.Drawable; use Gdk.Drawable;
 
 package Agpl.Gdk.Utils is
 
-   pragma Elaborate_Body;
+   --   pragma Elaborate_Body;
 
    procedure Set_Color (This     : in Controlled_Gc.Object;
                         Color    : in Gdk_Color;

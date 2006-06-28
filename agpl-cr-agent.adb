@@ -84,11 +84,11 @@ package body Agpl.Cr.Agent is
    -- Get_Elapsed --
    -----------------
 
-   function Get_Elapsed (This : in Object) return Duration is
-      use Ada.Calendar;
-   begin
-      return Clock - This.Start;
-   end Get_Elapsed;
+--     function Get_Elapsed (This : in Object) return Duration is
+--        use Ada.Calendar;
+--     begin
+--        return Clock - This.Start;
+--     end Get_Elapsed;
 
    --------------
    -- Get_Cost --
@@ -247,11 +247,11 @@ package body Agpl.Cr.Agent is
    -- Mark_Start --
    ----------------
 
-   procedure Mark_Start (This : in out Object) is
-   begin
-      This.Start := Ada.Calendar.Clock;
-      This.Cost  := Get_Plan_Cost (This);
-   end Mark_Start;
+--     procedure Mark_Start (This : in out Object) is
+--     begin
+--        This.Start := Ada.Calendar.Clock;
+--        This.Cost  := Get_Plan_Cost (This);
+--     end Mark_Start;
 
    ----------------------
    -- Modify_Task_List --

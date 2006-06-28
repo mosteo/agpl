@@ -36,7 +36,7 @@ with Agpl.Htn.Tasks.Lists;
 
 package Agpl.Cr.Assignment is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    type Object is tagged private;
 

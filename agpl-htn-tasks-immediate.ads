@@ -30,6 +30,8 @@
 
 package Agpl.Htn.Tasks.Immediate is
 
+   pragma Preelaborate;
+
    type Object is abstract interface;
    type Object_Access is access Object'Class;
 

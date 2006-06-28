@@ -13,7 +13,7 @@ generic
    type Vertex_Data is private;
 package Agpl.Graphs.Bellman_Ford is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    Invalid_Graph : exception;
 

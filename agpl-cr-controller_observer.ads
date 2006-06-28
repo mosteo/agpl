@@ -24,9 +24,11 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Htn.Plan; pragma Elaborate_All (Agpl.Htn.Plan);
+with Agpl.Htn.Plan;
 
 package Agpl.Cr.Controller_Observer is
+
+   pragma Preelaborate;
 
    type Object is abstract tagged null record;
    --  This kind of object is used as a callback mechanism so the controller

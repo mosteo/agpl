@@ -27,6 +27,10 @@
 
 package Agpl.Stochastics.Mdp is
 
+   pragma Preelaborate;
+
+   Log_Section : constant String := "agpl.stochastics.mdp";
+
    --  Really, Markov matrix are square and its rows sum 1. This isn't
    --  enforceable in the type declaration so...
    type Markov_Matrix is

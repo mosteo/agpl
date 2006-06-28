@@ -46,6 +46,8 @@ generic
    type Index_Type    is range <>;
 package Agpl.Segmented_Thing is
 
+   pragma Preelaborate;
+
    ------------------------------------------------------------------------
    -- Object                                                             --
    ------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 with Agpl.Conversions.Io; use Agpl.Conversions.Io;
-
-with Ada.Text_Io;
+with Agpl.Text_Io;
 
 package body Agpl.Cr.Gap is
 
@@ -60,7 +59,7 @@ package body Agpl.Cr.Gap is
    ----------
 
    procedure Dump (This : Object) is
-      use Ada.Text_Io;
+      use Agpl.Text_Io;
       use type Cv.Float_Array_3;
       Origin : constant Cv.Point2D := (0.0, 0.0, 1.0);
    begin

@@ -38,14 +38,11 @@ generic
    Item_id : String := "Anonymous";     -- For debug and error reporting.
 package Agpl.Smart_access is
 
-   pragma Elaborate_Body;
+   pragma Preelaborate;
 
    package Lim is new Smart_Access_Limited (Item, Item_Access, Item_Id);
 
    type Object is new Lim.Object with private;
-
-   Null_Access : constant Object;
-   --  Get an uninitialized access.
 
    --  Get value
    function Val (This : in Object) return Item;
@@ -64,7 +61,5 @@ private
    pragma Inline (Val);
 
    type Object is new Lim.Object with null record;
-
-   Null_Access : constant Object := (Lim.Null_Access with null record);
 
 end Agpl.Smart_access;
