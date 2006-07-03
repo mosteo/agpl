@@ -128,7 +128,7 @@ private
    end Worker;
 
    type Object (Stack_size : Natural := 64 * 1024) is
-      record
+      limited record
          List   : Event_list.Sorted_index;
          Seq    : Id_sequence.Object;
          Waiter : Active_object (Object'Access);
