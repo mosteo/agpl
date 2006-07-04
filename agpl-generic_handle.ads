@@ -42,6 +42,8 @@ package Agpl.Generic_Handle is
 
    type Object is tagged private;
 
+   Null_Object : constant Object;
+
    function Set (This : in Item) return Object;
    function "+" (This : in Item) return Object renames Set;
    --  Creation
@@ -78,5 +80,8 @@ private
 
    procedure Adjust   (This : in out Object);
    procedure Finalize (This : in out Object);
+
+   Null_Object : constant Object :=
+                   (Ada.Finalization.Controlled with Data => null);
 
 end Agpl.Generic_Handle;
