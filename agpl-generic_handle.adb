@@ -88,6 +88,15 @@ package body Agpl.Generic_Handle is
       end if;
    end Get;
 
+   -----------------
+   -- Null_Object --
+   -----------------
+
+   function Null_Object return Object is
+   begin
+      return (Ada.Finalization.Controlled with null);
+   end Null_Object;
+
    ---------
    -- Ref --
    ---------

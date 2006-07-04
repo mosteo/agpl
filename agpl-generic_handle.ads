@@ -27,7 +27,7 @@
 --  A container for indefinite objects allowing an easier storage for them.
 --  'Read and 'Write are implemented, so this type can be safely serialized.
 
-with Ada.Finalization;
+private with Ada.Finalization;
 with Ada.Streams;
 
 generic
@@ -42,10 +42,12 @@ package Agpl.Generic_Handle is
 
    type Object is tagged private;
 
-   Null_Object : constant Object;
+   function Null_Object return Object;
+   pragma Inline (Null_Object);
 
    function Set (This : in Item) return Object;
    function "+" (This : in Item) return Object renames Set;
+   pragma Inline (Set);
    --  Creation
 
    procedure Set (This : in out Object; X : in Item);
@@ -53,15 +55,18 @@ package Agpl.Generic_Handle is
 
    function Get (This : in Object) return Item;
    function "+" (This : in Object) return Item renames Get;
+   pragma Inline (Get);
    --  Extraction. May raise No_Data if uninitialized.
 
    function Ref (This : in Object) return Item_Access;
+   pragma Inline (Ref);
    --  Reference to the held item.
 
    procedure Clear (This : in out Object);
    --  Make it uninitialized.
 
    function Is_Valid (This : in Object) return Boolean;
+   pragma Inline (Is_Valid);
    --  Says if it contains some value.
 
    procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
@@ -80,8 +85,5 @@ private
 
    procedure Adjust   (This : in out Object);
    procedure Finalize (This : in out Object);
-
-   Null_Object : constant Object :=
-                   (Ada.Finalization.Controlled with Data => null);
 
 end Agpl.Generic_Handle;
