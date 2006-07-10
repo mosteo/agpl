@@ -88,6 +88,9 @@ package Agpl.Htn.Plan is
       Pending        : in     Boolean := False)
       return                  Htn.Tasks.Lists.List;
 
+   procedure Clear (This : in out Object);
+   --  Delete everything
+
    procedure Expand (This    : in Object;
                      Results : not null access procedure (Found : in Object));
    --  Will produce eventually all valid expansions of the plan.
@@ -98,6 +101,9 @@ package Agpl.Htn.Plan is
    --  Will produce a tree of plans where the root is an OR node,
    --  and each child of this OR node is a fully expanded plan.
    --  Will return an empty plan if no valid expansions are found.
+
+   function Contains (This : in Object; Id : in Tasks.Task_Id) return Boolean;
+   --  Say if a particular task is somewhere in the plan
 
    function Get_Node
      (This : in Object;

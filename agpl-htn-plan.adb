@@ -666,6 +666,22 @@ package body Agpl.Htn.Plan is
       Plan_Node.Build_Index (This.Tasks, This.Index);
    end Build_Index;
 
+   procedure Clear (This : in out Object) is
+   begin
+      This.Finalize;
+      This.Index.Clear;
+      This.Methods.Clear;
+   end Clear;
+
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains (This : in Object; Id : in Tasks.Task_Id) return Boolean is
+   begin
+      return This.Index.Contains (Id);
+   end Contains;
+
    --------------------
    -- Copy_But_Tasks --
    --------------------

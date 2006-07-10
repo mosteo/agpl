@@ -31,6 +31,8 @@
 --  decomposed in other tasks (either compound and/or primitive) until all
 --  tasks are primitive. At this point we say we have a valid Plan.
 
+private with Agpl.Containers.String_String_Maps;
+
 with Ada.Finalization;
 with Ada.Streams;
 
@@ -57,6 +59,15 @@ package Agpl.Htn.Tasks is
    --  Raises Id_Error if the task has not been properly initialized.
 
    function Is_Primitive (This : in Object) return Boolean is abstract;
+
+   function Get_Property (This : in Object;
+                          Key  : in String;
+                          Def  : in String := "") return String;
+   --  If the default value is "" and the property doesnt exist, raise C_E.
+
+   procedure Set_Property (This : in out Object;
+                           Key  : in     String;
+                           Val  : in     String);
 
    function To_String (This : in Object) return String;
    --  Human readable task description.
@@ -95,7 +106,8 @@ private
    No_Task : constant Task_Id := 0;
 
    type Object is abstract new Ada.Finalization.Controlled with record
-      Id : Task_Id := No_Task;
+      Id         : Task_Id := No_Task;
+      Properties : Containers.String_String_Maps.Map;
    end record;
 
    procedure Initialize (This : in out Object);

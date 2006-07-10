@@ -66,6 +66,38 @@ package body Agpl.Htn.Tasks is
       end if;
    end Get_Id;
 
+   ------------------
+   -- Get_Property --
+   ------------------
+
+   function Get_Property (This : in Object;
+                          Key  : in String;
+                          Def  : in String := "") return String
+   is
+      use Containers.String_String_Maps;
+      I : constant Cursor := This.Properties.Find (Key);
+   begin
+      if Has_Element (I) then
+         return Element (I);
+      elsif Def /= "" then
+         return Def;
+      else
+         raise Constraint_Error;
+      end if;
+   end Get_Property;
+
+   ------------------
+   -- Set_Property --
+   ------------------
+
+   procedure Set_Property (This : in out Object;
+                           Key  : in     String;
+                           Val  : in     String)
+   is
+   begin
+      This.Properties.Include (Key, Val);
+   end Set_Property;
+
    ---------------
    -- To_String --
    ---------------

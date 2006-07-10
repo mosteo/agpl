@@ -45,7 +45,7 @@ project Agpl is
 
       for Default_Switches ("c") use ("-g");
       for Default_Switches ("ada") use 
-         ("-g", "-s", "-gnatf", "-gnat05", "-gnatwcfjklmopruvz", "-gnatyacehikn", "-gnatQ");
+         ("-g", "-s", "-gnatf", "-gnat05", "-gnatwcfjklmopruvz", "-gnatyacehikn", "-gnatqQ");
 
       case Build is
 
