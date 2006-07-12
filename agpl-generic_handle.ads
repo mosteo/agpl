@@ -36,7 +36,7 @@ package Agpl.Generic_Handle is
 
    pragma Preelaborate;
 
-   type Item_Access is access Item;
+   type Item_Access is access all Item;
 
    No_Data : exception;
 

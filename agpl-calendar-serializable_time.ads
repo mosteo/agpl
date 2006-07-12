@@ -45,6 +45,9 @@ package Agpl.Calendar.Serializable_Time is
 
    type Object is new Ada.Calendar.Time;
 
+   function "+" (This : in Object) return Ada.Calendar.Time;
+   pragma Inline ("+");
+
    procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
                    This   :    out Object);
    for Object'Read use Read;

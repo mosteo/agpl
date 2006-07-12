@@ -35,7 +35,9 @@ package body Agpl.Generic_Handle is
 
    procedure Adjust (This : in out Object) is
    begin
-      This.Data := new Item'(This.Data.all);
+      if This.Data /= null then
+         This.Data := new Item'(This.Data.all);
+      end if;
    end Adjust;
 
    -----------
@@ -63,7 +65,8 @@ package body Agpl.Generic_Handle is
 
    function Set (This : in Item) return Object is
    begin
-      return (Ada.Finalization.Controlled with Data => new Item'(This));
+      return (Ada.Finalization.Controlled with
+              Data => new Item'(This));
    end Set;
 
    ---------
