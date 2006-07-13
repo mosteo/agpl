@@ -61,4 +61,13 @@ package body Agpl.Chronos is
       return Agpl.Calendar.Format.Image (Elapsed (This));
    end Image;
 
+   -----------
+   -- Clock --
+   -----------
+
+   function Clock return Object is
+   begin
+      return (Start => Ada.Calendar.Clock);
+   end Clock;
+
 end Agpl.Chronos;

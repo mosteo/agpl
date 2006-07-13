@@ -59,6 +59,9 @@ package Agpl.Chronos is
    ------------------------------------------------------------------------
    function Image (This : in Object) return String;
 
+   function Clock return Object; -- An object denoting current time
+   pragma Inline (Clock);
+
 private
 
    type Object is tagged record

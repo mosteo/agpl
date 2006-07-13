@@ -9,6 +9,11 @@ package body Agpl.Calendar.Serializable_Time is
       return Ada.Calendar.Time (This);
    end "+";
 
+   function "+" (This : in Ada.Calendar.Time) return Object is
+   begin
+      return Object (This);
+   end "+";
+
    ----------
    -- Read --
    ----------

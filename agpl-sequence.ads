@@ -41,8 +41,8 @@ package Agpl.Sequence is
    pragma Preelaborate;
 
    protected type Object (
-      Initial_value : Num             := Num'First; 
-      Priority      : System.Priority := System.Priority'Last) 
+      Initial_value : Num             := Num'First;
+      Priority      : System.Priority := System.Priority'Last)
    is
       pragma Priority (Priority);
 
