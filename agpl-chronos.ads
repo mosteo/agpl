@@ -59,6 +59,10 @@ package Agpl.Chronos is
    ------------------------------------------------------------------------
    function Image (This : in Object) return String;
 
+   function Value (This : in Object) return Ada.Calendar.Time;
+   pragma Inline (Value);
+   --  This start time of this object
+
    function Clock return Object; -- An object denoting current time
    pragma Inline (Clock);
 

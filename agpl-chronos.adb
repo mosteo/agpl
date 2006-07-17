@@ -70,4 +70,13 @@ package body Agpl.Chronos is
       return (Start => Ada.Calendar.Clock);
    end Clock;
 
+   -----------
+   -- Value --
+   -----------
+
+   function Value (This : in Object) return Ada.Calendar.Time is
+   begin
+      return This.Start;
+   end Value;
+
 end Agpl.Chronos;
