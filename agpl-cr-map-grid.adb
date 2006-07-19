@@ -59,7 +59,6 @@ package body Agpl.Cr.Map.Grid is
       X, Y : in     Float;
       Obs  : in     Observations'Class)
    is
-      use String_Obs_Maps;
    begin
       Include (This.Cells, Key (This, X, Y), Obs);
    end Set_At;

@@ -28,6 +28,6 @@ pragma License (GPL);
 
 package Agpl is
 
-   pragma Pure (Agpl);
+   pragma Pure;
 
 end Agpl;
