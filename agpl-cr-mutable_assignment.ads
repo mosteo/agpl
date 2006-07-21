@@ -414,9 +414,11 @@ private
    function Reevaluate_Minimax    (This : in Object)
                                    return    Costs;
 
+   --  O (T + log R)
    procedure Reevaluate_Costs (This : in out Object);
    --  Recompute all costs from scratch and update internal cache
 
+   --  O (log R)
    procedure Update_Costs_Removing
      (This               : in out Object;
       Prev_To_Be_Kept    : in     Task_Context_Access;
