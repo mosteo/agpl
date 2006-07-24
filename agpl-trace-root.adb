@@ -29,7 +29,7 @@ package body Agpl.Trace.Root is
       return
         This.Active and then
         Level >= This.Level and then
-          (Level >= Error or else
+          (Level >= Warning or else
            Section = "" or else
            This.Sections.Contains (Section));
    end Must_Log;

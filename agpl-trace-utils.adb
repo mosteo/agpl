@@ -1,4 +1,5 @@
 with Agpl.Calendar.Format;
+with Agpl.Strings;
 
 package body Agpl.Trace.Utils is
 
@@ -58,5 +59,31 @@ package body Agpl.Trace.Utils is
         Prefix (Level) &
         "[" &Calendar.Format.Timestamp & "] " & Text;
    end Prepend_Level_Timestamp;
+
+   -------------------------------------
+   -- Prepend_Level_Timestamp_Section --
+   -------------------------------------
+
+   function Prepend_Level_Timestamp_Section (Text    : in String;
+                                             Level   : in Levels;
+                                             Section : in String) return String
+   is
+      Section_Width : constant := 16;
+      use Strings;
+   begin
+      if Section'Length <= Section_Width then
+         return
+           Prefix (Level) &
+         "[" & Calendar.Format.Timestamp & "]" &
+         "[" & Lpad (Section, Section_Width) & "] " &
+         Text;
+      else
+         return
+           Prefix (Level) &
+         "[" & Calendar.Format.Timestamp & "]" &
+         "[.." & Section (Section'Last - Section_Width + 3 ..Section'Last) & "] " &
+         Text;
+      end if;
+   end Prepend_Level_Timestamp_Section;
 
 end Agpl.Trace.Utils;

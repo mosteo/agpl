@@ -61,4 +61,9 @@ package Agpl.Trace.Utils is
    --  Add level & timestamp
    pragma Inline (Prepend_Level_Timestamp);
 
+   function Prepend_Level_Timestamp_Section (Text    : in String;
+                                             Level   : in Levels;
+                                             Section : in String) return String;
+   pragma Inline (Prepend_Level_Timestamp_Section);
+
 end Agpl.Trace.Utils;

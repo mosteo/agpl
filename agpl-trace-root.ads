@@ -48,8 +48,10 @@ package Agpl.Trace.Root is
                   Text    : in     String;
                   Level   : in     Levels;
                   Section : in     String := "") is null;
+   --  No need for implementations of this object to call Must_Log, it's called
+   --  in the Agpl.Trace.Log subprogram.
 
-   not overriding
+   overriding
    function Must_Log (This    : in Object;
                       Level   : in Levels;
                       Section : in String) return Boolean;

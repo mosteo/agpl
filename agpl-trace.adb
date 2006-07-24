@@ -120,7 +120,7 @@ package body Agpl.Trace is
       Section : in String := "") is
    begin
       if Enabled then
-         if This /= null then
+         if This /= null and then This.Must_Log (Level, Section) then
             Safe.Log (This.all, Text, Level, Section);
          end if;
       end if;
@@ -143,7 +143,9 @@ package body Agpl.Trace is
          end if;
 
          for I in Tracers.First_Index .. Tracers.Last_Index loop
-            Safe.Log (Tracers.Element (I).all, Text, Level, Section);
+            if Tracers.Element (I).Must_Log (Level, Section) then
+               Safe.Log (Tracers.Element (I).all, Text, Level, Section);
+            end if;
          end loop;
       end if;
    end Log;

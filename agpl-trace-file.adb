@@ -24,17 +24,13 @@ package body Agpl.Trace.File is
       Section : in String := "")
    is
    begin
-      if This.Must_Log (Level, Section) then
-         if not This.Opened then
-            Set_File (This);
-            pragma Assert (This.Opened);
-         end if;
-
-         Put_Line (This.File, This.Decorate (Text, Level, Section));
-         Flush (This.File);
+      if not This.Opened then
+         Set_File (This);
+         pragma Assert (This.Opened);
       end if;
 
-      Root.Object (This).Log (Text, Level, Section);
+      Put_Line (This.File, This.Decorate (Text, Level, Section));
+      Flush (This.File);
    end Log;
 
    --------------

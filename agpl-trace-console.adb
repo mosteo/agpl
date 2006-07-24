@@ -13,10 +13,7 @@ package body Agpl.Trace.Console is
       Section : in String := "")
    is
    begin
-      if This.Must_Log (Level, Section) then
-         Agpl.Text_Io.Put_Line (This.Decorate (Text, Level, Section));
-         Root.Object (This).Log (Text, Level, Section);
-      end if;
+      Agpl.Text_Io.Put_Line (This.Decorate (Text, Level, Section));
    end Log;
 
 end Agpl.Trace.Console;

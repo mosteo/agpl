@@ -105,6 +105,11 @@ package Agpl.Trace is
    is abstract;
    --  Apply the decorator.
 
+   function Must_Log (This    : in Object;
+                      Level   : in Levels;
+                      Section : in String) return Boolean
+   is abstract;
+
    procedure Log
      (Text    : in String;
       Level   : in Levels;
