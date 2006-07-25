@@ -49,6 +49,22 @@ package Agpl.Conversions is
 
    function To_String (N : Integer) return String;
 
+   --  Works as 'Img but removes leading/trailing spaces
+   --  Performs rounding on floats
+   function To_string (N        : Float;
+                       Decimals : Natural := 2)
+                       return     String;
+
+   function To_string (N        : Long_Long_Float;
+                       Decimals : Natural := 2)
+                       return     String;
+
+   generic
+      type Real is digits <>;
+   function To_Str (N        : Real;
+                    Decimals : Natural := 2)
+                    return     String;
+
    function Trim (This : in String) return String;
    pragma Inline (Trim);
 

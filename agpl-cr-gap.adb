@@ -1,4 +1,4 @@
-with Agpl.Conversions.Io; use Agpl.Conversions.Io;
+with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Text_Io;
 
 package body Agpl.Cr.Gap is

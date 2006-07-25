@@ -55,6 +55,8 @@ package Agpl.Protected_Datastore is
                      Listener : not null Key_Listener_Access);
    --  Register for a key
 
+   pragma Incomplete ("Should have unlisten equivalent!");
+
 private
 
    package Listener_Vectors is new Ada.Containers.Vectors

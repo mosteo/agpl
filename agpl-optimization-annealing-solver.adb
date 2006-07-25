@@ -25,7 +25,7 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Chronos;
-with Agpl.Conversions.Io; use Agpl.Conversions.Io;
+with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Cr;
 with Agpl.Trace; use Agpl.Trace;
 

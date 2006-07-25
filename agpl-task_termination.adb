@@ -24,11 +24,11 @@ package body Agpl.Task_Termination is
       begin
          Log ("Grim reaper: Task [" & Image (T) & "] finished with cause " &
               Cause_Of_Termination'Image (Cause),
-              Levels (Cause));
+              Levels (Cause), Log_Section);
          if Cause = Unhandled_Exception then
             Log ("Grim reaper: Task [" & Image (T) & "] exception was " &
               Trace.Report (X),
-              Levels (Cause));
+              Levels (Cause), Log_Section);
          end if;
       end Grim_Reaper;
    end Object;

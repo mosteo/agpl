@@ -67,14 +67,6 @@ package body Agpl.Strings is
    end To_upper;
 
    ------------------------------------------------------------------------
-   -- Trim                                                               --
-   ------------------------------------------------------------------------
-   function Trim (This : in String) return String is
-   begin
-      return Ada.Strings.Fixed.Trim (This, Ada.Strings.Both);
-   end Trim;
-
-   ------------------------------------------------------------------------
    -- Lpad                                                               --
    ------------------------------------------------------------------------
    function Lpad (

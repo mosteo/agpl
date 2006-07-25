@@ -97,8 +97,7 @@ package Agpl.Strings is
    ------------------------------------------------------------------------
    -- Trim                                                               --
    ------------------------------------------------------------------------
-   function Trim (This : in String) return String;
-   pragma Inline (Trim);
-
+   function Trim (This : in String) return String
+     renames Conversions.Trim;
 
 end Agpl.Strings;

@@ -39,6 +39,8 @@ with Ada.Strings.fixed;
 
 with Interfaces;
 
+with System.Img_Real; use System.Img_Real;
+
 package body Agpl.Conversions is
 
    ------------------------------------------------------------------------
@@ -117,6 +119,33 @@ package body Agpl.Conversions is
    begin
       return Trim (Integer'Image (N));
    end To_string;
+
+   function To_String (N : Float; Decimals : Natural := 2) return String is
+   begin
+      return To_String (Long_Long_Float (N), Decimals);
+   end To_string;
+
+   function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
+   begin
+      if Decimals > 0 then
+         return Trim (Image_Ordinary_Fixed_Point (N, Decimals));
+      else
+         return To_String (Integer (N));
+      end if;
+   end To_string;
+
+   ------------
+   -- To_Str --
+   ------------
+
+   function To_Str (N : Real; Decimals : Natural := 2) return String is
+   begin
+      if Decimals > 0 then
+         return To_String (Long_Long_Float (N), Decimals);
+      else
+         return To_String (Integer (N));
+      end if;
+   end To_Str;
 
    ------------------------------------------------------------------------
    -- Trim                                                               --

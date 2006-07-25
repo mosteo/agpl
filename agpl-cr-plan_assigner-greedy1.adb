@@ -27,7 +27,7 @@
 --  An assigner creates assignments. Ideally it should aim to achieve some kind
 --  of optimality.
 
---  with Agpl.Conversions.Io; use Agpl.Conversions.Io;
+--  with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
