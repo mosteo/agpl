@@ -103,6 +103,18 @@ package Agpl.Optimization.Annealing.Solver is
    --  solution found or Iterations are performed.
    --  Callback is called once every second, just in case you want to do smthing
 
+   procedure Work (This                     : in out Object;
+                   Anneal                   : not null access function
+                     (T : in Temperature) return Temperature;
+                   Iterations               : in     Positive;
+                   Timeout                  : in     Duration;
+                   Converge                 : in     Duration;
+                   Progress                 : access procedure
+                     (Continue : out Boolean) := null);
+   --  As previous, but doesn't require an initial solution: assumes one exists
+   --  and that everything is ready.
+   --  This allows "chunking" the computation
+
 private
 
    package Sol_Handle is new Generic_Handle (Solution);

@@ -196,8 +196,8 @@ package body Agpl.Optimization.Annealing.Solver is
    is
       use Chronos;
       Global_Timer,
-      Converge_Timer,
-      Info_Timer     : Chronos.Object;
+      Converge_Timer : Chronos.Object;
+      --  Info_Timer     : Chronos.Object;
 
       Best_Cost      : Cost;
       Remaining_Iter : Natural := Iterations;
@@ -210,11 +210,58 @@ package body Agpl.Optimization.Annealing.Solver is
            To_String (Float (Best_Cost)), Debug,
            Section => Log_Section);
 
+      Work (This, Anneal, Iterations, Timeout, Converge, Progress);
+
+      Log ("Best cost found: " & To_String (Float (Best_Cost)) &
+           " in" & This.Iterations'Img & " iterations run (" &
+           Image (Global_Timer) & ", " &
+           To_String
+             (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
+           " i/s) (" &
+           Integer'Image (This.Wasted * 100 / This.Iterations) & "% wasted moves)" &
+           " (" & Integer'Image (This.Discarded * 100 / This.Iterations) & "% discarded moves)",
+           Debug, Section => Log_Section);
+
+      if Remaining_Iter = 0 then
+         Log ("Annealing cycles exhausted", Debug, Section => Log_Section);
+      elsif Elapsed (Converge_Timer) >= Converge then
+         Log ("No progress found in convergence period",
+              Debug, Section => Log_Section);
+      elsif Elapsed (Global_Timer) >= Timeout then
+         Log ("Annealing time exhausted", Debug, Section => Log_Section);
+      end if;
+
+   end Solve;
+
+   ----------
+   -- Work --
+   ----------
+
+   procedure Work (This                     : in out Object;
+                   Anneal                   : not null access function
+                     (T : in Temperature) return Temperature;
+                   Iterations               : in     Positive;
+                   Timeout                  : in     Duration;
+                   Converge                 : in     Duration;
+                   Progress                 : access procedure
+                     (Continue : out Boolean) := null)
+   is
+      use Chronos;
+      Global_Timer,
+      Converge_Timer : Chronos.Object;
+--      Info_Timer     : Chronos.Object;
+
+      Best_Cost      : Cost;
+      Remaining_Iter : Natural := Iterations;
+      Continue       : Boolean := True;
+   begin
       while Continue and then
             Remaining_Iter > 0 and then
             Elapsed (Converge_Timer) < Converge and then
             Elapsed (Global_Timer) < Timeout
       loop
+         Best_Cost := This.Best_Cost;
+
          This.Iterate (Anneal);
 
          Log ("Iteration:" & This.Iterations'Img,
@@ -259,26 +306,6 @@ package body Agpl.Optimization.Annealing.Solver is
 --                   Debug, Section => Log_Section);
 --           end if;
       end loop;
-
-      Log ("Best cost found: " & To_String (Float (Best_Cost)) &
-           " in" & This.Iterations'Img & " iterations run (" &
-           Image (Global_Timer) & ", " &
-           To_String
-             (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
-           " i/s) (" &
-           Integer'Image (This.Wasted * 100 / This.Iterations) & "% wasted moves)" &
-           " (" & Integer'Image (This.Discarded * 100 / This.Iterations) & "% discarded moves)",
-           Debug, Section => Log_Section);
-
-      if Remaining_Iter = 0 then
-         Log ("Annealing cycles exhausted", Debug, Section => Log_Section);
-      elsif Elapsed (Converge_Timer) >= Converge then
-         Log ("No progress found in convergence period",
-              Debug, Section => Log_Section);
-      elsif Elapsed (Global_Timer) >= Timeout then
-         Log ("Annealing time exhausted", Debug, Section => Log_Section);
-      end if;
-
-   end Solve;
+   end Work;
 
 end Agpl.Optimization.Annealing.Solver;

@@ -156,9 +156,7 @@ package Agpl.Htn.Plan_Node is
    procedure Set_Finished (This : Node_Access; Finished : Boolean := True);
 
    function Get_Id (This : not null Node_Access) return String;
-   --  The id depends on the tasks
-   --  So if the tasks keep the id across plans, the node ids should also
-   --  be consistent.
+   --  Some unique id. Copied across plans.
 
    function Get_Owner (This : in Node_Access) return String;
    procedure Set_Owner (This : in Node_Access; Owner : in String);

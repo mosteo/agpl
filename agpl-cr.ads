@@ -30,14 +30,23 @@ with Agpl.Optimization;
 
 package Agpl.Cr is
 
-   pragma Pure;
+   pragma Preelaborate;
 
    subtype Costs is Optimization.Cost; --  Abstract "Cost" to perform some job.
    use type Costs;
 
    Infinite : constant Costs := Optimization.Infinite;
 
-   type Assignment_Criteria is (Minimax, Totalsum);
+   type Assignment_Criteria is record
+      Minimax_Weight  : Float;
+      Totalsum_Weight : Float;
+   end record;
    --  Possibilities for assignments
+
+   function Value (S : in String) return Assignment_Criteria;
+
+   Criterion_Minimax       : constant Assignment_Criteria := (1.0, 0.0);
+   Criterion_Totalsum      : constant Assignment_Criteria := (0.0, 1.0);
+   Criterion_Time_Critical : constant Assignment_Criteria := (1.0, 0.00001);
 
 end Agpl.Cr;

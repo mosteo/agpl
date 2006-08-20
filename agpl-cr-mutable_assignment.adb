@@ -380,6 +380,23 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Contexts.Delete (Task_Key (Job.Job));
    end Do_Remove_Task;
 
+   --------------
+   -- Evaluate --
+   --------------
+
+   function Evaluate (This      : in Object;
+                      Criterion : in Assignment_Criteria) return Costs
+   is
+      Mm : constant Costs := This.Evaluate_Minimax;
+      Ts : constant Costs := This.Evaluate_Totalsum;
+   begin
+      if Mm = Infinite or else Ts = Infinite then
+         return Infinite;
+      else
+         return Mm * Costs (Criterion.Weight_Minimax) +
+                Ts * Costs (Criterion.Weight_Totalsum);
+   end Evaluate;
+
    ----------------------
    -- Evaluate_Minimax --
    ----------------------

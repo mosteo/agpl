@@ -77,6 +77,9 @@ package Agpl.Cr.Mutable_Assignment is
    -- ANNEALING SUBPROGRAMS --
    ---------------------------
 
+   function Evaluate (This      : in Object;
+                      Criterion : in Assignment_Criteria) return Costs;
+
    function Evaluate_Minimax (This : in Object) return Costs;
    --  Return Inf if invalid
 
@@ -203,7 +206,7 @@ private
       Costs     : Cr.Cost_Matrix.Object;
       Plan      : Htn.Plan.Object;
 
-      Criterion : Assignment_Criteria := Minimax;
+      Criterion : Assignment_Criteria := Criterion_Time_Critical;
 
       Mutations : Mutation_Vectors.Object (First => 1);
    end record;
