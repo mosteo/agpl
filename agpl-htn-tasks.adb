@@ -199,6 +199,18 @@ package body Agpl.Htn.Tasks is
       return Task_Id (I);
    end Get_New_Id;
 
+   ----------
+   -- Read --
+   ----------
+
+   procedure Read
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      Item   :    out Object_Access)
+   is
+   begin
+      Item := new Object'Class'(Object'Class'Input (Stream));
+   end Read;
+
    -----------
    -- Write --
    -----------
@@ -208,7 +220,7 @@ package body Agpl.Htn.Tasks is
       Item   : in     Object_Access)
    is
    begin
-      Object'Class'Write (Stream, Item.all);
+      Object'Class'Output (Stream, Item.all);
    end Write;
 
    -------------

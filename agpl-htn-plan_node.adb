@@ -28,6 +28,7 @@ with Agpl.Debug;
 with Agpl.Sequence;
 with Agpl.Trace;  use Agpl.Trace;
 
+with Ada.Containers;
 with Interfaces;
 
 package body Agpl.Htn.Plan_Node is
@@ -35,6 +36,64 @@ package body Agpl.Htn.Plan_Node is
    package Unsigned_Sequences is new Sequence (Interfaces.Unsigned_32);
 
    Seq : Unsigned_Sequences.Object;
+
+   ---------
+   -- "=" --
+   ---------
+
+   function Equivalent (L, R : in Node_Access) return Boolean is
+      use type Ada.Containers.Count_Type;
+      use type Ustring;
+      use type Htn.Tasks.Object'Class;
+      use type Node_Vectors.Vector;
+   begin
+      Log ("Checking equivalence", Never);
+      if L = null and then R = null then
+         Log ("Both null", Never);
+         return True;
+      elsif L = null or else R = null then
+         Log ("Null/not null", Never);
+         return False;
+      elsif L.Kind /= R.Kind then
+         Log ("Kind clash", Never);
+         return False;
+      elsif L.Id /= R.Id then
+         Log ("Id clash", Never);
+         return False;
+      end if;
+
+      case L.Kind is
+         when Task_Node =>
+            if L.The_Task.all /= R.The_Task.all or else
+              L.Finished /= R.Finished or else
+              L.Owner /= R.Owner
+            then
+               Log ("Task clash", Never);
+               return False;
+            else
+               Log ("Expansion clash", Never);
+               return Equivalent (L.Child, R.Child);
+            end if;
+         when And_Node | Or_Node =>
+            if L.Children.Length /= R.Children.Length then
+               Log ("Children length clash", Never);
+               return False;
+            elsif L.Children.First_Index /= R.Children.First_Index then
+               Log ("Index clash", Never);
+               return False;
+            else
+               for I in L.Children.First_Index .. L.Children.Last_Index loop
+                  if not Equivalent (L.Children.Element (I),
+                                     R.Children.Element (I)) then
+                     Log ("Child clash", Never);
+                     return False;
+                  end if;
+               end loop;
+               Log ("Children are ok", Never);
+               return True;
+            end if;
+      end case;
+   end Equivalent;
 
    ------------------
    -- Append_Child --
@@ -592,5 +651,84 @@ package body Agpl.Htn.Plan_Node is
                     Trace.Error);
           raise;
    end Finalize;
+
+   ----------
+   -- Read --
+   ----------
+
+   procedure Read
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      This   :    out Node_Access;
+      Parent : in     Node_Access)
+   is
+      Not_Null : constant Boolean := Boolean'Input (Stream);
+   begin
+      if Not_Null then
+         declare
+            Kind : constant Node_Kind := Node_Kind'Input (Stream);
+         begin
+            This        := new Object (Kind);
+            This.Parent := Parent;
+            This.Id     := Ustring'Input (Stream);
+            case This.Kind is
+               when Task_Node =>
+                  This.The_Task := Tasks.Object_Access'Input (Stream);
+                  This.Finished := Boolean'Input (Stream);
+                  This.Owner    := Ustring'Input (Stream);
+                  Read (Stream, This.Child, This);
+               when And_Node | Or_Node =>
+                  declare
+                     Num_Children : constant Natural := Natural'Input (Stream);
+                     New_Child    :          Node_Access;
+                  begin
+                     for I in 1 .. Num_Children loop
+                        Read (Stream, New_Child, This);
+                        This.Children.Append (New_Child);
+                     end loop;
+                  end;
+            end case;
+         end;
+      else
+         This := null;
+      end if;
+   end Read;
+
+   procedure Read
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      This   :    out Node_Access)
+   is
+   begin
+      Read (Stream, This, null);
+   end Read;
+
+   -----------
+   -- Write --
+   -----------
+
+   procedure Write
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      This   : in     Node_Access)
+   is
+   begin
+      Boolean'Output (Stream, This /= null);
+      if This = null then
+         return;
+      end if;
+
+      Node_Kind'Output (Stream, This.Kind);
+      Ustring'Output (Stream, This.Id);
+      case This.Kind is
+         when Task_Node =>
+            Tasks.Object_Access'Output (Stream, This.The_Task);
+            Boolean'Output (Stream, This.Finished);
+            Ustring'Output (Stream, This.Owner);
+            Write (Stream, This.Child);
+         when And_Node | Or_Node =>
+            Natural'Output (Stream, Natural (This.Children.Length));
+            for I in This.Children.First_Index .. This.Children.Last_Index loop
+               Write (Stream, This.Children.Element (I));
+            end loop;
+      end case;
+   end Write;
 
 end Agpl.Htn.Plan_Node;

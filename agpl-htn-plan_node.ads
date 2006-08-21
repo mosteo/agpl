@@ -37,6 +37,7 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Vectors;
 with Ada.Finalization;
+with Ada.Streams;
 with Ada.Unchecked_Deallocation;
 
 package Agpl.Htn.Plan_Node is
@@ -51,7 +52,22 @@ package Agpl.Htn.Plan_Node is
    --  To prevent creation outside of our control.
 
    type Node_Access is access Object;
---   for Node_Access'Storage_Pool use Agpl.Debug.Pool;
+   --   for Node_Access'Storage_Pool use Agpl.Debug.Pool;
+
+   function Equivalent (L, R : in Node_Access) return Boolean;
+   --  Compares task bodies and node ids
+
+   procedure Read
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      This   :    out Node_Access);
+   for Node_Access'Read use Read;
+   --  Deserialize
+
+   procedure Write
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      This   : in     Node_Access);
+   for Node_Access'Write use Write;
+   --  Serialize pointers and such.
 
    type Node_Array is array (Positive range <>) of Node_Access;
 

@@ -38,6 +38,19 @@ package body Agpl.Htn.Plan is
    Boolean_To_Char : constant array (Boolean) of Character := (True  => 'T',
                                                                False => 'f');
 
+   ---------
+   -- "=" --
+   ---------
+
+   function "=" (L, R : in Object) return Boolean is
+      use type Subplan;
+      use type Htn.Method.Vectors.Vector;
+   begin
+      return L.Dirty = R.Dirty and then
+             L.Methods = R.Methods and then
+             Plan_Node.Equivalent (L.Tasks, R.Tasks);
+   end "=";
+
    -----------------
    -- Add_Subplan --
    -----------------
@@ -832,8 +845,11 @@ package body Agpl.Htn.Plan is
       This   :    out Object)
    is
    begin
-      raise Program_Error;
-      pragma Unimplemented;
+      This.Dirty   := Boolean'Input (Stream);
+      This.Methods := Method.Vectors.Vector'Input (Stream);
+      This.Tasks   := Subplan'Input (Stream);
+
+      This.Build_Index;
    end Read;
 
    -----------
@@ -845,8 +861,9 @@ package body Agpl.Htn.Plan is
       This   : in     Object)
    is
    begin
-      raise Program_Error;
-      pragma Unimplemented;
+      Boolean'Output (Stream, This.Dirty);
+      Method.Vectors.Vector'Output (Stream, This.Methods);
+      Subplan'Output (Stream, This.Tasks);
    end Write;
 
 end Agpl.Htn.Plan;

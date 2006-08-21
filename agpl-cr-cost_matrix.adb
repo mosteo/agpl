@@ -97,6 +97,21 @@ package body Agpl.Cr.Cost_Matrix is
       end loop;
    end Create;
 
+   ------------
+   -- Create --
+   ------------
+
+   procedure Create
+     (This   : in out Object;
+      Agent  : in Cr.Agent.Object'Class;
+      Tasks  : in Htn.Tasks.Lists.List)
+   is
+      A : Cr.Agent.Lists.List;
+   begin
+      A.Append (Agent);
+      Create (This, A, Tasks);
+   end Create;
+
    -----------------------
    -- Create_With_Start --
    -----------------------
@@ -179,6 +194,19 @@ package body Agpl.Cr.Cost_Matrix is
       end loop;
       return Total;
    end Get_Plan_Cost;
+
+   -----------
+   -- Merge --
+   -----------
+
+   procedure Merge (Dst : in out Object; Src : in Object) is
+      procedure Do_It (I : in Cursor) is
+      begin
+         Dst.Matrix.Include (Key (I), Element (I));
+      end Do_It;
+   begin
+      Src.Matrix.Iterate (Do_It'Access);
+   end Merge;
 
    --------------
    -- Set_Cost --

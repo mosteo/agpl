@@ -321,10 +321,10 @@ package body Agpl.Cr.Tasks.Insertions is
                  Success    => Success);
 
          if Success then
-            case Criterion is
-               when Minimax => New_Cost := New_Total;
-               when Totalsum => New_Cost := New_Delta;
-            end case;
+            New_Cost := Evaluate (Criterion,
+                                  Minimax  => New_Total,
+                                  Totalsum => New_Delta);
+
             if New_Cost < Best_Cost then
                Best_Cost  := New_Cost;
                Best_Agent := New_Agent;

@@ -51,6 +51,8 @@ package Agpl.Htn.Plan is
    subtype Subplan   is Plan_Node.Node_Access;
    --  Renamings used for simplicity.
 
+   function "=" (L, R : in Object) return Boolean;
+
    procedure Add_Subplan
      (This : in out Object;
       Comp : in     Subplan;

@@ -91,12 +91,16 @@ package Agpl.Htn.Tasks is
    function Get_New_Id return Task_Id;
    --  Get a new unique id (thread safe).
 
+   procedure Read
+     (Stream : access Ada.Streams.Root_Stream_Type'Class;
+      Item   :    out Object_Access);
+   for Object_Access'Read use Read;
+
    procedure Write
      (Stream : access Ada.Streams.Root_Stream_Type'Class;
       Item   : in     Object_Access);
    --  Will dispatch to .all'Write
-
-   --  for Object_Access'Write use Write;
+   for Object_Access'Write use Write;
 
    function Same_Id (L, R : in Object'Class) return Boolean;
    --  Equality by id.

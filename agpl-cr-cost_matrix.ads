@@ -53,7 +53,15 @@ package Agpl.Cr.Cost_Matrix is
       Agents : in Cr.Agent.Lists.List;
       Tasks  : in Htn.Tasks.Lists.List);
    --  Create a matrix given a list of agents and tasks to perform.
+   --  Note, any old costs not overwritten will remain...
    --  O (|A||T||T|)
+
+   procedure Create
+     (This   : in out Object;
+      Agent  : in Cr.Agent.Object'Class;
+      Tasks  : in Htn.Tasks.Lists.List);
+   --  Note, any old costs not overwritten will remain...
+   --  O (|T||T|)
 
    function Create_With_Start
      (Agents : in Cr.Agent.Lists.List;
@@ -67,6 +75,9 @@ package Agpl.Cr.Cost_Matrix is
    --  As previous, but adds a special Cr.Tasks.Starting_Pose task for each
    --  agent, which should be planned as the first task for each agent.
    --  These tasks are obtained via @Add_Starting_Tasks@
+
+   procedure Merge (Dst : in out Object; Src : in Object);
+   --  Overwrite Dst costs that are also present in Src, add new ones in Src.
 
    function Get_Cost
      (This  : in Object;

@@ -29,7 +29,7 @@
 
 package Agpl.Cr.Map is
 
-   pragma Pure;
+   pragma Preelaborate;
 
    No_Data : exception;
 

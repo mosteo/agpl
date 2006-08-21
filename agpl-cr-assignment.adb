@@ -368,10 +368,9 @@ package body Agpl.Cr.Assignment is
                       Criterion : in Assignment_Criteria) return Costs
    is
    begin
-      case Criterion is
-         when Minimax  => return Get_Max_Min_Cost (This);
-         when Totalsum => return Get_Cummulative_Cost (This);
-      end case;
+      return Evaluate (Criterion,
+                       Minimax  => Get_Max_Min_Cost (This),
+                       Totalsum => Get_Cummulative_Cost (This));
    end Get_Cost;
 
    function Get_Cost (This      : in Object;
@@ -379,10 +378,9 @@ package body Agpl.Cr.Assignment is
                       Criterion : in Assignment_Criteria) return Costs
    is
    begin
-      case Criterion is
-         when Minimax  => return Get_Max_Min_Cost (This, C);
-         when Totalsum => return Get_Cummulative_Cost (This, C);
-      end case;
+      return Evaluate (Criterion,
+                       Minimax  => Get_Max_Min_Cost (This, C),
+                       Totalsum => Get_Cummulative_Cost (This, C));
    end Get_Cost;
 
    ------------------------

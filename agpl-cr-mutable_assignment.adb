@@ -387,14 +387,10 @@ package body Agpl.Cr.Mutable_Assignment is
    function Evaluate (This      : in Object;
                       Criterion : in Assignment_Criteria) return Costs
    is
-      Mm : constant Costs := This.Evaluate_Minimax;
-      Ts : constant Costs := This.Evaluate_Totalsum;
    begin
-      if Mm = Infinite or else Ts = Infinite then
-         return Infinite;
-      else
-         return Mm * Costs (Criterion.Weight_Minimax) +
-                Ts * Costs (Criterion.Weight_Totalsum);
+      return Evaluate (Criterion,
+                       Minimax  => This.Evaluate_Minimax,
+                       Totalsum => This.Evaluate_Totalsum);
    end Evaluate;
 
    ----------------------
@@ -1029,7 +1025,7 @@ package body Agpl.Cr.Mutable_Assignment is
    is
    begin
       Log ("Undoing from scratch", Debug, Section => Detail_Section);
-      Set_Assignment (This, Undo.Ass, Minimax);
+      Set_Assignment (This, Undo.Ass, This.Context.Ref.Criterion);
    end Undo_From_Scratch;
 
    ----------------------

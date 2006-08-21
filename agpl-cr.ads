@@ -43,6 +43,11 @@ package Agpl.Cr is
    end record;
    --  Possibilities for assignments
 
+   function Evaluate (Criterion : in Assignment_Criteria;
+                      Minimax   : in Costs;
+                      Totalsum  : in Costs) return Costs;
+   pragma Inline (Evaluate);
+
    function Value (S : in String) return Assignment_Criteria;
 
    Criterion_Minimax       : constant Assignment_Criteria := (1.0, 0.0);

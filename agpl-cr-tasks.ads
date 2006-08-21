@@ -28,6 +28,6 @@
 
 package Agpl.Cr.Tasks is
 
-   pragma Pure;
+   pragma Preelaborate;
 
 end Agpl.Cr.Tasks;
