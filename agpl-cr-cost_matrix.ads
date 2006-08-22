@@ -70,6 +70,11 @@ package Agpl.Cr.Cost_Matrix is
 
    procedure Create_With_Start
      (This   : in out Object;
+      Agent  : in Cr.Agent.Object'Class;
+      Tasks  : in Htn.Tasks.Lists.List);
+
+   procedure Create_With_Start
+     (This   : in out Object;
       Agents : in Cr.Agent.Lists.List;
       Tasks  : in Htn.Tasks.Lists.List);
    --  As previous, but adds a special Cr.Tasks.Starting_Pose task for each
@@ -101,6 +106,9 @@ package Agpl.Cr.Cost_Matrix is
       Ini   : in     Htn.Tasks.Task_Id;
       Fin   : in     Htn.Tasks.Task_Id;
       Cost  : in     Costs);
+
+   procedure Print (This : in Object);
+   --  Debug dump
 
 private
 

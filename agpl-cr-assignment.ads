@@ -40,7 +40,7 @@ package Agpl.Cr.Assignment is
 
    type Object is tagged private;
 
-   --   type Object is tagged private;
+   function Empty_Object return Object;
 
    procedure Add
      (This     : in out Object;

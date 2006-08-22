@@ -853,6 +853,7 @@ package body Agpl.Cr.Mutable_Assignment is
             New_New_Ass : Cr.Assignment.Object;
             Success     : Boolean;
          begin
+            --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
             Tasks.Insertions.Greedy
               (New_Ass,
                Htn.Tasks.Maps.First_Element (Pending_Tasks),
@@ -863,8 +864,15 @@ package body Agpl.Cr.Mutable_Assignment is
 
             if not Success then
                Log ("Set_Assignment: cannot assign task " &
-                    Pending_Tasks.First_Element.To_String, Error);
-               raise Program_Error;
+                    To_String (Integer (Pending_Tasks.First_Element.Get_Id)) &
+                    "-" & Pending_Tasks.First_Element.To_String, Error,
+                    Log_Section);
+               raise Constraint_Error;
+            else
+               Log ("Set_Assignment: assigned task " &
+                    To_String (Integer (Pending_Tasks.First_Element.Get_Id)) &
+                    "-" & Pending_Tasks.First_Element.To_String, Debug,
+                    Detail_Section);
             end if;
 
             Pending_Tasks.Delete_First;

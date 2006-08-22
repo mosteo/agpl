@@ -122,7 +122,8 @@ package body Agpl.Optimization.Annealing.Solver is
          else
             This.Discarded := This.Discarded + 1;
             Undo (This.Curr_Sol.Ref.all);
-            Log ("Solver: UNDOINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG!", Always);
+--              Log ("Solver: UNDOINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG!",
+--                   Debug, Log_Section);
          end if;
 
          This.Curr_Temp := Anneal (This.Curr_Temp);
@@ -200,8 +201,7 @@ package body Agpl.Optimization.Annealing.Solver is
       --  Info_Timer     : Chronos.Object;
 
       Best_Cost      : Cost;
-      Remaining_Iter : Natural := Iterations;
-      Continue       : Boolean := True;
+--        Remaining_Iter : Natural := Iterations;
    begin
       This.Set_Initial_Solution (Ini_Sol);
       Best_Cost := This.Best_Cost;
@@ -222,13 +222,15 @@ package body Agpl.Optimization.Annealing.Solver is
            " (" & Integer'Image (This.Discarded * 100 / This.Iterations) & "% discarded moves)",
            Debug, Section => Log_Section);
 
-      if Remaining_Iter = 0 then
-         Log ("Annealing cycles exhausted", Debug, Section => Log_Section);
-      elsif Elapsed (Converge_Timer) >= Converge then
+--        if Remaining_Iter = 0 then
+--           Log ("Annealing cycles exhausted", Debug, Section => Log_Section);
+      if Elapsed (Converge_Timer) >= Converge then
          Log ("No progress found in convergence period",
               Debug, Section => Log_Section);
       elsif Elapsed (Global_Timer) >= Timeout then
          Log ("Annealing time exhausted", Debug, Section => Log_Section);
+      else
+         Log ("Iterations exahusted or convergence found", Debug, Section => Log_Section);
       end if;
 
    end Solve;

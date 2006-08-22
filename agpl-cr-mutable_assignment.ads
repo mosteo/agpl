@@ -106,6 +106,7 @@ package Agpl.Cr.Mutable_Assignment is
    ----------------------------
 
    procedure Add_Agent (This : in out Object; Name : in Agent_Id);
+   --  No problem to add the same one several times
 
    procedure Remove_Agent (This : in out Object; Name : in Agent_Id);
    --  Cut out this agent; its tasks will go to others

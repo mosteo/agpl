@@ -1,4 +1,6 @@
+with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Cr.Tasks.Starting_Pose;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Cost_Matrix is
 
@@ -132,6 +134,21 @@ package body Agpl.Cr.Cost_Matrix is
 
    procedure Create_With_Start
      (This   : in out Object;
+      Agent  : in Cr.Agent.Object'Class;
+      Tasks  : in Htn.Tasks.Lists.List)
+   is
+   A : Cr.Agent.Lists.List;
+   begin
+      A.Append (Agent);
+      Create_With_Start (This, A, Tasks);
+   end Create_With_Start;
+
+   -----------------------
+   -- Create_With_Start --
+   -----------------------
+
+   procedure Create_With_Start
+     (This   : in out Object;
       Agents : in Cr.Agent.Lists.List;
       Tasks  : in Htn.Tasks.Lists.List)
    is
@@ -207,6 +224,20 @@ package body Agpl.Cr.Cost_Matrix is
    begin
       Src.Matrix.Iterate (Do_It'Access);
    end Merge;
+
+   -----------
+   -- Print --
+   -----------
+
+   procedure Print (This : in Object) is
+      procedure Do_It (I : in Cursor) is
+      begin
+         Log (Key (I) & ": " & To_String (Float (Element (I))), Always);
+      end Do_It;
+   begin
+      Log ("Cost matrix dump follows:", Always);
+      This.Matrix.Iterate (Do_It'Access);
+   end Print;
 
    --------------
    -- Set_Cost --

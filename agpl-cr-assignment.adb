@@ -72,6 +72,15 @@ package body Agpl.Cr.Assignment is
       This.Ok := True;
    end Clear;
 
+   ------------------
+   -- Empty_Object --
+   ------------------
+
+   function Empty_Object return Object is
+   begin
+      return (Cr.Agent.Maps.Empty_Map, True);
+   end Empty_Object;
+
    -----------------
    -- Fill_Owners --
    -----------------
