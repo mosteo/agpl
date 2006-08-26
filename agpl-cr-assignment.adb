@@ -72,6 +72,15 @@ package body Agpl.Cr.Assignment is
       This.Ok := True;
    end Clear;
 
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains (This : in Object; Name : in String) return Boolean is
+   begin
+      return This.Agents.Contains (Name);
+   end Contains;
+
    ------------------
    -- Empty_Object --
    ------------------

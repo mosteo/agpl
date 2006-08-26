@@ -118,6 +118,9 @@ package Agpl.Cr.Mutable_Assignment is
    --  *MUST* include cost from No_Task to No_Task (i.e. past incurred costs
    --  of a now idle robot...)
 
+   procedure Set_Criterion (This      : in out Object;
+                            Criterion : in     Assignment_Criteria);
+
    procedure Set_Tasks (This : in out Object;
                         Plan : in     Htn.Plan.Object);
    --  The tasks are provided in Plan form, inflated or not.

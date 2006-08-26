@@ -914,6 +914,14 @@ package body Agpl.Cr.Mutable_Assignment is
       Reevaluate_Costs (This);
    end Set_Costs;
 
+   procedure Set_Criterion (This      : in out Object;
+                            Criterion : in     Assignment_Criteria)
+   is
+      C : constant Static_Context_Access := This.Context.Ref;
+   begin
+      C.Criterion := Criterion;
+   end Set_Criterion;
+
    -------------------
    -- Set_Attribute --
    -------------------

@@ -50,6 +50,9 @@ package Agpl.Cr.Assignment is
 
    procedure Clear (This : in out Object);
 
+   function Contains (This : in Object; Name : in String) return Boolean;
+   --  Says if the named agent is in the assignment.
+
    procedure Fill_Owners (This : in Object; Plan : in out Htn.Plan.Object);
    --  Fill the owners of tasks in a plan with this assignment.
 
