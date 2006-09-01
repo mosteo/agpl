@@ -55,6 +55,9 @@ package body Agpl.Graphs.Bellman_Ford is
          This.Vertices.Set_Length (Count_Type (V.Index));
       end if;
       This.Vertices.Replace_Element (V.Index, V);
+
+      This.Min_Vertex := Vertex_Index'Min (This.Min_Vertex, V.Index);
+      This.Max_Vertex := Vertex_Index'Max (This.Max_Vertex, V.Index);
    end Add_Vertex;
 
    ---------------
@@ -93,7 +96,8 @@ package body Agpl.Graphs.Bellman_Ford is
       Max : constant Vertex_Index := Max_Vertex (This);
       Used : array (Min .. Max) of Boolean;
    begin
-      if Used'First /= 1 then
+      if Used'First /= Vertex_Index'First then
+         Put_Line ("First vertex is not" & Vertex_Index'First'Img);
          return False;
       else
          for I in This.C_Edges.First_Index .. This.C_Edges.Last_Index loop
@@ -103,6 +107,7 @@ package body Agpl.Graphs.Bellman_Ford is
 
          for I in Used'Range loop
             if not Used (I) then
+               Put_Line ("There are unlinked vertices");
                return False;
             end if;
          end loop;
@@ -143,7 +148,25 @@ package body Agpl.Graphs.Bellman_Ford is
    -----------
 
    function Costs (This : in Graph) return Cost_Matrix is
-      Result : Cost_Matrix (1 .. Max_Vertex (This), 1 .. Max_Vertex (This));
+      Result : Cost_Matrix  (1 .. Max_Vertex (This), 1 .. Max_Vertex (This));
+   begin
+      Put_Line ("Computing graph costs...");
+      for I in Result'Range loop
+         declare
+            Row : constant Cost_Array := Costs_From_Source (This, I);
+         begin
+            for J in Row'Range loop
+               Result (I, J) := Row (J);
+            end loop;
+         end;
+      end loop;
+
+      return Result;
+   end Costs;
+
+   function Costs (This : in Graph) return Cost_Matrix_Access is
+      Result : constant Cost_Matrix_Access :=
+                 new Cost_Matrix (1 .. Max_Vertex (This), 1 .. Max_Vertex (This));
    begin
       Put_Line ("Computing graph costs...");
       for I in Result'Range loop

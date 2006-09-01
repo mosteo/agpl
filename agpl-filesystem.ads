@@ -32,16 +32,17 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
-package Agpl.Folders is
+package Agpl.Filesystem is
 
    pragma Preelaborate;
 
-   ------------------------------------------------------------------------
-   -- Ensure_Slash                                                       --
-   ------------------------------------------------------------------------
    --  Returns the same string with a Folder_Separator added if it is missing.
    function Ensure_Slash (This : in String; Separator : in Character := '/')
       return String;
    pragma Inline (Ensure_Slash);
 
-end Agpl.Folders;
+   function Replace_Extension (This : in String; New_Ext : in String)
+                               return    String;
+   --  Replace the extension by a new one
+
+end Agpl.Filesystem;

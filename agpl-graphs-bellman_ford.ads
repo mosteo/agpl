@@ -36,6 +36,8 @@ package Agpl.Graphs.Bellman_Ford is
                                Vertex_Index range <>) of Integer;
    --  Used to represent the cost of going from any vertex to any other
 
+   type Cost_Matrix_Access is access Cost_Matrix;
+
    type Graph is tagged private;
    --  Graphs must be continuous: that is, vertices must be consecutively named.
 
@@ -59,6 +61,9 @@ package Agpl.Graphs.Bellman_Ford is
    function Costs (This : in Graph) return Cost_Matrix;
    --  Complete costs for a graph.
    --  O (Edges * Vertices**2 )
+
+   function Costs (This : in Graph) return Cost_Matrix_Access;
+   --  For largish matrices. You must free it yourself.
 
    function Get_Edges (This : in Graph) return Edge_Array;
 
@@ -98,9 +103,9 @@ private
       Max_Vertex : Vertex_Index := Vertex_Index'First;
    end record;
 
-   procedure Bellman_Ford (Graph        : in C_Edge_Array;
-                           Source       : in C_Vertex;
-                           Vertex_Count : in Interfaces.C.Int;
+   procedure Bellman_Ford (Graph        : in     C_Edge_Array;
+                           Source       : in     C_Vertex;
+                           Vertex_Count : in     Interfaces.C.Int;
                            Distance     :    out C_Cost_Array);
    --  For internal use
 

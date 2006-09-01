@@ -32,12 +32,14 @@
 ------------------------------------------------------------------------------
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
-package body Agpl.Folders is
+with Agpl.Strings.Fields;
 
-   ------------------------------------------------------------------------
-   -- Ensure_Slash                                                       --
-   ------------------------------------------------------------------------
-   --  Returns the same string with a Folder_Separator added if it is missing.
+package body Agpl.Filesystem is
+
+   ------------------
+   -- Ensure_Slash --
+   ------------------
+
    function Ensure_Slash (This : in String; Separator : in Character := '/')
       return String is
    begin
@@ -48,4 +50,15 @@ package body Agpl.Folders is
       end if;
    end Ensure_Slash;
 
-end Agpl.Folders;
+   -----------------------
+   -- Replace_Extension --
+   -----------------------
+
+   function Replace_Extension (This : in String; New_Ext : in String)
+                               return    String
+   is
+   begin
+      return Strings.Fields.String_Tail_Reverse (This, '.') & '.' & New_Ext;
+   end Replace_Extension;
+
+end Agpl.Filesystem;

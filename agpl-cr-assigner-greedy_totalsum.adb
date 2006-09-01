@@ -29,7 +29,7 @@ with Agpl.Htn.Tasks;
 --  with Agpl.Strings;
 --  with Agpl.Trace; use Agpl.Trace;
 
-package body Agpl.Cr.Assigner.Hungry2 is
+package body Agpl.Cr.Assigner.Greedy_Totalsum is
 
    package Task_Lists renames Agpl.Htn.Tasks.Lists;
    use type Agent.Lists.Cursor;
@@ -157,4 +157,4 @@ package body Agpl.Cr.Assigner.Hungry2 is
       return A;
    end Assign;
 
-end Agpl.Cr.Assigner.Hungry2;
+end Agpl.Cr.Assigner.Greedy_Totalsum;

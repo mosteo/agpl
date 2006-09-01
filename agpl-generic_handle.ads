@@ -50,7 +50,12 @@ package Agpl.Generic_Handle is
    pragma Inline (Set);
    --  Creation
 
+   function Set (This : in Item_Access) return Object;
+   function "+" (This : in Item_Access) return Object renames Set;
+   pragma Inline (Set);
+
    procedure Set (This : in out Object; X : in Item);
+   procedure Set (This : in out Object; X : in Item_Access);
    --  Creation
 
    function Get (This : in Object) return Item;

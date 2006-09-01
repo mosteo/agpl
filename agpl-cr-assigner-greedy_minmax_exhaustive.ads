@@ -26,7 +26,7 @@
 
 with Agpl.Cr.Cost_Matrix;
 
-package Agpl.Cr.Assigner.Hungry3 is
+package Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
    --  Greedy heuristic that at each step will select the pair agent-task which
    --  adds less cost to the minimax cost.
@@ -48,4 +48,4 @@ package Agpl.Cr.Assigner.Hungry3 is
       Costs  : in Cr.Cost_Matrix.Object)
       return      Assignment.Object;
 
-end Agpl.Cr.Assigner.Hungry3;
+end Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;

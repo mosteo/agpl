@@ -73,7 +73,25 @@ package body Agpl.Generic_Handle is
    -- Set --
    ---------
 
+   function Set (This : in Item_Access) return Object is
+   begin
+      return (Ada.Finalization.Controlled with Data => This);
+   end Set;
+
+   ---------
+   -- Set --
+   ---------
+
    procedure Set (This : in out Object; X : in Item) is
+   begin
+      This := Set (X);
+   end Set;
+
+   ---------
+   -- Set --
+   ---------
+
+   procedure Set (This : in out Object; X : in Item_Access) is
    begin
       This := Set (X);
    end Set;

@@ -26,20 +26,17 @@
 
 with Agpl.Cr.Cost_Matrix;
 
-package Agpl.Cr.Assigner.Hungry3 is
+--  Greedy heuristic that will at each step use the agent with the least cost
+--  for its least costly task.
+--  Not exhaustive: tasks are always added to the end of an agent tasks list
 
-   --  Greedy heuristic that at each step will select the pair agent-task which
-   --  adds less cost to the minimax cost.
-   --  The new task for an agent will be tried at any point of its plan.
+--  O (T * A * T) ~ O (n^3)
 
-   --  O (T * A * T * T) ~ O (n^4)
+package Agpl.Cr.Assigner.Greedy_Totalsum is
 
    pragma Preelaborate;
 
-   type Object (Keep_Order : Boolean) is new Assigner.Object with null record;
-   --  If Keep_Order, any tasks in an Agent passed to Agents will be kept in
-   --  that position (at plan start).
-   --  If Keep_Order is false, all tasks will be planned in equal conditions.
+   type Object is new Assigner.Object with null record;
 
    function Assign
      (This   : in Object;
@@ -48,4 +45,4 @@ package Agpl.Cr.Assigner.Hungry3 is
       Costs  : in Cr.Cost_Matrix.Object)
       return      Assignment.Object;
 
-end Agpl.Cr.Assigner.Hungry3;
+end Agpl.Cr.Assigner.Greedy_Totalsum;
