@@ -30,6 +30,7 @@ package Agpl.Graphs.Bellman_Ford is
       Weight : Integer; -- Can be negative
    end record;
 
+   package Vertex_Vectors is new Ada.Containers.Vectors (Vertex_Index, Vertex);
    type Edge_Array  is array  (Positive range <>) of Edge;
    type Cost_Array  is array  (Vertex_Index range <>) of Integer;
    type Cost_Matrix is array  (Vertex_Index range <>,
@@ -65,6 +66,8 @@ package Agpl.Graphs.Bellman_Ford is
    function Costs (This : in Graph) return Cost_Matrix_Access;
    --  For largish matrices. You must free it yourself.
 
+   function Get_Vertices (This : in Graph) return Vertex_Vectors.Vector;
+
    function Get_Edges (This : in Graph) return Edge_Array;
 
    function Get_Vertex (This  : in Graph;
@@ -93,8 +96,6 @@ private
    pragma Convention (C, C_Cost_Array);
 
    package C_Edge_Vectors is new Ada.Containers.Vectors (Natural, C_Edge);
-
-   package Vertex_Vectors is new Ada.Containers.Vectors (Vertex_Index, Vertex);
 
    type Graph is tagged record
       C_Edges    : C_Edge_Vectors.Vector;

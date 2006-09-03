@@ -87,6 +87,15 @@ package body Agpl.Graphs.Bellman_Ford is
       return This.Vertices.Element (Index);
    end Get_Vertex;
 
+   ------------------
+   -- Get_Vertices --
+   ------------------
+
+   function Get_Vertices (This : in Graph) return Vertex_Vectors.Vector is
+   begin
+      return This.Vertices;
+   end Get_Vertices;
+
    --------------
    -- Is_Valid --
    --------------

@@ -33,7 +33,7 @@ with Agpl.Conversions;
 use  Agpl.Conversions;
 with Agpl.Cr.Agent.Dummy;
 with Agpl.Cr.Agent.Lists;
-with Agpl.Cr.Assigner.Hungry3;
+with Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;
 with Agpl.Cr.Plan_Assigner;
 with Agpl.Cr.Plan_Assigner.Greedy1;
 with Agpl.Cr.Tasks.Insertions;
@@ -260,7 +260,7 @@ package body Agpl.Cr.Mutable_Assignment is
       declare
          use Cr.Assignment;
          New_Assignment : constant Cr.Assignment.Object :=
-                            Cr.Assigner.Hungry3.Assign
+                            Cr.Assigner.Greedy_MinMax_Exhaustive.Assign
                               ((Cr.Assigner.Object with Keep_Order => True),
                                Get_Agents_Without_Tasks (A),
                                Get_All_Tasks (A),
@@ -271,9 +271,9 @@ package body Agpl.Cr.Mutable_Assignment is
          if New_Assignment.Is_Valid then
             Set_Assignment (This, New_Assignment, This.Context.Ref.Criterion);
          else
-            Log (File & "Hungry3 failed!", Warning);
+            Log (File & "Assigner failed!", Warning);
          end if;
-         --  Note: here Minimax will not be used since there are no new tasks.
+         --  Note: here criterion will not be used since there are no new tasks.
       end;
    end Do_Heuristic_1;
 
