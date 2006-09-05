@@ -27,11 +27,11 @@
 --  An assigner creates assignments. Ideally it should aim to achieve some kind
 --  of optimality.
 
-with Agpl.Cr.Agent.Lists;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 
 package Agpl.Cr.Assigner is
 
@@ -41,22 +41,22 @@ package Agpl.Cr.Assigner is
 
 --     function Assign
 --       (This   : in Object;
---        Agents : in Agent.Lists.List;
---        Tasks  : in Agpl.Htn.Tasks.Lists.List)
+--        Agents : in Agent.Containers.Lists.List;
+--        Tasks  : in Agpl.Htn.Tasks.Containers.Lists.List)
 --        return      Assignment.Object is abstract;
    --  Takes a bunch of agents and tasks and says who must perform each task.
 --  DEPRECATED. To avoid multiple calculation of costs.
 
    function Assign
      (This   : in Object;
-      Agents : in Agent.Lists.List;
-      Tasks  : in Agpl.Htn.Tasks.Lists.List;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Agpl.Htn.Tasks.Containers.Lists.List;
       Costs  : in Cost_Matrix.Object)
       return      Assignment.Object is abstract;
 
    procedure Assign_Best_Plan
      (The_Assigner   : in     Object'Class;
-      Agents         : in     Agent.Lists.List;
+      Agents         : in     Agent.Containers.Lists.List;
       Plans          : in     Htn.Plan.Object; -- OR of possible plans.
       Criterion      : in     Assignment_Criteria;
       Plan           :    out Htn.Plan.Object; -- Selected plan with best cost.
@@ -69,7 +69,7 @@ package Agpl.Cr.Assigner is
 
    procedure Assign_Best_Plan
      (The_Assigner   : in     Object'Class;
-      Agents         : in     Agent.Lists.List;
+      Agents         : in     Agent.Containers.Lists.List;
       Plans          : in     Htn.Plan.Object; -- OR of possible plans.
       Criterion      : in     Assignment_Criteria;
       Plan           :    out Htn.Plan.Object; -- Selected plan with best cost.

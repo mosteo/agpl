@@ -6,6 +6,8 @@
 
 --  C code taken from en.wikipedia.com
 
+with Agpl.Generic_Dense_Matrix;
+
 with Interfaces.C;
 with Ada.Containers.Vectors;
 
@@ -33,11 +35,11 @@ package Agpl.Graphs.Bellman_Ford is
    package Vertex_Vectors is new Ada.Containers.Vectors (Vertex_Index, Vertex);
    type Edge_Array  is array  (Positive range <>) of Edge;
    type Cost_Array  is array  (Vertex_Index range <>) of Integer;
-   type Cost_Matrix is array  (Vertex_Index range <>,
-                               Vertex_Index range <>) of Integer;
-   --  Used to represent the cost of going from any vertex to any other
 
-   type Cost_Matrix_Access is access Cost_Matrix;
+   package Cost_Matrices is new Generic_Dense_Matrix (Vertex_Index, Integer);
+   subtype Cost_Matrix is Cost_Matrices.Matrix;
+   --  where the integer is the cost of going from Row to Col vertex,
+   --  as given by the integer weights of the edges
 
    type Graph is tagged private;
    --  Graphs must be continuous: that is, vertices must be consecutively named.
@@ -62,9 +64,6 @@ package Agpl.Graphs.Bellman_Ford is
    function Costs (This : in Graph) return Cost_Matrix;
    --  Complete costs for a graph.
    --  O (Edges * Vertices**2 )
-
-   function Costs (This : in Graph) return Cost_Matrix_Access;
-   --  For largish matrices. You must free it yourself.
 
    function Get_Vertices (This : in Graph) return Vertex_Vectors.Vector;
 

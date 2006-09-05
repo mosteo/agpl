@@ -31,7 +31,7 @@
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Plan_Assigner.Greedy1 is
@@ -44,7 +44,7 @@ package body Agpl.Cr.Plan_Assigner.Greedy1 is
 
    function Assign
      (This      : in Object;
-      Agents    : in Agent.Vectors.Vector;
+      Agents    : in Agent.Containers.Vectors.Vector;
       Plan      : in Agpl.Htn.Plan.Object;
       Costs     : in Cost_Matrix.Object;
       Criterion : in Assignment_Criteria)
@@ -65,7 +65,7 @@ package body Agpl.Cr.Plan_Assigner.Greedy1 is
 
       loop
          declare
-            Pending : Htn.Tasks.Lists.List :=
+            Pending : Htn.Tasks.Containers.Lists.List :=
                         P.Enumerate_Tasks (Primitive => True,
                                            Pending   => True);
             New_Ass  : Assignment.Object;

@@ -32,7 +32,7 @@
 with Agpl.Conversions;
 use  Agpl.Conversions;
 with Agpl.Cr.Agent.Dummy;
-with Agpl.Cr.Agent.Lists;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;
 with Agpl.Cr.Plan_Assigner;
 with Agpl.Cr.Plan_Assigner.Greedy1;
@@ -40,7 +40,7 @@ with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Plan.Utils.Random;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Htn.Tasks.Maps;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
@@ -772,24 +772,24 @@ package body Agpl.Cr.Mutable_Assignment is
    is
       New_Ass       : Cr.Assignment.Object := Ass;
       Pending_Tasks : Htn.Tasks.Maps.Map;
-      L             : constant Htn.Tasks.Lists.List :=
+      L             : constant Htn.Tasks.Containers.Lists.List :=
                         Htn.Plan.Enumerate_Tasks
                           (Htn.Plan.Utils.Random.Get_Any_Expansion
                              (Ass.Freeze_Plan (This.Context.Ref.Plan)),
                            Primitive => True,
                            Pending   => True);
-      procedure Ins (I : Htn.Tasks.Lists.Cursor) is
-         use Htn.Tasks.Lists;
+      procedure Ins (I : Htn.Tasks.Containers.Lists.Cursor) is
+         use Htn.Tasks.Containers.Lists;
       begin
          Pending_Tasks.Insert (Element (I).Get_Id, Element (I));
       end Ins;
 
-      procedure Process_Agent (I : Cr.Agent.Lists.Cursor) is
-         use Cr.Agent.Lists;
-         use Htn.Tasks.Lists;
+      procedure Process_Agent (I : Cr.Agent.Containers.Lists.Cursor) is
+         use Cr.Agent.Containers.Lists;
+         use Htn.Tasks.Containers.Lists;
          A : constant Cr.Agent.Object'Class  := Element (I);
-         T : constant Htn.Tasks.Lists.List   := A.Get_Tasks;
-         J :          Htn.Tasks.Lists.Cursor := First (T);
+         T : constant Htn.Tasks.Containers.Lists.List   := A.Get_Tasks;
+         J :          Htn.Tasks.Containers.Lists.Cursor := T.First;
       begin
          while Has_Element (J) loop
             declare
@@ -816,12 +816,12 @@ package body Agpl.Cr.Mutable_Assignment is
          end loop;
       end Process_Agent;
 
-      procedure Remove_Agent_Tasks (I : Cr.Agent.Lists.Cursor) is
-         use Cr.Agent.Lists;
-         use Htn.Tasks.Lists;
+      procedure Remove_Agent_Tasks (I : Cr.Agent.Containers.Lists.Cursor) is
+         use Cr.Agent.Containers.Lists;
+         use Htn.Tasks.Containers.Lists;
          A : constant Cr.Agent.Object'Class  := Element (I);
-         T : constant Htn.Tasks.Lists.List   := A.Get_Tasks;
-         J :          Htn.Tasks.Lists.Cursor := First (T);
+         T : constant Htn.Tasks.Containers.Lists.List   := A.Get_Tasks;
+         J :          Htn.Tasks.Containers.Lists.Cursor := First (T);
       begin
          while Has_Element (J) loop
             Pending_Tasks.Delete (Element (J).Get_Id);
@@ -834,13 +834,13 @@ package body Agpl.Cr.Mutable_Assignment is
       Clear_Dynamic_Part (This);
 
       --  Keep mapped tasks
-      Htn.Tasks.Lists.Iterate (L, Ins'Access);
+      L.Iterate (Ins'Access);
 
       --  Remove assigned tasks
       declare
-         Agents : constant Cr.Agent.Lists.List := Ass.Get_Agents;
+         Agents : constant Cr.Agent.Containers.Lists.List := Ass.Get_Agents;
       begin
-         Cr.Agent.Lists.Iterate (Agents, Remove_Agent_Tasks'Access);
+         Cr.Agent.Containers.Lists.Iterate (Agents, Remove_Agent_Tasks'Access);
       end;
 
       --  At this point, the Pending_Tasks lists contains only tasks in the plan
@@ -887,9 +887,9 @@ package body Agpl.Cr.Mutable_Assignment is
 
       --  Create all contexts and things.
       declare
-         Agents : constant Cr.Agent.Lists.List := New_Ass.Get_Agents;
+         Agents : constant Cr.Agent.Containers.Lists.List := New_Ass.Get_Agents;
       begin
-         Cr.Agent.Lists.Iterate (Agents, Process_Agent'Access);
+         Cr.Agent.Containers.Lists.Iterate (Agents, Process_Agent'Access);
       end;
 
       Log ("Set_Assignment: Assigned tasks reinserted",

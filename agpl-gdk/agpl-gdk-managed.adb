@@ -3,7 +3,7 @@ with Agpl.Trace; use Agpl.Trace;
 with Gtk.Main; pragma Elaborate_All (Gtk.Main);
 
 --  with Ada.Tags; use Ada.Tags;
---  with Ada.Text_Io; use Ada.Text_Io;
+  with Ada.Text_Io; use Ada.Text_Io;
 
 package body Agpl.Gdk.Managed is
 

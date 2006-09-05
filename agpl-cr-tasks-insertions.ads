@@ -30,7 +30,7 @@ with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 use  Agpl;
 
 --  Insertion of tasks into agents
@@ -47,7 +47,7 @@ package Agpl.Cr.Tasks.Insertions is
                 Cost_Total :    out Cr.Costs;
                 Success    :    out Boolean);
 
-   procedure Before_Id (List    : in out Htn.Tasks.Lists.List;
+   procedure Before_Id (List    : in out Htn.Tasks.Containers.Lists.List;
                         Job     : in     Htn.Tasks.Object'Class;
                         Id      : in     Htn.Tasks.Task_Id;
                         Is_Last : in     Boolean := False);
@@ -106,7 +106,7 @@ package Agpl.Cr.Tasks.Insertions is
    --  The results are given in New_Ass, with Success true.
 
    procedure Greedy (Ass       : in     Assignment.Object;
-                     Tasks     : in     Htn.Tasks.Lists.List;
+                     Tasks     : in     Htn.Tasks.Containers.Lists.List;
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;

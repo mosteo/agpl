@@ -37,7 +37,7 @@ package Agpl.Cr.Plan_Assigner.Greedy1 is
 
    function Assign
      (This      : in Object;
-      Agents    : in Agent.Vectors.Vector;
+      Agents    : in Agent.Containers.Vectors.Vector;
       Plan      : in Agpl.Htn.Plan.Object;
       Costs     : in Cost_Matrix.Object;
       Criterion : in Assignment_Criteria)

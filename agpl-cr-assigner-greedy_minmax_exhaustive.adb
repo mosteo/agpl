@@ -28,16 +28,16 @@ with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Tasks;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Htn.Tasks.Handle;
---  with Agpl.Trace; use Agpl.Trace;
+with Agpl.Trace; use Agpl.Trace;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
-   package Task_Lists renames Agpl.Htn.Tasks.Lists;
-   use type Agent.Lists.Cursor;
-   use type Task_Lists.Cursor;
+   use type Agent.Containers.Lists.Cursor;
+   use type Htn.Tasks.Containers.Lists.Cursor;
    use type Htn.Tasks.Task_Id;
    use type Cr.Agent.Handle.Object;
    use type Htn.Tasks.Handle.Object;
@@ -51,15 +51,15 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
    function Assign
      (This   : in Object;
-      Agents : in Agent.Lists.List;
-      Tasks  : in Task_Lists.List;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List;
       Costs  : in Cr.Cost_Matrix.Object)
       return Assignment.Object
    is
       A : Assignment.Object;
       --  The result we'll return.
 
-      Pending : Task_Lists.List := Tasks;
+      Pending : Htn.Tasks.Containers.Lists.List := Tasks;
       --  Tasks not yet assigned.
 
       Not_Before : Int_Maps.Map;
@@ -70,7 +70,7 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
       -------------------------
 
       procedure Remove_From_Pending (T : in Htn.Tasks.Object'Class) is
-         use Task_Lists;
+         use Htn.Tasks.Containers.Lists;
          I : Cursor := Pending.First;
       begin
          while Has_Element (I) loop
@@ -95,8 +95,8 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
                            Ct  :    out Cr.Costs;
                            Job :    out Htn.Tasks.Handle.Object)
       is
-         use Task_Lists;
-         T         : Task_Lists.Cursor  := Pending.First;
+         use Htn.Tasks.Containers.Lists;
+         T  : Cursor  := Pending.First;
       begin
          Ct := Cr.Costs'Last;
          while Has_Element (T) loop
@@ -128,8 +128,9 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
    begin
       --  Initialize assignment:
+      Log ("Starting ass", Always);
       declare
-         use Agent.Lists;
+         use Agent.Containers.Lists;
          I : Cursor := Agents.First;
       begin
          while Has_Element (I) loop
@@ -141,6 +142,7 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
                                    0);
             end if;
 
+            Log ("Adding agent " & Element (I).Get_Name, Always);
             A.Set_Agent (Element (I));
             Next (I);
          end loop;
@@ -148,11 +150,12 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
       --  Assign tasks:
       while not Pending.Is_Empty loop
+         Log ("Pending:" & Pending.Length'Img, Always);
          declare
             Best_Cost        : Cr.Costs := Cr.Costs'Last;
             Best_Agent       : Agent.Handle.Object;
             Best_Task        : Htn.Tasks.Handle.Object;
-            use Agent.Lists;
+            use Agent.Containers.Lists;
             I                : Cursor := Agents.First;
          begin
             while Has_Element (I) loop

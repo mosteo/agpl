@@ -24,7 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 
 package Agpl.Htn.Plan.Utils.Random is
 
@@ -33,8 +33,8 @@ package Agpl.Htn.Plan.Utils.Random is
    Log_Section : constant String := "agpl.htn.plan.utils";
 
    function Get_Any_Expansion (This : in Plan.Object;
-                               Jobs : in Tasks.Lists.List)
-                               return    Tasks.Lists.List;
+                               Jobs : in Tasks.Containers.Lists.List)
+                               return    Tasks.Containers.Lists.List;
    --  Given a list of tasks, and a plan with some methods for expansion,
    --  will return the tasks in some arbitrary expansion.
    --  Tasks are expanded one by one so no exponential problem can occur

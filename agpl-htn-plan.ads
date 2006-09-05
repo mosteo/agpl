@@ -30,7 +30,7 @@ with Agpl.Htn.Method;
 with Agpl.Htn.Method.Vectors;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 
 with Ada.Finalization;
 with Ada.Streams;
@@ -76,7 +76,7 @@ package Agpl.Htn.Plan is
 
    procedure Enumerate_Tasks
      (This           : in     Object;
-      Tasks          :    out Htn.Tasks.Lists.List;
+      Tasks          :    out Htn.Tasks.Containers.Lists.List;
       Compound       : in     Boolean := False;
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;
@@ -88,7 +88,7 @@ package Agpl.Htn.Plan is
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;
       Pending        : in     Boolean := False)
-      return                  Htn.Tasks.Lists.List;
+      return                  Htn.Tasks.Containers.Lists.List;
 
    procedure Clear (This : in out Object);
    --  Delete everything
@@ -121,7 +121,7 @@ package Agpl.Htn.Plan is
    --  Gets a reference to a task in this plan. Should not be kept but just
    --  be used puntually.
 
-   function Get_Tasks (This : in Object) return Tasks.Lists.List;
+   function Get_Tasks (This : in Object) return Tasks.Containers.Lists.List;
    --  Obtain a list of the tasks to be performed in this plan
    --  in no particular order.
    --  Task Nodes marked as finished are not reported.

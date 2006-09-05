@@ -25,7 +25,7 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Cr.Tasks.Starting_Pose;
-with Agpl.Htn.Tasks.Vectors;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Optimization.Concorde;
 
 package body Agpl.Cr.Assigner.MTSP_Concorde is
@@ -38,20 +38,20 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
 
    function Assign
      (This   : in Object;
-      Agents : in Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List;
       Costs  : in Cr.Cost_Matrix.Object)
       return      Assignment.Object
    is
       pragma Unreferenced (This, Costs);
-      Jobs   : Htn.Tasks.Vectors.Vector;
+      Jobs   : Htn.Tasks.Containers.Vectors.Vector;
       Ag     : constant Cr.Agent.Object'Class := Agents.First_Element;
       Result : Assignment.Object;
    begin
       --  Create the tasks vector
       --  Use a starting pose for each agent:
       declare
-         use Cr.Agent.Lists;
+         use Cr.Agent.Containers.Lists;
          I : Cursor := Agents.First;
       begin
          while Has_Element (I) loop
@@ -62,7 +62,7 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
 
       --  Add the tasks:
       declare
-         use Htn.Tasks.Lists;
+         use Htn.Tasks.Containers.Lists;
          I : Cursor := Tasks.First;
       begin
          while Has_Element (I) loop
@@ -105,7 +105,7 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
                              Solve_Mtsp (Start,
                                          C,
                                          No_Return => True));
-            use Cr.Agent.Lists;
+            use Cr.Agent.Containers.Lists;
             A : Cursor := Agents.First;
          begin
             --  Reconstruct agents

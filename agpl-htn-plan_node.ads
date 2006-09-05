@@ -30,7 +30,7 @@
 
 --  with Agpl.Debug;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Containers.Doubly_Linked_Lists;
@@ -96,7 +96,7 @@ package Agpl.Htn.Plan_Node is
 
    function Create
      (Kind   : in Composite_Node_Kind;
-      From   : in Tasks.Lists.List;
+      From   : in Tasks.Containers.Lists.List;
       Parent : in Node_Access := null) return Node_Access;
    --  Allocates a node consisting in several and/or tasks
 
@@ -145,7 +145,7 @@ package Agpl.Htn.Plan_Node is
 
    procedure Enumerate_Tasks
      (This           : in     Node_Access;
-      Tasks          :    out Htn.Tasks.Lists.List;
+      Tasks          :    out Htn.Tasks.Containers.Lists.List;
       Compound       : in     Boolean := False;
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;

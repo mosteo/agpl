@@ -45,7 +45,4 @@ package Agpl.Generic_File_Store is
 
    function Load (File : in String) return Item;
 
-   function Load (File : in String) return Item_Access;
-   --  You must free it
-
 end Agpl.Generic_File_Store;

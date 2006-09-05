@@ -32,8 +32,8 @@ package Agpl.Cr.Assigner.MTSP_Concorde is
 
    function Assign
      (This   : in Object;
-      Agents : in Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List;
       Costs  : in Cr.Cost_Matrix.Object)
       return      Assignment.Object;
    --  Using the concorde solver.

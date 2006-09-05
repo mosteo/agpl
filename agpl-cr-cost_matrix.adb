@@ -24,12 +24,12 @@ package body Agpl.Cr.Cost_Matrix is
    ------------------------
 
    function Add_Starting_Tasks
-     (Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List) return Htn.Tasks.Lists.List
+     (Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List) return Htn.Tasks.Containers.Lists.List
    is
-      Tasks_Bis : Htn.Tasks.Lists.List  := Tasks;
-      I         : Cr.Agent.Lists.Cursor := Agents.Last;
-      use Cr.Agent.Lists;
+      Tasks_Bis : Htn.Tasks.Containers.Lists.List  := Tasks;
+      I         : Cr.Agent.Containers.Lists.Cursor := Agents.Last;
+      use Cr.Agent.Containers.Lists;
    begin
       while Has_Element (I) loop
          Tasks_Bis.Prepend (Cr.Tasks.Starting_Pose.Create (Element (I).Get_Name));
@@ -45,11 +45,11 @@ package body Agpl.Cr.Cost_Matrix is
 
    procedure Create
      (This   : in out Object;
-      Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List)
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
    is
-      package AL renames Cr.Agent.Lists;
-      package TL renames Htn.Tasks.Lists;
+      package AL renames Cr.Agent.Containers.Lists;
+      package TL renames Htn.Tasks.Containers.Lists;
       use type AL.Cursor; use type TL.Cursor;
 
       A   : AL.Cursor := AL.First (Agents);
@@ -106,9 +106,9 @@ package body Agpl.Cr.Cost_Matrix is
    procedure Create
      (This   : in out Object;
       Agent  : in Cr.Agent.Object'Class;
-      Tasks  : in Htn.Tasks.Lists.List)
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
    is
-      A : Cr.Agent.Lists.List;
+      A : Cr.Agent.Containers.Lists.List;
    begin
       A.Append (Agent);
       Create (This, A, Tasks);
@@ -119,8 +119,8 @@ package body Agpl.Cr.Cost_Matrix is
    -----------------------
 
    function Create_With_Start
-     (Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List) return Object
+     (Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List) return Object
    is
       Result : Object;
    begin
@@ -135,9 +135,9 @@ package body Agpl.Cr.Cost_Matrix is
    procedure Create_With_Start
      (This   : in out Object;
       Agent  : in Cr.Agent.Object'Class;
-      Tasks  : in Htn.Tasks.Lists.List)
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
    is
-   A : Cr.Agent.Lists.List;
+   A : Cr.Agent.Containers.Lists.List;
    begin
       A.Append (Agent);
       Create_With_Start (This, A, Tasks);
@@ -149,8 +149,8 @@ package body Agpl.Cr.Cost_Matrix is
 
    procedure Create_With_Start
      (This   : in out Object;
-      Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List)
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
    is
    begin
       Create (This, Agents, Add_Starting_Tasks (Agents, Tasks));
@@ -188,13 +188,13 @@ package body Agpl.Cr.Cost_Matrix is
      (This  : in Object;
       Agent : in Cr.Agent.Object'Class) return Costs
    is
-      T    : constant Htn.Tasks.Lists.List := Agent.Get_Tasks;
+      T    : constant Htn.Tasks.Containers.Lists.List := Agent.Get_Tasks;
       Prev :          Htn.Tasks.Task_Id    := Htn.Tasks.No_Task;
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
 
       Total,
       Partial : Cr.Costs               := 0.0;
-      I       : Htn.Tasks.Lists.Cursor := T.First;
+      I       : Htn.Tasks.Containers.Lists.Cursor := T.First;
    begin
       while Has_Element (I) loop
          Partial := Get_Cost (This,

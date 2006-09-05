@@ -138,9 +138,9 @@ package body Agpl.Cr.Agent is
    -------------------
 
    function Get_Plan_Cost (This  : in Object;
-                           Tasks : in Htn.Tasks.Lists.List) return Costs
+                           Tasks : in Htn.Tasks.Containers.Lists.List) return Costs
    is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
       I     : Cursor := First (Tasks);
       Prev  : Cursor;
       Total : Costs  := 0.0;
@@ -187,7 +187,7 @@ package body Agpl.Cr.Agent is
 
    function Get_First_Task (This : in Object) return Htn.Tasks.Object'Class
    is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
    begin
       return Element (First (This.Tasks));
    end Get_First_Task;
@@ -198,7 +198,7 @@ package body Agpl.Cr.Agent is
 
    function Get_Last_Task  (This : in Object) return Htn.Tasks.Object'Class
    is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
    begin
       return Element (Last (This.Tasks));
    end Get_Last_Task;
@@ -219,7 +219,7 @@ package body Agpl.Cr.Agent is
    ---------------
 
    function Has_Tasks (This : in Object) return Boolean is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
    begin
       return not Is_Empty (This.Tasks);
    end Has_Tasks;
@@ -238,7 +238,7 @@ package body Agpl.Cr.Agent is
    ---------------
 
    function Get_Tasks (This : in Object)
-                       return Htn.Tasks.Lists.List is
+                       return Htn.Tasks.Containers.Lists.List is
    begin
       return This.Tasks;
    end Get_Tasks;
@@ -259,7 +259,7 @@ package body Agpl.Cr.Agent is
 
    procedure Modify_Task_List (This     : in out Object;
                                Modifier : access procedure
-                                 (Tasks : in out Htn.Tasks.Lists.List))
+                                 (Tasks : in out Htn.Tasks.Containers.Lists.List))
    is
    begin
       Modifier (This.Tasks);
@@ -270,7 +270,7 @@ package body Agpl.Cr.Agent is
    ---------------
 
    procedure Set_Tasks (This  : in out Object;
-                        Tasks : in     Htn.Tasks.Lists.List) is
+                        Tasks : in     Htn.Tasks.Containers.Lists.List) is
    begin
       This.Tasks := Tasks;
    end Set_Tasks;
@@ -280,7 +280,7 @@ package body Agpl.Cr.Agent is
    -----------------
 
    procedure Remove_Task (This : in out Object; Id : in Htn.Tasks.Task_Id) is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
       use type Htn.Tasks.Task_Id;
       I : Cursor := First (This.Tasks);
    begin
@@ -308,8 +308,8 @@ package body Agpl.Cr.Agent is
 
    procedure Print_Plan_Cost (This : in Object)
    is
-      use Htn.Tasks.Lists;
-      Tasks : constant Htn.Tasks.Lists.List := This.Get_Tasks;
+      use Htn.Tasks.Containers.Lists;
+      Tasks : constant Htn.Tasks.Containers.Lists.List := This.Get_Tasks;
       Total : Cr.Costs := 0.0;
 
       Res   : Ustring;

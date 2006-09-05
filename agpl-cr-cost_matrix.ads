@@ -28,9 +28,9 @@ with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Strings.Hash;
 
 with Agpl.Cr.Agent;
-with Agpl.Cr.Agent.Lists;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 
 package Agpl.Cr.Cost_Matrix is
 
@@ -43,15 +43,16 @@ package Agpl.Cr.Cost_Matrix is
    Empty_Object : constant Object;
 
    function Add_Starting_Tasks
-     (Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List) return Htn.Tasks.Lists.List;
+     (Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
+      return      Htn.Tasks.Containers.Lists.List;
    --  Get a copy of Tasks including Cr.Tasks.Starting_Task for each agent
    --  The starting tasks will be the first ones in the order in which agents are.
 
    procedure Create
      (This   : in out Object;
-      Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List);
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List);
    --  Create a matrix given a list of agents and tasks to perform.
    --  Note, any old costs not overwritten will remain...
    --  O (|A||T||T|)
@@ -59,24 +60,24 @@ package Agpl.Cr.Cost_Matrix is
    procedure Create
      (This   : in out Object;
       Agent  : in Cr.Agent.Object'Class;
-      Tasks  : in Htn.Tasks.Lists.List);
+      Tasks  : in Htn.Tasks.Containers.Lists.List);
    --  Note, any old costs not overwritten will remain...
    --  O (|T||T|)
 
    function Create_With_Start
-     (Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List) return Object;
+     (Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List) return Object;
    --  As following but in function form.
 
    procedure Create_With_Start
      (This   : in out Object;
       Agent  : in Cr.Agent.Object'Class;
-      Tasks  : in Htn.Tasks.Lists.List);
+      Tasks  : in Htn.Tasks.Containers.Lists.List);
 
    procedure Create_With_Start
      (This   : in out Object;
-      Agents : in Cr.Agent.Lists.List;
-      Tasks  : in Htn.Tasks.Lists.List);
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List);
    --  As previous, but adds a special Cr.Tasks.Starting_Pose task for each
    --  agent, which should be planned as the first task for each agent.
    --  These tasks are obtained via @Add_Starting_Tasks@

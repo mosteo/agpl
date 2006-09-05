@@ -24,9 +24,23 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
+--  Massive instantiation of containers
+
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Vectors;
 
-package Agpl.Cr.Agent.Vectors is new
-Ada.Containers.Indefinite_Vectors (Positive, Object'Class);
+generic
+   type Element_Type (<>) is private;
+   with function "=" (Left, Right : Element_Type) return Boolean is <>;
+   type Index_Type is range <>;
+package Agpl.Containers.Bulk is
 
-pragma Preelaborate (Agpl.Cr.Agent.Vectors);
+   pragma Preelaborate;
+
+   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
+     (Element_Type);
+
+   package Vectors is new Ada.Containers.Indefinite_Vectors
+     (Index_Type, Element_Type);
+
+end Agpl.Containers.Bulk;

@@ -165,10 +165,10 @@ package body Agpl.Htn.Plan_Node is
 
    function Create
      (Kind   : in Composite_Node_Kind;
-      From   : in Tasks.Lists.List;
+      From   : in Tasks.Containers.Lists.List;
       Parent : in Node_Access := null) return Node_Access
    is
-      use Tasks.Lists;
+      use Agpl.Htn.Tasks.Containers.Lists;
       I    : Cursor               := First (From);
       Node : constant Node_Access := new Object (Kind);
    begin
@@ -351,7 +351,7 @@ package body Agpl.Htn.Plan_Node is
 
    procedure Enumerate_Tasks
      (This           : in     Node_Access;
-      Tasks          :    out Htn.Tasks.Lists.List;
+      Tasks          :    out Htn.Tasks.Containers.Lists.List;
       Compound       : in     Boolean := False;
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;
@@ -367,7 +367,7 @@ package body Agpl.Htn.Plan_Node is
            ((Finished and then This.Finished) or else
               (Pending and then not This.Finished))
          then
-            Htn.Tasks.Lists.Append (Tasks, This.The_Task.all);
+            Tasks.Append (This.The_Task.all);
          end if;
          if Get_Expanded (This) then
             Enumerate_Tasks (Node_Access (This.Child), Tasks,

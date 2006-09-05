@@ -1,5 +1,5 @@
 with Agpl.Htn.Plan_Node;
-with Agpl.Htn.Tasks.Lists_Utils;
+with Agpl.Htn.Tasks.Utils;
 with Agpl.Random;
 
 package body Agpl.Htn.Plan.Utils.Random is
@@ -9,10 +9,10 @@ package body Agpl.Htn.Plan.Utils.Random is
    -----------------------
 
    function Get_Any_Expansion (This : in Plan.Object;
-                               Jobs : in Tasks.Lists.List)
-                               return    Tasks.Lists.List
+                               Jobs : in Tasks.Containers.Lists.List)
+                               return    Tasks.Containers.Lists.List
    is
-      use Tasks.Lists;
+      use Tasks.Containers.Lists;
       I      : Cursor := Jobs.First;
       Result : List;
    begin
@@ -35,7 +35,7 @@ package body Agpl.Htn.Plan.Utils.Random is
                                         Jobs,
                                         Primitive => True,
                                         Pending   => True);
-                  Tasks.Lists_Utils.Concatenate (Result, Jobs);
+                  Tasks.Utils.Concatenate (Result, Jobs);
                end;
             end;
          end if;

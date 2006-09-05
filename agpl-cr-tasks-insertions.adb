@@ -1,6 +1,5 @@
-with Agpl.Cr.Agent.Lists;
-with Agpl.Htn.Tasks.Lists_Utils;
-with Agpl.Htn.Tasks.Vectors;
+with Agpl.Cr.Agent.Containers;
+with Agpl.Htn.Tasks.Utils;
 --  with Agpl.Text_Io; use Agpl.Text_Io;
 
 package body Agpl.Cr.Tasks.Insertions is
@@ -11,12 +10,12 @@ package body Agpl.Cr.Tasks.Insertions is
    -- Before_Id --
    ---------------
 
-   procedure Before_Id (List    : in out Htn.Tasks.Lists.List;
+   procedure Before_Id (List    : in out Htn.Tasks.Containers.Lists.List;
                         Job     : in     Htn.Tasks.Object'Class;
                         Id      : in     Htn.Tasks.Task_Id;
                         Is_Last : in     Boolean := False)
    is
-      use Htn.Tasks.Lists;
+      use Htn.Tasks.Containers.Lists;
       use type Htn.Tasks.Task_Id;
    begin
       if Is_Last then
@@ -50,7 +49,7 @@ package body Agpl.Cr.Tasks.Insertions is
       Cost_Total :    out Cr.Costs;
       Success    :    out Boolean)
    is
-      use Agpl.Htn.Tasks.Lists;
+      use Agpl.Htn.Tasks.Containers.Lists;
       New_Tasks : List := A.Get_Tasks;
    begin
       New_Agent.Set (A);
@@ -139,7 +138,7 @@ package body Agpl.Cr.Tasks.Insertions is
                   declare
                      Aux       : Cr.Agent.Object'Class := A;
                   begin
-                     Htn.Tasks.Lists.Insert (New_Tasks, Best_Pos, T);
+                     Htn.Tasks.Containers.Lists.Insert (New_Tasks, Best_Pos, T);
                      Aux.Set_Tasks (New_Tasks);
                      New_Agent.Set (Aux);
                   end;
@@ -163,7 +162,7 @@ package body Agpl.Cr.Tasks.Insertions is
                      Success    :    out Boolean)
    is
       use Agpl.Htn.Tasks;
-      use Agpl.Htn.Tasks.Lists;
+      use Agpl.Htn.Tasks.Containers.Lists;
       New_Tasks : List            := A.Get_Tasks;
       Name      : constant String := A.Get_Name;
    begin
@@ -265,7 +264,7 @@ package body Agpl.Cr.Tasks.Insertions is
                   declare
                      Aux       : Cr.Agent.Object'Class := A;
                   begin
-                     Htn.Tasks.Lists.Insert (New_Tasks, Best_Pos, T);
+                     Htn.Tasks.Containers.Lists.Insert (New_Tasks, Best_Pos, T);
                      Aux.Set_Tasks (New_Tasks);
                      New_Agent.Set (Aux);
                   end;
@@ -296,12 +295,12 @@ package body Agpl.Cr.Tasks.Insertions is
                      New_Ass   :    out Assignment.Object;
                      Success   :    out Boolean)
    is
-      Agents : constant Agent.Lists.List := Ass.Get_Agents;
+      Agents : constant Agent.Containers.Lists.List := Ass.Get_Agents;
 
       Best_Agent : Agent.Handle.Object;
       Best_Cost  : Cr.Costs := Infinite;
 
-      procedure Check_Agent (I : in Cr.Agent.Lists.Cursor) is
+      procedure Check_Agent (I : in Cr.Agent.Containers.Lists.Cursor) is
          New_Agent : Cr.Agent.Handle.Object;
          New_Total,
          New_Delta : Cr.Costs;
@@ -309,10 +308,10 @@ package body Agpl.Cr.Tasks.Insertions is
          Success   : Boolean;
       begin
 --           Put_Line ("Trying insertion of " & T.To_String & " at agent " &
---                     Agent.Lists.Element (I).Get_Name & " with tasks:");
---           Htn.Tasks.Lists_Utils.Print (Agent.Lists.Element (I).Get_Tasks);
+--                     Agent.Containers.Lists.Element (I).Get_Name & " with tasks:");
+--           Htn.Tasks.Utils.Print (Agent.Containers.Lists.Element (I).Get_Tasks);
 
-         Greedy (Agent.Lists.Element (I),
+         Greedy (Agent.Containers.Lists.Element (I),
                  T,
                  Costs,
                  0,
@@ -335,7 +334,7 @@ package body Agpl.Cr.Tasks.Insertions is
    begin
       New_Ass := Ass;
 
-      Agent.Lists.Iterate (Agents, Check_Agent'Access);
+      Agent.Containers.Lists.Iterate (Agents, Check_Agent'Access);
 
       if Best_Agent.Is_Valid then
          Success := True;
@@ -351,14 +350,14 @@ package body Agpl.Cr.Tasks.Insertions is
    ------------
 
    procedure Greedy (Ass       : in     Assignment.Object;
-                     Tasks     : in     Htn.Tasks.Lists.List;
+                     Tasks     : in     Htn.Tasks.Containers.Lists.List;
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
                      Inserted  :    out Htn.Tasks.Task_Id)
    is
-      Pending : constant Htn.Tasks.Vectors.Vector :=
-                  Htn.Tasks.Lists_Utils.To_Vector (Tasks);
+      Pending : constant Htn.Tasks.Containers.Vectors.Vector :=
+                  Htn.Tasks.Utils.To_Vector (Tasks);
       Best_Cost     : Cr.Costs := Infinite;
       pragma Optimization_Opportunity
         ("The new cost could be known without recomputing in full for each",

@@ -27,7 +27,7 @@
 --  An assigner creates assignments. Ideally it should aim to achieve some kind
 --  of optimality.
 
-with Agpl.Cr.Agent.Vectors;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan;
@@ -40,7 +40,7 @@ package Agpl.Cr.Plan_Assigner is
 
    function Assign
      (This      : in Object;
-      Agents    : in Agent.Vectors.Vector;
+      Agents    : in Agent.Containers.Vectors.Vector;
       Plan      : in Agpl.Htn.Plan.Object;
       Costs     : in Cost_Matrix.Object;
       Criterion : in Assignment_Criteria)

@@ -122,7 +122,7 @@ package body Agpl.Htn.Plan is
 
    procedure Enumerate_Tasks
      (This           : in     Object;
-      Tasks          :    out Htn.Tasks.Lists.List;
+      Tasks          :    out Htn.Tasks.Containers.Lists.List;
       Compound       : in     Boolean := False;
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;
@@ -147,9 +147,9 @@ package body Agpl.Htn.Plan is
       Primitive      : in     Boolean := False;
       Finished       : in     Boolean := False;
       Pending        : in     Boolean := False)
-      return                  Htn.Tasks.Lists.List
+      return                  Htn.Tasks.Containers.Lists.List
    is
-      Result : Htn.Tasks.Lists.List;
+      Result : Htn.Tasks.Containers.Lists.List;
    begin
       Enumerate_Tasks (This,
                        Result,
@@ -374,7 +374,7 @@ package body Agpl.Htn.Plan is
 
    procedure Extract_Tasks
      (This  : in Plan_Node.Node_Access;
-      Tasks : out Agpl.Htn.Tasks.Lists.List) is
+      Tasks : out Agpl.Htn.Tasks.Containers.Lists.List) is
    begin
       Plan_Node.Enumerate_Tasks (This, Tasks,
                                  Primitive => True,
@@ -422,8 +422,8 @@ package body Agpl.Htn.Plan is
    -- Get_Tasks --
    ---------------
 
-   function Get_Tasks (This : in Object) return Tasks.Lists.List is
-      Tasks : Htn.Tasks.Lists.List;
+   function Get_Tasks (This : in Object) return Tasks.Containers.Lists.List is
+      Tasks : Htn.Tasks.Containers.Lists.List;
    begin
       Extract_Tasks (This.Tasks, Tasks);
       return Tasks;
@@ -729,8 +729,8 @@ package body Agpl.Htn.Plan is
    -------------------
 
    procedure Print_Summary (This : in Object) is
-      Tasks : constant Htn.Tasks.Lists.List := Get_Tasks (This);
-      use Htn.Tasks.Lists;
+      Tasks : constant Htn.Tasks.Containers.Lists.List := Get_Tasks (This);
+      use Htn.Tasks.Containers.Lists;
       I     : cursor := First (Tasks);
    begin
       Trace.Log ("Plan summary follows: ", Trace.Always);

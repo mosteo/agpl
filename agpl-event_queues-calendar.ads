@@ -86,6 +86,8 @@ package Agpl.Event_queues.Calendar is
    function Length (This : in Object) return Natural;
 
    procedure Shutdown (This : in out Object);
+   --  Premature termination (if events pending).
+   --  If no events pending, termination should be automatic
 
    End_Of_Time : constant Time := Time_Of (Year_Number'Last, 1, 1);
    --  Returned by Get_Next_Deadline when no other deadline exists.
@@ -124,7 +126,6 @@ private
                      Stack  : Natural) is
       pragma Storage_size (Stack);
       entry Execute (Event : in Event_type);
-      entry Shutdown;
    end Worker;
 
    type Object (Stack_size : Natural := 64 * 1024) is

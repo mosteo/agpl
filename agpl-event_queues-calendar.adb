@@ -157,7 +157,6 @@ package body Agpl.Event_queues.Calendar is
    procedure Shutdown (This : in out Object) is
    begin
       This.Waiter.Shutdown;
-      This.Doer.Shutdown;
    end Shutdown;
 
    --------------
@@ -215,20 +214,38 @@ package body Agpl.Event_queues.Calendar is
                end if;
             end if;
 
-            --  Wait for news
-            select
-               accept Reschedule (Action : in Action_type) do
-                  if Action = Job_finished then
-                     Worker_ready := True;
-                     Parent.Master_Status := Ready;
-                  end if;
-               end Reschedule;
-            or
-               accept Shutdown;
-               exit;
-            or
-               delay until Deadline;
-            end select;
+            --  To aid in automatic finalization, if no events pending...
+            if Deadline = End_Of_Time then
+               --  Wait for news
+               select
+                  accept Reschedule (Action : in Action_Type) do
+                     if Action = Job_Finished then
+                        Worker_Ready := True;
+                        Parent.Master_Status := Ready;
+                     end if;
+                  end Reschedule;
+               or
+                  accept Shutdown;
+                  exit;
+               or
+                  terminate;
+               end select;
+            else
+               --  Wait for news
+               select
+                  accept Reschedule (Action : in Action_Type) do
+                     if Action = Job_Finished then
+                        Worker_Ready := True;
+                        Parent.Master_Status := Ready;
+                     end if;
+                  end Reschedule;
+               or
+                  accept Shutdown;
+                  exit;
+               or
+                  delay until Deadline;
+               end select;
+            end if;
          exception
             when E : others =>
                Log ("Event_Queue.Calendar.Active: " & Trace.Report (E), Trace.Error);
@@ -262,9 +279,6 @@ package body Agpl.Event_queues.Calendar is
                if not Parent.Waiter'Terminated then
                   Parent.Waiter.Reschedule (Job_finished);
                end if;
-            or
-               accept Shutdown;
-               exit;
             or
                terminate;
             end select;

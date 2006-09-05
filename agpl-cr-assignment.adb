@@ -28,7 +28,7 @@ with Agpl.Trace; use Agpl.Trace;
 
 --  with Agpl.Cr.Agent.Handle;
 with Agpl.Htn.Plan.Utils;
-with Agpl.Htn.Tasks.Lists_Utils;
+with Agpl.Htn.Tasks.Utils;
 
 package body Agpl.Cr.Assignment is
 
@@ -106,17 +106,17 @@ package body Agpl.Cr.Assignment is
          -- For_Each_Task --
          -------------------
 
-         procedure For_Each_Task (J : Htn.Tasks.Lists.Cursor) is
+         procedure For_Each_Task (J : Htn.Tasks.Containers.Lists.Cursor) is
          begin
             Htn.Plan.Set_Task_Owner
               (Plan,
-               Htn.Tasks.Get_Id (Htn.Tasks.Lists.Element (J)),
+               Htn.Tasks.Get_Id (Htn.Tasks.Containers.Lists.Element (J)),
                Agent.Get_Name (Agent.Maps.Element (I)));
          end For_Each_Task;
 
-         T : constant Htn.Tasks.Lists.List := Agent.Get_Tasks (Agent.Maps.Element (I));
+         T : constant Htn.Tasks.Containers.Lists.List := Agent.Get_Tasks (Agent.Maps.Element (I));
       begin
-         Htn.Tasks.Lists.Iterate (T, For_Each_Task'Access);
+         T.Iterate (For_Each_Task'Access);
       end For_Each_Agent;
    begin
       Agent.Maps.Iterate (This.Agents, For_Each_Agent'Access);
@@ -154,12 +154,12 @@ package body Agpl.Cr.Assignment is
       Result : Htn.Plan.Object := P;
 
       procedure Check (I : in Agent.Maps.Cursor) is
-         TL : constant Htn.Tasks.Lists.List := Agent.Maps.Element (I).Get_Tasks;
+         TL : constant Htn.Tasks.Containers.Lists.List := Agent.Maps.Element (I).Get_Tasks;
 
-         procedure Check_Tasks (T : in Htn.Tasks.Lists.Cursor) is
+         procedure Check_Tasks (T : in Htn.Tasks.Containers.Lists.Cursor) is
          begin
             Htn.Plan.Utils.Trim_Or_Siblings
-              (Result, Htn.Tasks.Lists.Element (T).Get_Id);
+              (Result, Htn.Tasks.Containers.Lists.Element (T).Get_Id);
          end Check_Tasks;
       begin
          Tl.Iterate (Check_Tasks'Access);
@@ -178,12 +178,12 @@ package body Agpl.Cr.Assignment is
    ----------------
 
    function Get_Agents (This : in Object)
-                        return Agent.Lists.List
+                        return Agent.Containers.Lists.List
    is
-      use Agent.Lists;
+      use Agent.Containers.Lists;
       use Agent.Maps;
 
-      Result : Agent.Lists.List;
+      Result : Agent.Containers.Lists.List;
 
       procedure Add (X : in Agent.Maps.Cursor) is
       begin
@@ -201,12 +201,12 @@ package body Agpl.Cr.Assignment is
    ------------------------------
 
    function Get_Agents_Without_Tasks (This : in Object)
-                                      return    Agent.Lists.List
+                                      return    Agent.Containers.Lists.List
    is
-      use Agent.Lists;
+      use Agent.Containers.Lists;
       use Agent.Maps;
 
-      Result : Agent.Lists.List;
+      Result : Agent.Containers.Lists.List;
 
       procedure Add (X : in Agent.Maps.Cursor) is
          A : Cr.Agent.Object'Class := Element (X);
@@ -226,12 +226,12 @@ package body Agpl.Cr.Assignment is
    ------------------------------
 
    function Get_Agents_Without_Tasks (This : in Object)
-                                      return    Agent.Vectors.Vector
+                                      return    Agent.Containers.Vectors.Vector
    is
-      use Agent.Vectors;
+      use Agent.Containers.Vectors;
       use Agent.Maps;
 
-      Result : Agent.Vectors.Vector;
+      Result : Agent.Containers.Vectors.Vector;
 
       procedure Add (X : in Agent.Maps.Cursor) is
          A : Cr.Agent.Object'Class := Element (X);
@@ -276,14 +276,13 @@ package body Agpl.Cr.Assignment is
    -- Get_All_Tasks --
    -------------------
 
-   function Get_All_Tasks (This : in Object) return Htn.Tasks.Lists.List is
-      Result : Htn.Tasks.Lists.List;
+   function Get_All_Tasks (This : in Object) return Htn.Tasks.Containers.Lists.List is
+      Result : Htn.Tasks.Containers.Lists.List;
       use Cr.Agent.Maps;
       I      : Cursor := This.Agents.First;
    begin
       while Has_Element (I) loop
-         Htn.Tasks.Lists_Utils.Concatenate (Result,
-                                            Cr.Agent.Get_Tasks (Element (I)));
+         Htn.Tasks.Utils.Concatenate (Result, Cr.Agent.Get_Tasks (Element (I)));
          Next (I);
       end loop;
 
@@ -297,10 +296,10 @@ package body Agpl.Cr.Assignment is
    function Get_Tasks
      (This : in Object;
       Agent : in Cr.Agent.Object'Class)
-      return Htn.Tasks.Lists.List
+      return Htn.Tasks.Containers.Lists.List
    is
       use Cr.Agent.Maps;
-      Empty : Htn.Tasks.Lists.List;
+      Empty : Htn.Tasks.Containers.Lists.List;
    begin
       if Contains (This.Agents, Cr.Agent.Get_Name (Agent)) then
          return Cr.Agent.Get_Tasks
@@ -451,9 +450,9 @@ package body Agpl.Cr.Assignment is
             Log ("** Agent : " & Key (I), Always);
 
             declare
-               T : constant Htn.Tasks.Lists.List := Element (I).Get_Tasks;
-               J : Htn.Tasks.Lists.Cursor        := T.First;
-               use Htn.Tasks.Lists;
+               T : constant Htn.Tasks.Containers.Lists.List := Element (I).Get_Tasks;
+               J : Htn.Tasks.Containers.Lists.Cursor        := T.First;
+               use Htn.Tasks.Containers.Lists;
             begin
                if not Has_Element (J) then
                   Log ("No tasks", Always);

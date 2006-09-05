@@ -26,13 +26,12 @@
 
 --  An assignment says who must perform each task in a plan.
 
-with Agpl.Cr.Agent.Lists;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Agent.Maps;
-with Agpl.Cr.Agent.Vectors;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 
 package Agpl.Cr.Assignment is
 
@@ -67,20 +66,20 @@ package Agpl.Cr.Assignment is
    --  Add or replace an agent and its tasks
 
    function Get_Agents (This : in Object)
-                        return Agent.Lists.List;
+                        return Agent.Containers.Lists.List;
    --  Get all agents with its tasks.
 
    function Get_Agents_Without_Tasks (This : in Object)
-                                      return    Agent.Lists.List;
+                                      return    Agent.Containers.Lists.List;
 
    function Get_Agents_Without_Tasks (This : in Object)
-                                      return    Agent.Vectors.Vector;
+                                      return    Agent.Containers.Vectors.Vector;
 
-   function Get_All_Tasks (This : in Object) return Htn.Tasks.Lists.List;
+   function Get_All_Tasks (This : in Object) return Htn.Tasks.Containers.Lists.List;
    --  Return all tasks in the assignment, regardless of owner agent.
 
    function Get_Tasks (This : in Object; Agent : in Cr.Agent.Object'Class)
-                       return Htn.Tasks.Lists.List;
+                       return Htn.Tasks.Containers.Lists.List;
    --  Says the tasks assigned to a particular agent.
 
    function Get_Max_Min_Cost (This : in Object) return Costs;

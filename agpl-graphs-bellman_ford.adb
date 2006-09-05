@@ -157,36 +157,25 @@ package body Agpl.Graphs.Bellman_Ford is
    -----------
 
    function Costs (This : in Graph) return Cost_Matrix is
-      Result : Cost_Matrix  (1 .. Max_Vertex (This), 1 .. Max_Vertex (This));
+      Result : Cost_Matrix :=
+                 Cost_Matrices.Create (Max_Vertex (This),
+                                       Max_Vertex (This));
    begin
       Put_Line ("Computing graph costs...");
-      for I in Result'Range loop
+      for I in Result.First_Row .. Result.Last_Row loop
          declare
             Row : constant Cost_Array := Costs_From_Source (This, I);
          begin
-            for J in Row'Range loop
-               Result (I, J) := Row (J);
+            pragma Assert (Row'First = Result.First_Col);
+            for J in Result.First_Col .. Result.Last_Col loop
+               Result.Set (I, J, Row (J));
             end loop;
          end;
       end loop;
 
-      return Result;
-   end Costs;
-
-   function Costs (This : in Graph) return Cost_Matrix_Access is
-      Result : constant Cost_Matrix_Access :=
-                 new Cost_Matrix (1 .. Max_Vertex (This), 1 .. Max_Vertex (This));
-   begin
-      Put_Line ("Computing graph costs...");
-      for I in Result'Range loop
-         declare
-            Row : constant Cost_Array := Costs_From_Source (This, I);
-         begin
-            for J in Row'Range loop
-               Result (I, J) := Row (J);
-            end loop;
-         end;
-      end loop;
+--        Put_Line ("C GRAPH");
+--        Print_C_Graph (To_C_Edge_Array (This));
+--        Put_Line ("C GRAPH END");
 
       return Result;
    end Costs;
@@ -305,11 +294,11 @@ package body Agpl.Graphs.Bellman_Ford is
       declare
          C : constant Cost_Matrix := G.Costs;
       begin
-         pragma Assert (C'Length     = G.Max_Vertex);
-         pragma Assert (C'Length (2) = G.Max_Vertex);
-         for I in C'Range loop
-            for J in C'Range (2) loop
-               Put (Rpad (Trim (To_String (C (I, J))), 2));
+         pragma Assert (C.Last_Row = G.Max_Vertex);
+         pragma Assert (C.Last_Col = G.Max_Vertex);
+         for I in C.First_Row .. C.Last_Row loop
+            for J in C.First_Col .. C.Last_Col loop
+               Put (Rpad (Trim (To_String (C.Get (I, J))), 2));
             end loop;
             New_Line;
          end loop;

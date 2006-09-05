@@ -28,7 +28,7 @@
 
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
-with Agpl.Htn.Tasks.Lists;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Htn.Tasks.Primitive;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
@@ -93,7 +93,7 @@ package Agpl.Cr.Agent is
    --  Should return Costs'Last for undoable plans, never raise Constraint_Error.
 
    function Get_Plan_Cost (This  : in Object;
-                           Tasks : in Htn.Tasks.Lists.List) return Costs;
+                           Tasks : in Htn.Tasks.Containers.Lists.List) return Costs;
    --  Says the cost of this plan, not the one in the robot.
    --  Should return Costs'Last for undoable plans, never raise Constraint_Error.
 
@@ -106,16 +106,16 @@ package Agpl.Cr.Agent is
    function Get_Task_Count (This : in Object) return Natural;
 
    function Get_Tasks (This : in Object)
-                       return Htn.Tasks.Lists.List;
+                       return Htn.Tasks.Containers.Lists.List;
 
    procedure Modify_Task_List (This     : in out Object;
                                Modifier : access procedure
-                                 (Tasks : in out Htn.Tasks.Lists.List));
+                                 (Tasks : in out Htn.Tasks.Containers.Lists.List));
    --  Will call Modifier with a in-place modifiable task list, to avoid
    --  redundant copying.
 
    procedure Set_Tasks (This  : in out Object;
-                        Tasks : in     Htn.Tasks.Lists.List);
+                        Tasks : in     Htn.Tasks.Containers.Lists.List);
    --  Set all the ordered tasks that must conform the TO DO list;
 
    function Has_Tasks (This : in Object) return Boolean;
@@ -165,7 +165,7 @@ private
       Cost  : Costs;
 --      Start : Ada.Calendar.Time;
 
-      Tasks : Htn.Tasks.Lists.List;
+      Tasks : Htn.Tasks.Containers.Lists.List;
       --  The TO DO list for this agent.
 
       Execs : Executer_Maps.Map;

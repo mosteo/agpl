@@ -11,7 +11,7 @@ package body Agpl.Cr.Assigner is
 
    procedure Assign_Best_Plan
      (The_Assigner   : in     Object'Class;
-      Agents         : in     Agent.Lists.List;
+      Agents         : in     Agent.Containers.Lists.List;
       Plans          : in     Htn.Plan.Object; -- OR of possible plans.
       Criterion      : in     Assignment_Criteria;
       Plan           :    out Htn.Plan.Object; -- Selected plan with best cost.
@@ -33,7 +33,7 @@ package body Agpl.Cr.Assigner is
 
    procedure Assign_Best_Plan
      (The_Assigner   : in     Object'Class;
-      Agents         : in     Agent.Lists.List;
+      Agents         : in     Agent.Containers.Lists.List;
       Plans          : in     Htn.Plan.Object; -- OR of possible plans.
       Criterion      : in     Assignment_Criteria;
       Plan           :    out Htn.Plan.Object; -- Selected plan with best cost.
@@ -52,7 +52,7 @@ package body Agpl.Cr.Assigner is
       begin
          while Has_Element (I) loop
             declare
-               Tasks : Htn.Tasks.Lists.List;
+               Tasks : Htn.Tasks.Containers.Lists.List;
                Assig : Assignment.Object;
                Costs : Cost_Matrix.Object;
 
