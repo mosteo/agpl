@@ -26,8 +26,8 @@
 
 with Agpl.Cr.Cost_Matrix;
 
---  Greedy heuristic that will at each step use the agent with the least cost
---  for its least costly task.
+--  Greedy heuristic that will at each step use the best pair agent-task
+--  with task adding less cost.
 --  Not exhaustive: tasks are always added to the end of an agent tasks list
 
 --  O (T * A * T) ~ O (n^3)

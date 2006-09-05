@@ -7,6 +7,7 @@
 --  C code taken from en.wikipedia.com
 
 with Agpl.Generic_Dense_Matrix;
+private with Agpl.Generic_Handle;
 
 with Interfaces.C;
 with Ada.Containers.Vectors;
@@ -61,9 +62,14 @@ package Agpl.Graphs.Bellman_Ford is
    --  Get the costs from a given source to any other vertex.
    --  O (Edges * Vertices)
 
-   function Costs (This : in Graph) return Cost_Matrix;
+   procedure Compute_Costs (This : in out Graph);
+   --  Compute and cache costs
+
+   function Get_Costs (This   : in Graph;
+                       Cached : in Boolean := True) return Cost_Matrix;
    --  Complete costs for a graph.
-   --  O (Edges * Vertices**2 )
+   --  O (Edges * Vertices**2 ) unless cached already
+   --  If cached = false they're forcibly recomputed
 
    function Get_Vertices (This : in Graph) return Vertex_Vectors.Vector;
 
@@ -96,11 +102,14 @@ private
 
    package C_Edge_Vectors is new Ada.Containers.Vectors (Natural, C_Edge);
 
+   package Cost_Handle is new Generic_Handle (Cost_Matrix);
+
    type Graph is tagged record
       C_Edges    : C_Edge_Vectors.Vector;
       Vertices   : Vertex_Vectors.Vector;
       Min_Vertex : Vertex_Index := Vertex_Index'Last;
       Max_Vertex : Vertex_Index := Vertex_Index'First;
+      Costs      : Cost_Handle.Object; -- Cached costs
    end record;
 
    procedure Bellman_Ford (Graph        : in     C_Edge_Array;

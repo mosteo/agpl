@@ -29,6 +29,8 @@ with Agpl.Htn.Tasks;
 --  with Agpl.Strings;
 --  with Agpl.Trace; use Agpl.Trace;
 
+with Agpl.Text_Io; use Agpl.Text_Io;
+
 package body Agpl.Cr.Assigner.Greedy_Totalsum is
 
    package Task_Lists renames Agpl.Htn.Tasks.Containers.Lists;
@@ -127,6 +129,7 @@ package body Agpl.Cr.Assigner.Greedy_Totalsum is
       Best_Task  : Task_Lists.Cursor;
    begin
       while not Pending.Is_Empty loop
+         Put_Line ("Pending:" & Pending.Length'Img);
 
          --  Select the agent with a less costly task:
          Best_Combo (Best_Agent, Best_Task);

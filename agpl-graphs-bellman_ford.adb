@@ -152,15 +152,29 @@ package body Agpl.Graphs.Bellman_Ford is
       end;
    end Costs_From_Source;
 
-   -----------
-   -- Costs --
-   -----------
+   -------------------
+   -- Compute_Costs --
+   -------------------
 
-   function Costs (This : in Graph) return Cost_Matrix is
+   procedure Compute_Costs (This : in out Graph) is
+   begin
+      This.Costs.Set (Get_Costs (This, Cached => False));
+   end Compute_Costs;
+
+   ---------------
+   -- Get_Costs --
+   ---------------
+
+   function Get_Costs (This   : in Graph;
+                       Cached : in Boolean := True) return Cost_Matrix is
       Result : Cost_Matrix :=
                  Cost_Matrices.Create (Max_Vertex (This),
                                        Max_Vertex (This));
    begin
+      if Cached and then This.Costs.Is_Valid then
+         return This.Costs.Get;
+      end if;
+
       Put_Line ("Computing graph costs...");
       for I in Result.First_Row .. Result.Last_Row loop
          declare
@@ -178,7 +192,7 @@ package body Agpl.Graphs.Bellman_Ford is
 --        Put_Line ("C GRAPH END");
 
       return Result;
-   end Costs;
+   end Get_Costs;
 
    ------------------
    -- Bellman_Ford --
@@ -292,7 +306,7 @@ package body Agpl.Graphs.Bellman_Ford is
       Put_Line ("Max. Vertex is" & G.Max_Vertex'Img);
 
       declare
-         C : constant Cost_Matrix := G.Costs;
+         C : constant Cost_Matrix := G.Get_Costs;
       begin
          pragma Assert (C.Last_Row = G.Max_Vertex);
          pragma Assert (C.Last_Col = G.Max_Vertex);
