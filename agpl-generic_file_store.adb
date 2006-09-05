@@ -38,7 +38,7 @@ package body Agpl.Generic_File_Store is
    begin
       Open (F, Name => File, Mode => In_File);
 
-      This := Item'Input (Stream (F));
+      Item'Read (Stream (F), This);
 
       Close (F);
    end Load;

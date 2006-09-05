@@ -2,6 +2,8 @@ with Agpl.Conversions; use Agpl.Conversions;
 with Agpl.Cr.Tasks.Starting_Pose;
 with Agpl.Trace; use Agpl.Trace;
 
+with Ada.Containers;
+
 package body Agpl.Cr.Cost_Matrix is
 
    use type Cr.Costs;
@@ -253,5 +255,51 @@ package body Agpl.Cr.Cost_Matrix is
    begin
       Include (This.Matrix, Key (Agent, Ini, Fin), Cost);
    end Set_Cost;
+
+   ----------
+   -- Read --
+   ----------
+
+   procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
+                   This   :    out Object)
+   is
+      use Ada.Containers;
+      Size : constant Count_Type := Count_Type'Input (Stream);
+   begin
+      This.Matrix.Clear;
+      This.Matrix.Reserve_Capacity (Size);
+
+      for I in 1 .. Size loop
+         declare
+            Key : constant String := String'Input (Stream);
+            C   : constant Costs  := Costs'Input (Stream);
+         begin
+            This.Matrix.Include (Key, C);
+         end;
+--           if I rem 100 = 0 then
+--              Log ("Read" & I'Img & " of" & Size'Img, Always);
+--           end if;
+      end loop;
+   end Read;
+
+   -----------
+   -- Write --
+   -----------
+
+   procedure Write (Stream : access Ada.Streams.Root_Stream_Type'Class;
+                    This   : in     Object)
+   is
+      use Ada.Containers;
+
+      procedure Write (I : in Cursor) is
+      begin
+         String'Output (Stream, Key (I));
+         Costs'Output (Stream, Element (I));
+      end Write;
+
+   begin
+      Count_Type'Output (Stream, This.Matrix.Length);
+      This.Matrix.Iterate (Write'Access);
+   end Write;
 
 end Agpl.Cr.Cost_Matrix;

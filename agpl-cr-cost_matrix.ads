@@ -32,6 +32,8 @@ with Agpl.Cr.Agent.Containers;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
 
+with Ada.Streams;
+
 package Agpl.Cr.Cost_Matrix is
 
    pragma Preelaborate;
@@ -110,6 +112,14 @@ package Agpl.Cr.Cost_Matrix is
 
    procedure Print (This : in Object);
    --  Debug dump
+
+   procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
+                   This   :    out Object);
+   for Object'Read use Read;
+
+   procedure Write (Stream : access Ada.Streams.Root_Stream_Type'Class;
+                    This   : in     Object);
+   for Object'Write use Write;
 
 private
 
