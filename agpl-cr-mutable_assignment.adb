@@ -389,8 +389,8 @@ package body Agpl.Cr.Mutable_Assignment is
    is
    begin
       return Evaluate (Criterion,
-                       Minimax  => This.Evaluate_Minimax,
-                       Totalsum => This.Evaluate_Totalsum);
+                       Minmax => This.Evaluate_Minimax,
+                       Minsum => This.Evaluate_Totalsum);
    end Evaluate;
 
    ----------------------

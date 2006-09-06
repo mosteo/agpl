@@ -39,6 +39,7 @@ package Agpl.Cr.Assigner.MTSP_Concorde is
    --  Using the concorde solver.
    --  Works only with homogeneous robots, since costs are provided by the
    --  first agent in the list.
-   --  Optimization is always TotalSum
+   --  Optimization is always MinSum
+   --  Tasks *Mustn't* contain starting tasks
 
 end Agpl.Cr.Assigner.MTSP_Concorde;

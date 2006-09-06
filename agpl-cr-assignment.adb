@@ -386,8 +386,8 @@ package body Agpl.Cr.Assignment is
    is
    begin
       return Evaluate (Criterion,
-                       Minimax  => Get_Max_Min_Cost (This),
-                       Totalsum => Get_Cummulative_Cost (This));
+                       Minmax => Get_Max_Min_Cost (This),
+                       Minsum => Get_Cummulative_Cost (This));
    end Get_Cost;
 
    function Get_Cost (This      : in Object;
@@ -396,8 +396,8 @@ package body Agpl.Cr.Assignment is
    is
    begin
       return Evaluate (Criterion,
-                       Minimax  => Get_Max_Min_Cost (This, C),
-                       Totalsum => Get_Cummulative_Cost (This, C));
+                       Minmax => Get_Max_Min_Cost (This, C),
+                       Minsum => Get_Cummulative_Cost (This, C));
    end Get_Cost;
 
    ------------------------

@@ -11,4 +11,13 @@ package body Agpl.Cr.Tasks.Starting_Pose is
               Agent_Name => For_Agent);
    end Create;
 
+   --------------
+   -- Get_Name --
+   --------------
+
+   function Get_Name (This : in Object) return String is
+   begin
+      return This.Agent_Name;
+   end Get_Name;
+
 end Agpl.Cr.Tasks.Starting_Pose;

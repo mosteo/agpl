@@ -32,7 +32,7 @@ with Agpl.Cr.Cost_Matrix;
 
 --  O (T * A * T) ~ O (n^3)
 
-package Agpl.Cr.Assigner.Greedy_Totalsum is
+package Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail is
 
    pragma Preelaborate;
 
@@ -45,4 +45,4 @@ package Agpl.Cr.Assigner.Greedy_Totalsum is
       Costs  : in Cr.Cost_Matrix.Object)
       return      Assignment.Object;
 
-end Agpl.Cr.Assigner.Greedy_Totalsum;
+end Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail;

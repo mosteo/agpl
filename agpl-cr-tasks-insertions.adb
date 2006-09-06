@@ -1,10 +1,15 @@
 with Agpl.Cr.Agent.Containers;
+with Agpl.Cr.Agent.Utils; use Agpl.Cr.Agent.Utils;
 with Agpl.Htn.Tasks.Utils;
 --  with Agpl.Text_Io; use Agpl.Text_Io;
 
 package body Agpl.Cr.Tasks.Insertions is
 
    use type Cr.Costs;
+
+   package Agent_Lists renames Agent.Containers.Lists;
+   package Agent_Vectors renames Agent.Containers.Vectors;
+   package Task_Lists renames Htn.Tasks.Containers.Lists;
 
    ---------------
    -- Before_Id --
@@ -168,7 +173,7 @@ package body Agpl.Cr.Tasks.Insertions is
    begin
       New_Agent.Set (A);
 
-      if New_Tasks.Is_Empty or else Natural (New_Tasks.Length) <= Not_Before then
+      if New_Tasks.Is_Empty or else Natural (New_Tasks.Length) < Not_Before then
          Cost_Delta := Cost_Matrix.Get_Cost
            (C, Name, Htn.Tasks.No_Task, Get_Id (T));
          Cost_Total := Cost_Delta;
@@ -322,8 +327,8 @@ package body Agpl.Cr.Tasks.Insertions is
 
          if Success then
             New_Cost := Evaluate (Criterion,
-                                  Minimax  => New_Total,
-                                  Totalsum => New_Delta);
+                                  Minmax => New_Total,
+                                  Minsum => New_Delta);
 
             if New_Cost < Best_Cost then
                Best_Cost  := New_Cost;
@@ -388,5 +393,214 @@ package body Agpl.Cr.Tasks.Insertions is
          end;
       end loop;
    end Greedy;
+
+   -----------------
+   -- Greedy_Tail --
+   -----------------
+
+   procedure Greedy_Tail (Agent      : in Cr.Agent.Object'Class;
+                          Tasks      : in Htn.Tasks.Containers.Lists.List;
+                          Costs      : in     Cost_Matrix.Object;
+                          New_Agent  :    out Cr.Agent.Handle.Object;
+                          Inserted   :    out Htn.Tasks.Task_Id;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs)
+   is
+      use Task_Lists;
+
+      Prev_Task : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
+      Best_Cost : Cr.Costs := Infinite;
+
+      procedure Check (I : in Cursor) is
+         Cost : constant Cr.Costs := Cost_Matrix.Get_Cost (Costs,
+                                                           Agent.Get_Name,
+                                                           Prev_Task,
+                                                           Element (I).Get_Id);
+         Temp_Agent : Cr.Agent.Object'Class := Agent;
+      begin
+         if Cost < Best_Cost then
+            Best_Cost := Cost;
+            Temp_Agent.Set_Tasks (Agent.Get_Tasks);
+            Temp_Agent.Add_Task (Element (I));
+            New_Agent.Set (Temp_Agent);
+            Inserted   := Element (I).Get_Id;
+            Cost_Total := Cost_Matrix.Get_Plan_Cost (Costs, Temp_Agent);
+            Cost_Delta := Cost;
+         end if;
+      end Check;
+   begin
+      Inserted := Htn.Tasks.No_Task;
+
+      if Natural (Agent.Get_Tasks.Length) > 0 then
+         Prev_Task := Agent.Get_Tasks.Last_Element.Get_Id;
+      end if;
+
+      Tasks.Iterate (Check'Access);
+   end Greedy_Tail;
+
+   -----------------
+   -- Greedy_Tail --
+   -----------------
+
+   procedure Greedy_Tail (Ass        : in Assignment.Object;
+                          T          : in Htn.Tasks.Object'Class;
+                          Costs      : in Cost_Matrix.Object;
+                          Criterion  : in     Assignment_Criteria;
+                          New_Ass    :    out Assignment.Object;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs;
+                          Success    :    out Boolean)
+   is
+      Agents  : Agent_Lists.List  := Ass.Get_Agents;
+
+      Best_Cost  : Cr.Costs           := Infinite;
+      Best_Agent : Agent_Lists.Cursor := Agent_Lists.No_Element;
+
+      procedure Check_Agent (I : in Agent_Lists.Cursor) is
+         Agent : Cr.Agent.Object'Class := Agent_Lists.Element (I);
+         Tasks  : Task_Lists.List       := Agent.Get_Tasks;
+         Tasks2 : Task_Lists.List       := Tasks;
+         Agent_Total : Cr.Costs;
+         Agent_Delta : Cr.Costs;
+      begin
+         Tasks2.Append (T);
+         Agent_Total := Cost_Matrix.Get_Plan_Cost (Costs,
+                                                   Agent.Get_Name,
+                                                   Tasks2);
+         Agent_Delta := Agent_Total - Cost_Matrix.Get_Plan_Cost (Costs,
+                                                                 Agent.Get_Name,
+                                                                 Tasks);
+         if Evaluate (Criterion,
+                      Minmax => Agent_Total,
+                      Minsum => Agent_Delta) < Best_Cost then
+            Best_Cost  := Evaluate (Criterion,
+                                    Minmax => Agent_Total,
+                                    Minsum => Agent_Delta);
+            Best_Agent := I;
+            Cost_Total := Agent_Total;
+            Cost_Delta := Agent_Delta;
+         end if;
+      end Check_Agent;
+
+   begin
+      New_Ass := Ass;
+      Agents.Iterate (Check_Agent'Access);
+      if Best_Cost < Infinite then
+         declare
+            use Agent_Lists;
+            Ag : Cr.Agent.Object'Class :=
+                   Ass.Get_Agent (Element (Best_Agent).Get_Name);
+         begin
+            Ag.Add_Task (T);
+            New_Ass.Set_Agent (Ag);
+         end;
+         Success := True;
+      else
+         Success := False;
+      end if;
+   end Greedy_Tail;
+
+   -----------------
+   -- Greedy_Tail --
+   -----------------
+
+   procedure Greedy_Tail (Ass       : in     Assignment.Object;
+                          Tasks     : in     Htn.Tasks.Containers.Lists.List;
+                          Costs     : in     Cost_Matrix.Object;
+                          Criterion : in     Assignment_Criteria;
+                          New_Ass   :    out Assignment.Object;
+                          Inserted  :    out Htn.Tasks.Task_Id;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs)
+   is
+      Pending : constant Htn.Tasks.Containers.Vectors.Vector :=
+                  Htn.Tasks.Utils.To_Vector (Tasks);
+      Best_Cost     : Cr.Costs := Infinite;
+   begin
+      Inserted := Htn.Tasks.No_Task;
+
+      for I in Pending.First_Index .. Pending.Last_Index loop
+         declare
+            Temp_Ass        : Assignment.Object;
+            Partial_Success : Boolean;
+            Temp_Cost,
+            Temp_Total,
+            Temp_Delta      : Cr.Costs;
+         begin
+            Greedy_Tail (Ass,
+                         Pending.Element (I),
+                         Costs,
+                         Criterion,
+                         Temp_Ass,
+                         Temp_Total,
+                         Temp_Delta,
+                         Partial_Success);
+            if Partial_Success then
+               Temp_Cost := Evaluate (Criterion,
+                                      Minmax => Temp_Total,
+                                      Minsum => Temp_Delta);
+               if Temp_Cost < Best_Cost then
+                  New_Ass    := Temp_Ass;
+                  Best_Cost  := Temp_Cost;
+                  Inserted   := Pending.Element (I).Get_Id;
+                  Cost_Total := Temp_Total;
+                  Cost_Delta := Temp_Delta;
+               end if;
+            end if;
+         end;
+      end loop;
+   end Greedy_Tail;
+
+   ---------------
+   -- Idle_Tail --
+   ---------------
+
+   procedure Idle_Tail (Ass        : in     Assignment.Object;
+                        Tasks      : in     Htn.Tasks.Containers.Lists.List;
+                        Costs      : in     Cost_Matrix.Object;
+                        New_Ass    :    out Assignment.Object;
+                        Inserted   :    out Htn.Tasks.Task_Id;
+                        Cost_Total :    out Cr.Costs;
+                        Cost_Delta :    out Cr.Costs)
+   is
+      Agents : constant Agent_Vectors.Vector := To_Vector (Ass.Get_Agents);
+
+      Best_Cost  : Cr.Costs := Infinite;
+      Best_Agent : Agent_Vectors.Cursor := Agent_Vectors.No_Element;
+
+      procedure Check (I : Agent_Vectors.Cursor) is
+         Agent_Cost : constant Cr.Costs :=
+                        Cost_Matrix.Get_Plan_Cost (Costs,
+                                                   Agent_Vectors.Element (I));
+      begin
+         if Agent_Cost < Best_Cost then
+            Best_Cost  := Agent_Cost;
+            Best_Agent := I;
+         end if;
+      end Check;
+
+      Agent_Total,
+      Agent_Delta : Cr.Costs;
+      New_Agent   : Cr.Agent.Handle.Object;
+      Agent_Task  : Htn.Tasks.Task_Id;
+   begin
+      Agents.Iterate (Check'Access);
+      if Agent_Vectors.Has_Element (Best_Agent) then
+         Greedy_Tail (Agent_Vectors.Element (Best_Agent),
+                      Tasks,
+                      Costs,
+                      New_Agent,
+                      Agent_Task,
+                      Agent_Total,
+                      Agent_Delta);
+         New_Ass    := Ass;
+         New_Ass.Set_Agent (New_Agent.Get);
+         Inserted   := Agent_Task;
+         Cost_Total := Agent_Total;
+         Cost_Delta := Agent_Delta;
+      else
+         Inserted := Htn.Tasks.No_Task;
+      end if;
+   end Idle_Tail;
 
 end Agpl.Cr.Tasks.Insertions;

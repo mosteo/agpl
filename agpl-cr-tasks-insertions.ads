@@ -115,4 +115,44 @@ package Agpl.Cr.Tasks.Insertions is
    --  Just *one* task is inserted.
    --  Inserted can be No_Task if failure.
 
+   procedure Greedy_Tail (Agent      : in Cr.Agent.Object'Class;
+                          Tasks      : in Htn.Tasks.Containers.Lists.List;
+                          Costs      : in     Cost_Matrix.Object;
+                          New_Agent  :    out Cr.Agent.Handle.Object;
+                          Inserted   :    out Htn.Tasks.Task_Id;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs);
+   --  Best task to the tail of the agent
+
+   procedure Greedy_Tail (Ass        : in Assignment.Object;
+                          T          : in Htn.Tasks.Object'Class;
+                          Costs      : in Cost_Matrix.Object;
+                          Criterion  : in     Assignment_Criteria;
+                          New_Ass    :    out Assignment.Object;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs;
+                          Success    :    out Boolean);
+   --  Append the task in the best agent.
+
+   procedure Greedy_Tail (Ass       : in     Assignment.Object;
+                          Tasks     : in     Htn.Tasks.Containers.Lists.List;
+                          Costs     : in     Cost_Matrix.Object;
+                          Criterion : in     Assignment_Criteria;
+                          New_Ass   :    out Assignment.Object;
+                          Inserted  :    out Htn.Tasks.Task_Id;
+                          Cost_Total :    out Cr.Costs;
+                          Cost_Delta :    out Cr.Costs);
+   --  Insert the best task in the best agent.
+   --  Just *one* task is inserted.
+   --  The task is only tried at end of agent plans.
+
+   procedure Idle_Tail (Ass        : in     Assignment.Object;
+                        Tasks      : in     Htn.Tasks.Containers.Lists.List;
+                        Costs      : in     Cost_Matrix.Object;
+                        New_Ass    :    out Assignment.Object;
+                        Inserted   :    out Htn.Tasks.Task_Id;
+                        Cost_Total :    out Cr.Costs;
+                        Cost_Delta :    out Cr.Costs);
+   --  Append in the less busy agent its best task from Tasks
+
 end Agpl.Cr.Tasks.Insertions;

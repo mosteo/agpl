@@ -7,15 +7,15 @@ package body Agpl.Cr is
    --------------
 
    function Evaluate (Criterion : in Assignment_Criteria;
-                      Minimax   : in Costs;
-                      Totalsum  : in Costs) return Costs
+                      Minmax    : in Costs;
+                      Minsum    : in Costs) return Costs
    is
    begin
-      if Minimax = Infinite or else Totalsum = Infinite then
+      if Minmax = Infinite or else Minsum = Infinite then
          return Infinite;
       else
-         return Costs (Criterion.Minimax_Weight)  * Minimax +
-                Costs (Criterion.Totalsum_Weight) * Totalsum;
+         return Costs (Criterion.Minmax_Weight) * Minmax +
+                Costs (Criterion.Minsum_Weight) * Minsum;
       end if;
    end Evaluate;
 

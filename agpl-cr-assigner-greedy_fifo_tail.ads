@@ -24,39 +24,27 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Htn;
-with Agpl.Htn.Tasks.Primitive;
+with Agpl.Cr.Cost_Matrix;
 
-package Agpl.Cr.Tasks.Starting_Pose is
+package Agpl.Cr.Assigner.Greedy_Fifo_Tail is
 
-   pragma Preelaborate;
+   --  Greedy heuristic that at each step will select the less occupied agent
+   --  and select for him his best task (iterated assignment).
+   --  The new task for an agent will be tried just at end of plan.
+   --  This mimics an agent that when finishing a task just asks for the next
+   --  one he is best suited for.
 
-   type Object (<>) is new Htn.Tasks.Primitive.Object with private;
-   --  This special task is used to simplify the manipulation of task lists
-   --  so there's no special case for the first task of an agent.
+   --  O (T * A * T) ~ O (n^3)
 
-   --  For it to work, each Agent'Class implementation should treat this task
-   --  as of cost 0 if matches its name and its the first task, infinite otherwise.
-   --  Conversely, the cost from this task to any other is the cost from the agent
-   --  current position to the task.
+--  pragma Preelaborate;
 
-   --  As a variation, instead of reporting the cost from current pose to the task,
-   --  it should report the cost from the last finished task to the next one.
-   --  In this way, partially completed task lists can be evaluated using real
-   --  posteriori costs plus estimated costs, and, in an ideal world, everything
-   --  should match and be the same.
+   type Object is new Assigner.Object with null record;
 
-   --  Or, even better, if it reports the cost of all past tasks plus the
-   --  estimation to the next, then no jumps in cost will occur.
+   function Assign
+     (This   : in Object;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List;
+      Costs  : in Cr.Cost_Matrix.Object)
+      return      Assignment.Object;
 
-   function Create (For_Agent : in String) return Object;
-
-   function Get_Name (This : in Object) return String;
-
-private
-
-   type Object (Name_Len : Natural) is new Htn.Tasks.Primitive.Object with record
-      Agent_Name : String (1 .. Name_Len);
-   end record;
-
-end Agpl.Cr.Tasks.Starting_Pose;
+end Agpl.Cr.Assigner.Greedy_Fifo_Tail;

@@ -12,7 +12,7 @@ package body Agpl.Generic_File_Store is
    begin
       Create (F, Name => File, Mode => Out_File);
 
-      Item'Output (Stream (F), This);
+      Item'Write (Stream (F), This);
       Close (F);
    end To_File;
 

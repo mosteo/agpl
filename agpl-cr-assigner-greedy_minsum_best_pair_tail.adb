@@ -31,7 +31,7 @@ with Agpl.Htn.Tasks;
 
 with Agpl.Text_Io; use Agpl.Text_Io;
 
-package body Agpl.Cr.Assigner.Greedy_Totalsum is
+package body Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail is
 
    package Task_Lists renames Agpl.Htn.Tasks.Containers.Lists;
    use type Agent.Containers.Lists.Cursor;
@@ -160,4 +160,4 @@ package body Agpl.Cr.Assigner.Greedy_Totalsum is
       return A;
    end Assign;
 
-end Agpl.Cr.Assigner.Greedy_Totalsum;
+end Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail;

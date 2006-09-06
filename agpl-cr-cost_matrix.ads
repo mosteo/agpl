@@ -32,8 +32,6 @@ with Agpl.Cr.Agent.Containers;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
 
-with Ada.Streams;
-
 package Agpl.Cr.Cost_Matrix is
 
    pragma Preelaborate;
@@ -103,6 +101,12 @@ package Agpl.Cr.Cost_Matrix is
       Agent : in Cr.Agent.Object'Class) return Costs;
    --  Say the full cost of an agent plan.
 
+   function Get_Plan_Cost
+     (This  : in Object;
+      Agent : in String;
+      Tasks : in Htn.Tasks.Containers.Lists.List) return Costs;
+   --  Evaluate a plan with a given agent
+
    procedure Set_Cost
      (This  : in out Object;
       Agent : in     String;
@@ -112,14 +116,6 @@ package Agpl.Cr.Cost_Matrix is
 
    procedure Print (This : in Object);
    --  Debug dump
-
-   procedure Read (Stream : access Ada.Streams.Root_Stream_Type'Class;
-                   This   :    out Object);
-   for Object'Read use Read;
-
-   procedure Write (Stream : access Ada.Streams.Root_Stream_Type'Class;
-                    This   : in     Object);
-   for Object'Write use Write;
 
 private
 

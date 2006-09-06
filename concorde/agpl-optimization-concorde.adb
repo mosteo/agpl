@@ -16,7 +16,7 @@ package body Agpl.Optimization.Concorde is
    begin
       for Row in Cost'Range (1) loop
          for Col in Cost'Range (2) loop
-            exit when Col > Row;
+            --  exit when Col > Row; -- Fails with asymmetric problems!!!
             if Cost (Row, Col) /= Inf then
                Big_M := Big_M + abs (Cost (Row, Col));
             end if;
@@ -203,7 +203,7 @@ package body Agpl.Optimization.Concorde is
          end loop;
       end loop;
 
---      Print_Problem (New_Cost);
+      --  Print_Problem (New_Cost);
 
       --  Get result and undo transformation:
       declare
@@ -229,6 +229,8 @@ package body Agpl.Optimization.Concorde is
                                              Real_Sol'Range (2));
             Pos             : Stages := Reverse_Sol'First (2);
          begin
+            --  Print_Solution (Cost, Start, Real_Sol, True);
+
             Reverse_Sol (Reverse_Sol'First, Pos) := Real_Sol (Real_Sol'First, 1);
             Pos := Pos + 1; -- This is to keep the first city ordering.
 
@@ -242,11 +244,15 @@ package body Agpl.Optimization.Concorde is
             --  Return the proper asymmetric solution:
             Second_Sol_Cost := Get_Total_Cost (Cost, Reverse_Sol, False);
             if Costs'Min (First_Sol_Cost, Second_Sol_Cost) > Big_M then
+               Log ("Straight sol cost:" & First_Sol_Cost'Img, Error);
+               Log ("Reverse  sol cost:" & Second_Sol_Cost'Img, Error);
+               Log ("Big_M:" & Big_M'Img, Error);
                raise No_Solution; -- Forbidden link used!
             end if;
 
             --  Check that the costs in the solutions match!!
-            if Get_Total_Cost (New_Cost, Sol, No_Return => False) + (Big_M * Costs (N)) /=
+            if Get_Total_Cost (New_Cost, Sol, No_Return => False) +
+              (Big_M * Costs (N)) /=
               Costs'Min (First_Sol_Cost, Second_Sol_Cost) then
                raise Program_Error; -- Solution isn't optimal, some error happened.
             end if;
@@ -489,7 +495,7 @@ package body Agpl.Optimization.Concorde is
          end loop;
       end loop;
 
---      Print_Problem (Mod_Cost);
+      --  Print_Problem (Mod_Cost);
 
       declare
          aSol : constant Result_Matrix :=
