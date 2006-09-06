@@ -14,17 +14,21 @@ package body Agpl.Optimization.Concorde is
    function Get_Big_M (Cost : in Cost_Matrix) return Costs is
       Big_M : Costs := 0;
    begin
-      for Row in Cost'Range (1) loop
-         for Col in Cost'Range (2) loop
+      for Row in Cost.First_Row .. Cost.Last_Row loop
+         for Col in Cost.First_Col .. Cost.Last_Col loop
             --  exit when Col > Row; -- Fails with asymmetric problems!!!
-            if Cost (Row, Col) /= Inf then
-               Big_M := Big_M + abs (Cost (Row, Col));
+            if Cost.Get (Row, Col) /= Inf and then Cost.Get (Row, Col) > 0 then
+               pragma Beware ("I'm not sure this is correct, because the ATSP --> TSP transform uses -Big_M in some places. Alors?");
+               --  Big_M := Big_M + abs (Cost.Get (Row, Col));
+
+               Big_M := Costs'Max (Big_M, abs (Cost.Get (Row, Col)));
+               pragma Atchung ("This is wrong for sure...");
             end if;
          end loop;
       end loop;
 
       Log ("Big M is" & Big_M'Img, Debug, Log_Section);
-      return Big_M;
+      return Big_M * Costs (Cost.Rows);
    end Get_Big_M;
 
    ---------------
@@ -38,11 +42,11 @@ package body Agpl.Optimization.Concorde is
    is
 
       type Int_Cost_Array is array
-        (1 .. Cost'Length (1) * (Cost'Length (1) + 1) / 2) of C.int;
+        (1 .. C.Int (Cost.Rows * (Cost.Rows + 1) / 2)) of C.int;
       pragma Convention (C, Int_Cost_Array);
 
       type Int_Sol_Array is array
-        (1 .. Cost'Length (1)) of C.int;
+        (1 .. C.Int (Cost.Rows)) of C.int;
       pragma Convention (C, Int_Sol_Array);
 
       procedure Solve (Err    :    out C.int;
@@ -57,28 +61,30 @@ package body Agpl.Optimization.Concorde is
       Min_Cost : Costs := Inf;
       New_Cost : Cost_Matrix := Cost;
    begin
-      if Cost'First /= 1 or else Cost'First (2) /= 1 or else Start'First /= 1 then
+      if Cost.First_Row /= 1 or else Cost.First_Col /= 1 or else
+        Start'First /= 1
+      then
          raise Constraint_Error;
       end if;
 
-      pragma Assert (Cost'Length (1) = Cost'Length (2));
+      pragma Assert (Cost.Rows = Cost.Cols);
 
       --  Print_Problem (Cost);
 
       --  Check symmetry and get min cost:
-      for From in Cost'Range loop
-         for To in Cost'Range (2) loop
+      for From in Cost.First_Row .. Cost.Last_Row loop
+         for To in Cost.First_Col .. Cost.Last_Col loop
             exit when To > From;
-            if Cost (From, To) /= Cost (To, From) then
-               raise Constraint_Error;
+            if Cost.Get (From, To) /= Cost.Get (To, From) then
+               raise Constraint_Error with "TSP is not symmetric";
             end if;
-            Min_Cost := Costs'Min (Min_Cost, Cost (From, To));
+            Min_Cost := Costs'Min (Min_Cost, Cost.Get (From, To));
          end loop;
       end loop;
 
       declare
          Co  : Int_Cost_Array;
-         I   : Integer := Co'First;
+         I   : C.Int := Co'First;
          R   : C.int;
          Sol : Int_Sol_Array;
 
@@ -87,16 +93,16 @@ package body Agpl.Optimization.Concorde is
       begin
          --  Assign values to the C matrix, moving them to the optimal range:
          --  At the same time, keep new costs in another matrix.
-         for Row in Cost'Range (1) loop
-            for Col in Cost'First (2) .. Cost'First (2) + Row - Cost'First (1) loop
-               if Cost (Row, Col) = Inf then
+         for Row in Cost.First_Row .. Cost.Last_Row loop
+            for Col in Cost.First_Col .. Cost.First_Col + Row - Cost.First_Row loop
+               if Cost.Get (Row, Col) = Inf then
                   Co (I) := C.Int (Big_M - Min_Cost);
                else
-                  Co (I) := C.int (Cost (Row, Col) - Min_Cost);
+                  Co (I) := C.int (Cost.Get (Row, Col) - Min_Cost);
                end if;
-               New_Cost (Row, Col) := Costs (Co (I));
-               New_Cost (Col, Row) := New_Cost (Row, Col);
-               I                   := I + 1;
+               New_Cost.Set (Row, Col, Costs (Co (I)));
+               New_Cost.Set (Col, Row, New_Cost.Get (Row, Col));
+               I         := I + 1;
             end loop;
          end loop;
 
@@ -108,7 +114,7 @@ package body Agpl.Optimization.Concorde is
             --  Create the solution vector, in the appropriate permutation.
             declare
                Result : Result_Matrix (1 .. 1, 1 .. Sol'Length);
-               Pos    : Integer := Sol'First;
+               Pos    : C.Int := Sol'First;
             begin
                --  Locate the starting city:
                while Cities (Sol (Pos) + 1) /= Start (Start'First) loop
@@ -152,26 +158,29 @@ package body Agpl.Optimization.Concorde is
                         Cost  : in Cost_Matrix) return Result_Matrix
    is
       Big_M    : constant Costs := Get_Big_M (Cost); -- Inf for practical purposes
-      New_Cost : Cost_Matrix (Cost'First (1) .. Cost'Last (1) * 2,
-                              Cost'First (2) .. Cost'Last (2) * 2) :=
-                                               (others => (others => Inf));
+      New_Cost : Cost_Matrix :=
+                   Create (First_Row => Cost.First_Row,
+                           Last_Row  => Cost.Last_Row * 2,
+                           First_Col => Cost.First_Row,
+                           Last_Col  => Cost.Last_Row * 2,
+                           Default => Inf);
       --  New transformed cost matrix
 
-      N        : constant Cities := Cost'Length (1); -- Number of nodes
+      N        : constant Cities := Cities (Cost.Rows); -- Number of nodes
    begin
-      if Cost'First /= 1 or else Cost'First (2) /= 1 or else Start'First /= 1 then
+      if Cost.First_Row /= 1 or else Cost.First_Col /= 1 or else Start'First /= 1 then
          raise Constraint_Error;
       end if;
-      pragma Assert (Cost'Length (1) = Cost'Length (2));
+      pragma Assert (Cost.Rows = Cost.Cols);
 
       --  Check if it's symmetric...
       declare
          Asym : Boolean := False;
       begin
          Outer:
-         for R in Cost'Range loop
-            for C in Cost'Range (2) loop
-               if Cost (R, C) /= Cost (C, R) then
+         for R in Cost.First_Row .. Cost.Last_Row loop
+            for C in Cost.First_Col .. Cost.Last_Col loop
+               if Cost.Get (R, C) /= Cost.Get (C, R) then
                   Asym := True;
                   exit Outer;
                end if;
@@ -186,19 +195,19 @@ package body Agpl.Optimization.Concorde is
 
       --  Print_Problem (Cost);
 
-      for I in Cost'Range (1) loop
-         New_Cost (I + N, I) := -Big_M;
-         New_Cost (I, I + N) := -Big_M; -- For symmetry, but innecesary.
+      for I in Cost.First_Row .. Cost.Last_Row loop
+         New_Cost.Set (I + N, I, -Big_M);
+         New_Cost.Set (I, I + N, -Big_M); -- For symmetry, but innecesary.
          --  This should be Big_M according to Reinelt.
       end loop;
 
       --  WARNING!! HERE WE ARE EXPLICITELY REMOVING LOOP COSTS.
       --  I THINK THIS DOESN'T AFFECT ANYTHING, BUT...
-      for I in Cost'Range (1) loop
-         for J in Cost'Range (2) loop
-            if I /= J and then Cost (I, J) /= Inf then
-               New_Cost (I + N, J) := Cost (I, J);
-               New_Cost (J, I + N) := Cost (I, J); -- For symmetry, but innecesary.
+      for I in Cost.First_Row .. Cost.Last_Row loop
+         for J in Cost.First_Col .. Cost.Last_Col loop
+            if I /= J and then Cost.Get (I, J) /= Inf then
+               New_Cost.Set (I + N, J, Cost.Get (I, J));
+               New_Cost.Set (J, I + N, Cost.Get (I, J)); -- For symmetry, but innecesary.
             end if;
          end loop;
       end loop;
@@ -289,17 +298,20 @@ package body Agpl.Optimization.Concorde is
                         Cost      : in Cost_Matrix;
                         No_Return : in Boolean := False) return Result_Matrix
    is
-      N        : constant Cities   := Cost'Length (1); -- Number of nodes
+      N        : constant Cities   := Cities (Cost.Rows); -- Number of nodes
       M        : constant Salesmen := Start'Length;    -- Number of travelers
 
-      New_Cost : Cost_Matrix (Cost'First (1) .. Cost'First (1) + N + Cities (M) - 1,
-                              Cost'First (2) .. Cost'First (2) + N + Cities (M) - 1) :=
-                   (others => (others => Inf));
+      New_Cost : Cost_Matrix :=
+                   Create (First_Row => Cost.First_Row,
+                           Last_Row  => Cost.First_Row + N + Cities (M) - 1,
+                           First_Col => Cost.First_Col,
+                           Last_Col  => Cost.First_Col + N + Cities (M) - 1,
+                           Default   => Inf);
    begin
-      if Cost'First /= 1 or else Cost'First (2) /= 1 or else Start'First /= 1 then
+      if Cost.First_Row /= 1 or else Cost.First_Col /= 1 or else Start'First /= 1 then
          raise Constraint_Error;
       end if;
-      pragma Assert (Cost'Length (1) = Cost'Length (2));
+      pragma Assert (Cost.Rows = Cost.Cols);
 
       --  If just a salesman, don't even do the transform:
       if Start'Length = 1 and then not No_Return then
@@ -314,38 +326,38 @@ package body Agpl.Optimization.Concorde is
       end if;
 
       --  Keep original costs:
-      for Row in Cost'Range loop
-         for Col in Cost'Range (2) loop
-            New_Cost (Row, Col) := Cost (Row, Col);
+      for Row in Cost.First_Row .. Cost.Last_Row loop
+         for Col in Cost.First_Col .. Cost.Last_Col loop
+            New_Cost.Set (Row, Col, Cost.Get (Row, Col));
          end loop;
       end loop;
 
       --  Artificial cities costs
-      for Row in New_Cost'Range loop
-         for Col in New_Cost'Range (2) loop
-            if Row > Cost'Last and then Col = Row + 1 then
+      for Row in New_Cost.First_Row .. Cost.Last_Row loop
+         for Col in New_Cost.First_Col .. Cost.Last_Col loop
+            if Row > Cost.Last_Row and then Col = Row + 1 then
                --  From artificial i to i + 1
-               --  New_Cost (Row, Col) := 0;
+               --  New_Cost.Get (Row, Col) := 0;
                null; -- I deviate here from Helmberg suggestion; I prefer that
                      --  each traveller explicitely visits its own city.
-            elsif Row = New_Cost'Last and then Col = Cost'Last (2) + 1 then
+            elsif Row = New_Cost.Last_Row and then Col = Cost.Last_Col + 1 then
                --  From artificial i_m to i
-               --  New_Cost (Row, Col) := 0;
+               --  New_Cost.Get (Row, Col) := 0;
                null; -- I deviate here from Helmberg suggestion; I prefer that
                      --  each traveller explicitely visits its own city.
-            elsif Row > Cost'Last and then Col <= Cost'Last (2) then
+            elsif Row > Cost.Last_Row and then Col <= Cost.Last_Col then
                --  From artificial to real
                declare
                   Salesman : constant Salesmen range 1 .. M := Salesmen (Row - N);
                   Starting : constant Cities   range 1 .. N := Start (Start'First + Salesman - 1);
                begin
                   if Col = Starting then
-                     New_Cost (Row, Col) := 0; -- Already there
+                     New_Cost.Set (Row, Col, 0); -- Already there
                   else
-                     New_Cost (Row, Col) := Cost (Starting, Col);
+                     New_Cost.Set (Row, Col, Cost.Get (Starting, Col));
                   end if;
                end;
-            elsif Row <= Cost'Last and then Col > Cost'Last (2) then
+            elsif Row <= Cost.Last_Row and then Col > Cost.Last_Col then
                --  From real to artificial
                declare
                   Salesman : Salesmen range 1 .. M := Salesmen (Col - N);
@@ -361,15 +373,15 @@ package body Agpl.Optimization.Concorde is
                   Starting := Start (Start'First + Salesman - 1);
 
                   if Row = Starting then
-                     New_Cost (Row, Col) := 0; -- Already there
+                     New_Cost.Set (Row, Col, 0); -- Already there
                   else
-                     New_Cost (Row, Col) := Cost (Row, Starting);
+                     New_Cost.Set (Row, Col, Cost.Get (Row, Starting));
                   end if;
                end;
-            elsif Row > Cost'Last and then Col > Cost'Last (2) then
+            elsif Row > Cost.Last_Row and then Col > Cost.Last_Col then
                --  From artificial to artificial: already at Infinite cost.
                null;
-            elsif Row <= Cost'Last and then Col <= Cost'Last (2) then
+            elsif Row <= Cost.Last_Row and then Col <= Cost.Last_Col then
                --  From real to real, already assigned before
                null;
             else
@@ -483,14 +495,14 @@ package body Agpl.Optimization.Concorde is
 
       --  Big_M : constant Costs := Get_Big_M (Cost);
    begin
-      pragma Assert (Mod_Cost'First = 1 and then Mod_Cost'First (2) = 1);
+      pragma Assert (Mod_Cost.First_Row = 1 and then Mod_Cost.First_Col = 1);
       Log ("Doing No_Return transformation...", Debug, Log_Section);
 
       --  Nullify costs of returning to base
-      for From in Mod_Cost'Range loop
-         for To in Mod_Cost'Range (2) loop
+      for From in Mod_Cost.First_Row .. Cost.Last_Row loop
+         for To in Mod_Cost.First_Col .. Cost.Last_Col loop
             if Is_Base (To) then
-               Mod_Cost (From, To) := 0;
+               Mod_Cost.Set (From, To, 0);
             end if;
          end loop;
       end loop;
@@ -500,7 +512,7 @@ package body Agpl.Optimization.Concorde is
       declare
          aSol : constant Result_Matrix :=
                   Solve_ATSP ((1 => Start (Start'First)), Mod_Cost);
-         Sol  :          Result_Matrix (1 .. Start'Length, 1 .. Cost'Length);
+         Sol  :          Result_Matrix (1 .. Start'Length, 1 .. Stages (Cost.Rows));
 
          Salesman : Salesmen := Sol'First;
          Stage    : Stages   := Sol'First (2) + 1;
@@ -547,7 +559,7 @@ package body Agpl.Optimization.Concorde is
 
          for City in Sol'First (2) + 1 .. Sol'Last (2) loop
             begin
-               Total := Total + Cost (Sol (1, City - 1),
+               Total := Total + Cost.Get (Sol (1, City - 1),
                                       Sol (1, City));
             exception
                when Constraint_Error =>
@@ -557,7 +569,7 @@ package body Agpl.Optimization.Concorde is
 
          if not No_Return then
             begin
-               Total := Total + Cost (Sol (1, Sol'Last (2)),
+               Total := Total + Cost.Get (Sol (1, Sol'Last (2)),
                                       Sol (1, Sol'First (2)));
             exception
                when Constraint_Error =>
@@ -680,12 +692,12 @@ package body Agpl.Optimization.Concorde is
    begin
       Int_Io.Default_Width := 5;
       New_Line;
-      for I in Cost'Range loop
-         for J in Cost'Range (2) loop
-            if Cost (I, J) = Inf then
+      for I in Cost.First_Row .. Cost.Last_Row loop
+         for J in Cost.First_Col .. Cost.Last_Col loop
+            if Cost.Get (I, J) = Inf then
                Put ("  XXX");
             else
-               Put (Cost (I, J));
+               Put (Cost.Get (I, J));
             end if;
          end loop;
          New_Line;
@@ -710,7 +722,7 @@ package body Agpl.Optimization.Concorde is
             for City in Tour'Range (2) loop
                Put (Tour (1, City)'Img);
             end loop;
-            Put_Line (" (" & Get_Total_cost (Cost, Tour, No_Return)'Img & ")");
+            Put_Line (" (" & Get_Total_Cost (Cost, Tour, No_Return)'Img & ")");
          end;
       end loop;
 

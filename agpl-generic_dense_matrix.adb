@@ -21,6 +21,31 @@ package body Agpl.Generic_Dense_Matrix is
                                                 First_Col .. Last_Col));
    end Create;
 
+   ------------
+   -- Create --
+   ------------
+
+   function Create (Last_Row,
+                    Last_Col  : Index_Type;
+                    Default   : Cell_Type;
+                    First_Row,
+                    First_Col : Index_Type := Index_Type'First)
+                    return      Matrix
+   is
+      Result : constant Matrix := Create (Last_Row,
+                                          Last_Col,
+                                          First_Row,
+                                          First_Col);
+   begin
+      for I in Result.Ptr'Range (1) loop
+         for J in Result.Ptr'Range (2) loop
+            Result.Ptr (I, J) := Default;
+         end loop;
+      end loop;
+
+      return Result;
+   end Create;
+
    ---------------
    -- First_Row --
    ---------------
@@ -56,6 +81,24 @@ package body Agpl.Generic_Dense_Matrix is
    begin
       return This.Ptr.all'Last (2);
    end Last_Col;
+
+   ----------
+   -- Rows --
+   ----------
+
+   function Rows (This : in Matrix) return Index_Type is
+   begin
+      return This.Ptr'Length (1);
+   end Rows;
+
+   ----------
+   -- Cols --
+   ----------
+
+   function Cols (This : in Matrix) return Index_Type is
+   begin
+      return This.Ptr'Length (2);
+   end Cols;
 
    ---------
    -- Get --

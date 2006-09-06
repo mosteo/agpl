@@ -44,11 +44,22 @@ package Agpl.Generic_Dense_Matrix is
                     First_Col : Index_Type := Index_Type'First)
                     return      Matrix;
 
+   function Create (Last_Row,
+                    Last_Col  : Index_Type;
+                    Default   : Cell_Type;
+                    First_Row,
+                    First_Col : Index_Type := Index_Type'First)
+                    return      Matrix;
+
    function First_Row (This : in Matrix) return Index_Type;
    function Last_Row  (This : in Matrix) return Index_Type;
    function First_Col (This : in Matrix) return Index_Type;
    function Last_Col  (This : in Matrix) return Index_Type;
    pragma Inline (First_Row, Last_Row, First_Col, Last_Col);
+
+   function Rows (This : in Matrix) return Index_Type;
+   function Cols (This : in Matrix) return Index_Type;
+   pragma Inline (Rows, Cols);
 
    function Get (This : in Matrix; Row, Col : in Index_Type)
                  return    Cell_Type;
@@ -60,6 +71,8 @@ package Agpl.Generic_Dense_Matrix is
                   Row,
                   Col  : in     Index_Type;
                   Data : in     Cell_Type);
+
+   pragma Inline (Get, Ref, Set);
 
 private
 

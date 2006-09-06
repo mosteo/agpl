@@ -104,8 +104,9 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
       declare
          use Optimization.Concorde;
          Start : Start_Matrix (1 .. Salesmen (Agents.Length));
-         C     : Optimization.Concorde.Cost_Matrix (1 .. Cities (Jobs.Length),
-                                                    1 .. Cities (Jobs.Length));
+         C     : Optimization.Concorde.Cost_Matrix :=
+                   Cost_Matrices.Create (Cities (Jobs.Length),
+                                         Cities (Jobs.Length));
          use Cost_Matrix;
       begin
          for I in Start'Range loop
@@ -125,16 +126,18 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
                                Jobs.Element (I).Get_Id,
                                Jobs.Element (J).Get_Id) < Infinite
                   then
-                     C (Cities (I),
-                        Cities (J)) :=
-                       Concorde.Costs
-                         (Get_Cost (Costs,
-                          Apt_Agent.Get_Name,
-                          Jobs.Element (I).Get_Id,
-                          Jobs.Element (J).Get_Id));
+                     C.Set
+                       (Cities (I),
+                        Cities (J),
+                        Concorde.Costs
+                          (Get_Cost (Costs,
+                           Apt_Agent.Get_Name,
+                           Jobs.Element (I).Get_Id,
+                           Jobs.Element (J).Get_Id)));
                   else
-                     C (Cities (I),
-                        Cities (J)) := Concorde.Inf;
+                     C.Set (Cities (I),
+                            Cities (J),
+                            Concorde.Inf);
                   end if;
                end loop;
             end;

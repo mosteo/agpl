@@ -28,6 +28,7 @@
 --  With transformations ATSP -> TSP, mATSP -> TSP
 
 with Agpl.Dynamic_Vector;
+with Agpl.Generic_Dense_Matrix;
 
 with Interfaces.C;
 
@@ -50,9 +51,8 @@ package Agpl.Optimization.Concorde is
    type Cities   is new Positive;
    type Stages   is new Positive;
 
-
-   type Cost_Matrix is array (Cities range <>,
-                              Cities range <>) of Costs;
+   package Cost_Matrices is new Generic_Dense_Matrix (Cities, Costs);
+   subtype Cost_Matrix is Cost_Matrices.Matrix; use Cost_Matrices;
    --  Indexes are from-city, to-city
    --  For symmetric problems, just the lower half of the matrix must be filled.
 
