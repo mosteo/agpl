@@ -28,7 +28,15 @@ package body Agpl.Optimization.Concorde is
       end loop;
 
       Log ("Big M is" & Big_M'Img, Debug, Log_Section);
+
+      --  return Big_M;
       return Big_M * Costs (Cost.Rows);
+      pragma Danger ("The above is also suspicious...");
+      --  Big_M should be the sum of all costs
+      --  But when we have negative ones? -> ABS -> Too big
+      --  Sum only positives --> seems to work, but gives errors in large problems
+      --  Get the maximum one and make big_M = Max times Rows. Seems to work but
+      --  be warned!!
    end Get_Big_M;
 
    ---------------

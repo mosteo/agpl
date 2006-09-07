@@ -38,10 +38,11 @@ package Agpl.Cr is
    Infinite : constant Costs := Optimization.Infinite;
 
    type Assignment_Criteria is record
-      Minmax_Weight : Float;
-      Minsum_Weight : Float;
+      Minmax_Weight : Float := 0.0;
+      Minsum_Weight : Float := 0.0;
    end record;
    --  Possibilities for assignments
+   --  Defaults to invalid to ensure that we set it!
 
    function Evaluate (Criterion : in Assignment_Criteria;
                       Minmax    : in Costs;
@@ -50,6 +51,7 @@ package Agpl.Cr is
 
    function Value (S : in String) return Assignment_Criteria;
 
+   Criterion_Invalid       : constant Assignment_Criteria := (0.0, 0.0);
    Criterion_Minimax       : constant Assignment_Criteria := (1.0, 0.0);
    Criterion_Totalsum      : constant Assignment_Criteria := (0.0, 1.0);
    Criterion_Time_Critical : constant Assignment_Criteria := (1.0, 0.00001);

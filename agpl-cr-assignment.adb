@@ -24,6 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
+with Agpl.Conversions;
 with Agpl.Trace; use Agpl.Trace;
 
 --  with Agpl.Cr.Agent.Handle;
@@ -31,6 +32,8 @@ with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Tasks.Utils;
 
 package body Agpl.Cr.Assignment is
+
+   function To_String is new Conversions.To_Str (Costs);
 
    ---------
    -- Add --
@@ -467,6 +470,10 @@ package body Agpl.Cr.Assignment is
             Next (I);
             Log ("", Always);
          end loop;
+
+         Log ("MinSum cost: " & To_String (This.Get_Cummulative_Cost), Always);
+         Log ("MinMax cost: " & To_String (This.Get_Max_Min_Cost), Always);
+         Log ("", Always);
       end;
    end Print_Assignment;
 

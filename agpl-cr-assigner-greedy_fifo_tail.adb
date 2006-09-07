@@ -52,6 +52,8 @@ package body Agpl.Cr.Assigner.Greedy_Fifo_Tail is
       Costs  : in Cr.Cost_Matrix.Object)
       return Assignment.Object
    is
+      pragma Unreferenced (This);
+
       A : Assignment.Object;
       --  The result we'll return.
 

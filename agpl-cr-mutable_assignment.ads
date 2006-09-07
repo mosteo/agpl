@@ -35,6 +35,7 @@ with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
+with Agpl.Htn.Tasks.Containers;
 with Agpl.Optimization.Annealing;
 with Agpl.Smart_Access; pragma Elaborate_All (Agpl.Smart_Access);
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
@@ -174,6 +175,12 @@ package Agpl.Cr.Mutable_Assignment is
    --  This heuristic will consider the best of *all* tasks in every possible
    --  expansion; freeze the plan with the chosen task; repeat until no more T.
 
+   procedure Do_Move_Task (This : in out Object;
+                           Desc :    out Ustring;
+                           Undo :    out Undo_Info);
+   procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info);
+   --  Will un-move all movements, in the Undo_Info stack, not just one.
+
    -----------------
    -- CONVERSIONS --
    -----------------
@@ -190,6 +197,8 @@ package Agpl.Cr.Mutable_Assignment is
    --  The dynamic structures will be prepared.
 
 private
+
+   package Task_Lists renames Htn.Tasks.Containers.Lists;
 
    --  Each registered mutation to be used
    type Mutation_Handler is record
@@ -306,8 +315,22 @@ private
    procedure Undo_From_Scratch (This : in out Object;
                                 Undo : in     Undo_Info);
 
+   --  This record is used to store one moved task so it can be replaced
+   --  where it was.
+   type Undo_Move_Task_Info is record
+      Moved_One  : Htn.Tasks.Task_Id;
+      Was_Before : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
+      --  No id for the last task
+   end record;
+
+   package Undo_Move_Vectors is
+     new Agpl.Dynamic_Vector (Undo_Move_Task_Info, 2);
+
    type Undo_Info is record
       Ass : Assignment.Object; -- For scratch starting
+
+      Move_Stack : Undo_Move_Vectors.Object (First => 1);
+      --  LIFO stack of moved tasks. To undo, just undo movements from tail to H
    end record;
 
    ------------
@@ -332,8 +355,8 @@ private
       --  All assigned tasks
 
       --  The current solution costs
-      Totalsum    : Costs;
-      Minimax     : Cost_Agent_Sets.Set;
+      MinSum      : Costs;
+      MinMax      : Cost_Agent_Sets.Set;
       Agent_Costs : Agent_Cost_Maps.Map;
 
       --  Undo information
@@ -365,6 +388,25 @@ private
    function Is_Sane (This : in Object) return Boolean;
    --  Check for data structures sanity
    --  Can be expensive, use it only for debugging.
+
+   --  Tasks
+   function Num_Assigned_Tasks (This : in Object) return Natural;
+
+   procedure Do_Move_Task (This       : in out Object;
+                           Src        : in Task_Context_Access;
+                           Bfr        : in Task_Context_Access;
+                           New_Owner  : in Ustring);
+   --  Move a task from one point to another
+   --  Must maintain all integrity: adjust costs, before/after links, ownership
+   --  New owner is necessary if Bfr is No_Task!
+
+   procedure Do_Remove_Task (This : in out Object;
+                             Job  : not null Task_Context_Access);
+   --  Remove this task from assignation; update all data structures accordingly
+
+   function Get_Task_Context (This : in Object;
+                              Id   : in Htn.Tasks.Task_Id)
+                              return    Task_Context_Access;
 
    --  Attributes
    function Get_Attribute (This : in Solution_Context_Pointer;
@@ -400,10 +442,6 @@ private
    procedure Remove_From_All_Bags (This    : in out Object;
                                    Context : in     Solution_Context_Pointer);
 
-   procedure Do_Remove_Task (This : in out Object;
-                             Job  : not null Task_Context_Access);
-   --  Remove this task from assignation; update all data structures accordingly
-
    procedure Moving_Solution_Context (Context : in out Solution_Context_Access;
                                       Bag     : in out Bag_Context;
                                       Prev,
@@ -424,6 +462,13 @@ private
    --  O (T + log R)
    procedure Reevaluate_Costs (This : in out Object);
    --  Recompute all costs from scratch and update internal cache
+
+   procedure Update_Costs_Inserting
+     (This                : in out Object;
+      Prev_In_List        : in     Task_Context_Access;
+      Curr_To_Be_Inserted : in     Task_Context_Access;
+      Next_In_List        : in     Task_Context_Access);
+   --  Update the costs of inserting the Curr task.
 
    --  O (log R)
    procedure Update_Costs_Removing

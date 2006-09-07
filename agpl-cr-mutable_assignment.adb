@@ -40,8 +40,8 @@ with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Plan.Utils.Random;
-with Agpl.Htn.Tasks.Containers;
 with Agpl.Htn.Tasks.Maps;
+with Agpl.If_Function;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
@@ -313,6 +313,77 @@ package body Agpl.Cr.Mutable_Assignment is
          Log (Report (E), Warning);
    end Do_Heuristic_2;
 
+   ------------------
+   -- Do_Move_Task --
+   ------------------
+
+   procedure Do_Move_Task (This       : in out Object;
+                           Src        : in Task_Context_Access;
+                           Bfr        : in Task_Context_Access;
+                           New_Owner  : in Ustring)
+   is
+      function Coalesce is new If_Function (Task_Context_Access);
+   begin
+      Set_Attribute (Solution_Context_Pointer (Src), Owner, +New_Owner);
+
+      This.Update_Costs_Removing (This.Get_Task_Context (Src.Prev),
+                                  Src,
+                                  This.Get_Task_Context (Src.Next));
+
+      This.Update_Costs_Inserting
+        (Coalesce (Bfr /= null, This.Get_Task_Context (Bfr.Prev), null),
+         Src,
+         Bfr);
+   end Do_Move_Task;
+
+   ------------------
+   -- Do_Move_Task --
+   ------------------
+
+   procedure Do_Move_Task (This : in out Object;
+                           Desc :    out Ustring;
+                           Undo :    out Undo_Info)
+   is
+      procedure Do_It (Key   : in     Bag_Key;
+                       Tasks : in out Solution_Context_Bags.Object)
+      is
+         pragma Unreferenced (Key);
+         Src_Idx   : constant Positive :=
+                       Random.Get_Integer (Tasks.First, Tasks.Last);
+         Src       : constant Task_Context_Access :=
+                       Task_Context_Access
+                         (Tasks.Vector (Src_Idx).Ref);
+
+         Dst_Idx   : Positive;
+         Dst       : Task_Context_Access;
+
+         Undo_Move : Undo_Move_Task_Info;
+      begin
+         loop
+            Dst_Idx := Random.Get_Integer (Tasks.First, Tasks.Last);
+            exit when Dst_Idx /= Src_Idx;
+         end loop;
+         Dst := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+
+         Desc := + ("Move" & Src.Job'Img & " before" & Dst.Job'Img);
+         Undo_Move.Moved_One  := Src.Job;
+         Undo_Move.Was_Before := Src.Next;
+         Undo.Move_Stack.Append (Undo_Move);
+
+         This.Do_Move_Task (Src,
+                            This.Get_Task_Context (Dst.Next),
+                            +Get_Attribute
+                              (Solution_Context_Pointer (Dst), Owner));
+      end Do_It;
+   begin
+      if This.Num_Assigned_Tasks <= 1 then
+         Do_Identity (This, Desc, Undo);
+      else
+         This.Bags.Update_Element
+           (This.Bags.Find (All_Assigned_Tasks), Do_It'Access);
+      end if;
+   end Do_Move_Task;
+
    -----------------
    -- Do_Identity --
    -----------------
@@ -400,7 +471,7 @@ package body Agpl.Cr.Mutable_Assignment is
    function Evaluate_Minimax (This : in Object) return Costs is
    begin
       if This.Valid then
-         return This.Minimax.Last_Element.Cost;
+         return This.MinMax.Last_Element.Cost;
       else
          return Infinite;
       end if;
@@ -413,7 +484,7 @@ package body Agpl.Cr.Mutable_Assignment is
    function Evaluate_Totalsum (This : in Object) return Costs is
    begin
       if This.Valid then
-         return This.Totalsum;
+         return This.MinSum;
       else
          return Infinite;
       end if;
@@ -430,6 +501,26 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       return Element (Find (This.Attributes, Attr));
    end Get_Attribute;
+
+   ----------------------
+   -- Get_Task_Context --
+   ----------------------
+
+   function Get_Task_Context (This : in Object;
+                              Id   : in Htn.Tasks.Task_Id)
+                              return    Task_Context_Access
+   is
+      use Solution_Context_Maps;
+      use Htn.Tasks;
+   begin
+      if Id = No_Task then
+         return null;
+      else
+         return Task_Context_Access
+           (Element
+              (This.Contexts.Find (Task_Key (Id))).Ref);
+      end if;
+   end Get_Task_Context;
 
    ----------------
    -- Initialize --
@@ -566,6 +657,26 @@ package body Agpl.Cr.Mutable_Assignment is
          raise;
    end Normalize;
 
+   ------------------------
+   -- Num_Assigned_Tasks --
+   ------------------------
+
+   function Num_Assigned_Tasks (This : in Object) return Natural is
+      Len : Natural;
+      procedure Query (Key : Bag_Key;
+                       Bag : Solution_Context_Bags.Object)
+      is
+         pragma Unreferenced (Key);
+      begin
+         Len := Bag.Length;
+      end Query;
+   begin
+      Solution_Context_Bag_Maps.Query_Element
+        (This.Bags.Find (All_Assigned_Tasks),
+         Query'Access);
+      return Len;
+   end Num_Assigned_Tasks;
+
    --------------------
    -- Reassign_Tasks --
    --------------------
@@ -643,17 +754,17 @@ package body Agpl.Cr.Mutable_Assignment is
          Id   : constant Agent_Id := Agent_Sets.Element (I);
          Cost : constant Costs    := Reevaluate_Agent_Cost (This, Id);
       begin
-         This.Minimax.Insert ((Cost, +String (Id)));
+         This.MinMax.Insert ((Cost, +String (Id)));
          This.Agent_Costs.Insert (Id, Cost);
       end Ev;
    begin
-      This.Totalsum := Reevaluate_Totalsum (This);
+      This.MinSum := Reevaluate_Totalsum (This);
 
-      This.Minimax.Clear;
+      This.MinMax.Clear;
       This.Agent_Costs.Clear;
       Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
 
-      This.Valid := This.Totalsum < Infinite;
+      This.Valid := This.MinSum < Infinite;
    end Reevaluate_Costs;
 
    ------------------------
@@ -1063,6 +1174,29 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Undo_Identity;
 
+   --------------------
+   -- Undo_Move_Task --
+   --------------------
+
+   procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info) is
+   begin
+      null;
+   end Undo_Move_Task;
+
+   ----------------------------
+   -- Update_Costs_Inserting --
+   ----------------------------
+
+   procedure Update_Costs_Inserting
+     (This                : in out Object;
+      Prev_In_List        : in     Task_Context_Access;
+      Curr_To_Be_Inserted : in     Task_Context_Access;
+      Next_In_List        : in     Task_Context_Access)
+   is
+   begin
+      null;
+   end Update_Costs_Inserting;
+
    ---------------------------
    -- Update_Costs_Removing --
    ---------------------------
@@ -1088,7 +1222,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Pr, Ne   : Htn.Tasks.Task_Id := No_Task;
    begin
       This.Agent_Costs.Delete (Agent);
-      This.Minimax.Delete ((Cost, +String (Agent)));
+      This.MinMax.Delete ((Cost, +String (Agent)));
 
       if Prev /= null then
          Pr := Prev.Job;
@@ -1115,7 +1249,8 @@ package body Agpl.Cr.Mutable_Assignment is
       Cost := Cost - Minus_1 - Minus_2 + Plus;
 
       This.Agent_Costs.Insert (Agent, Cost);
-      This.Minimax.Insert ((Cost, +String (Agent)));
+      This.MinMax.Insert ((Cost, +String (Agent)));
+      This.Minsum := This.Minsum - Minus_1 - Minus_2 + Plus;
    end Update_Costs_Removing;
 
 end Agpl.Cr.Mutable_Assignment;
