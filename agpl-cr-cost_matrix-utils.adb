@@ -21,6 +21,18 @@ package body Agpl.Cr.Cost_Matrix.Utils is
          Agent : constant Cr.Agent.Object'Class := Element (I);
          V     : Tc.Vectors.Vector := To_Vector (Ass.Get_Tasks (Agent));
       begin
+         --  Starting tasks
+         if not V.Is_Empty then
+            Set_Cost
+              (Dst, Agent.Get_Name,
+               Htn.Tasks.No_Task,
+               V.First_Element.Get_Id,
+               Get_Cost
+                 (Src, Agent.Get_Name,
+                  Htn.Tasks.No_Task,
+                  V.First_Element.Get_Id));
+         end if;
+         --  Used tasks
          for I in V.First_Index .. V.Last_Index - 1 loop
             Set_Cost
               (Dst, Agent.Get_Name,

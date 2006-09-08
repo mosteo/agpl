@@ -78,6 +78,9 @@ package Agpl.Cr.Mutable_Assignment is
    -- ANNEALING SUBPROGRAMS --
    ---------------------------
 
+   function Evaluate (This      : in Object) return Costs;
+   --  Uses the internal criterion
+
    function Evaluate (This      : in Object;
                       Criterion : in Assignment_Criteria) return Costs;
 
@@ -195,6 +198,12 @@ package Agpl.Cr.Mutable_Assignment is
    --  Any unassigned tasks will be greedily inserted in arbitrary order.
    --  The criterion is used only for previously unassigned tasks.
    --  The dynamic structures will be prepared.
+
+   -----------
+   -- DEBUG --
+   -----------
+
+   procedure Debug_Dump_Contexts (This : in Object);
 
 private
 
@@ -319,8 +328,12 @@ private
    --  where it was.
    type Undo_Move_Task_Info is record
       Moved_One  : Htn.Tasks.Task_Id;
+      Was_After  : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
       Was_Before : Htn.Tasks.Task_Id := Htn.Tasks.No_Task;
+      Owner_Was  : Ustring;
       --  No id for the last task
+
+      Minsum_Was : Costs;
    end record;
 
    package Undo_Move_Vectors is
@@ -332,6 +345,9 @@ private
       Move_Stack : Undo_Move_Vectors.Object (First => 1);
       --  LIFO stack of moved tasks. To undo, just undo movements from tail to H
    end record;
+
+   procedure Reset (This : in out Undo_Info);
+   --  Reset the undo information;
 
    ------------
    -- Object --
@@ -383,22 +399,28 @@ private
    -- Inner utilities --
    ---------------------
 
-   procedure Debug_Dump_Contexts (This : in Object);
-
    function Is_Sane (This : in Object) return Boolean;
    --  Check for data structures sanity
    --  Can be expensive, use it only for debugging.
 
    --  Tasks
+   procedure Adjust_Chain_Removing (This : in out Object;
+                                    Job  : in     Task_Context_Access);
+   procedure Adjust_Chain_Inserting (This         : in out Object;
+                                     After_This   : in     Task_Context_Access;
+                                     Job          : in     Task_Context_Access;
+                                     Before_This  : in     Task_Context_Access);
+
    function Num_Assigned_Tasks (This : in Object) return Natural;
 
-   procedure Do_Move_Task (This       : in out Object;
-                           Src        : in Task_Context_Access;
-                           Bfr        : in Task_Context_Access;
-                           New_Owner  : in Ustring);
+   procedure Do_Move_Task (This        : in out Object;
+                           After_This  : in Task_Context_Access;
+                           Src         : in Task_Context_Access;
+                           Before_This : in Task_Context_Access;
+                           New_Owner   : in Ustring);
    --  Move a task from one point to another
    --  Must maintain all integrity: adjust costs, before/after links, ownership
-   --  New owner is necessary if Bfr is No_Task!
+   --  New owner is necessary if before and after are null
 
    procedure Do_Remove_Task (This : in out Object;
                              Job  : not null Task_Context_Access);
@@ -467,7 +489,8 @@ private
      (This                : in out Object;
       Prev_In_List        : in     Task_Context_Access;
       Curr_To_Be_Inserted : in     Task_Context_Access;
-      Next_In_List        : in     Task_Context_Access);
+      Next_In_List        : in     Task_Context_Access;
+      New_Owner           : in     String);
    --  Update the costs of inserting the Curr task.
 
    --  O (log R)
@@ -475,7 +498,8 @@ private
      (This               : in out Object;
       Prev_To_Be_Kept    : in     Task_Context_Access;
       Curr_To_Be_Deleted : in     Task_Context_Access;
-      Next_To_Be_Kept    : in     Task_Context_Access);
+      Next_To_Be_Kept    : in     Task_Context_Access;
+      Former_Owner       : in     String);
    --  Update the costs of removing the Curr task.
    --  Prev or Next can be null
 

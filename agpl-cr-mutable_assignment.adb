@@ -41,7 +41,6 @@ with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Plan.Utils.Random;
 with Agpl.Htn.Tasks.Maps;
-with Agpl.If_Function;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
@@ -59,8 +58,8 @@ package body Agpl.Cr.Mutable_Assignment is
 
    No_Task : Htn.Tasks.Task_Id renames Htn.Tasks.No_Task;
 
-   function S is new
-     Conversions.To_Str (Optimization.Annealing.Probability);
+   function S is new Conversions.To_Str (Optimization.Annealing.Probability);
+   function To_String is new Conversions.To_Str (Cr.Costs);
 
    function "<" (L, R : Minimax_Key) return Boolean is
       use Asu;
@@ -151,6 +150,61 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Adjust;
 
+   ----------------------------
+   -- Adjust_Chain_Inserting --
+   ----------------------------
+
+   procedure Adjust_Chain_Inserting (This         : in out Object;
+                                     After_This   : in     Task_Context_Access;
+                                     Job          : in     Task_Context_Access;
+                                     Before_This  : in     Task_Context_Access)
+   is
+      pragma Unreferenced (This);
+      Aft : Task_Context_Access renames After_This;
+      Bfr : Task_Context_Access renames Before_This;
+   begin
+      if (Aft /= null and then Bfr /= null and then Aft.Next /= Bfr.Job) or else
+        (Aft /= null and then Bfr = null and then Aft.Next /= No_Task) or else
+        (Bfr /= null and then Aft = null and then Bfr.Prev /= No_Task)
+      then
+         raise Constraint_Error with "Integrity violated!";
+      end if;
+
+      if Aft /= null then
+         Aft.Next := Job.Job;
+         Job.Prev := Aft.Job;
+      else
+         Job.Prev := No_Task;
+      end if;
+
+      if Bfr /= null then
+         Bfr.Prev := Job.Job;
+         Job.Next := Bfr.Job;
+      else
+         Job.Next := No_Task;
+      end if;
+   end Adjust_Chain_Inserting;
+
+   ---------------------------
+   -- Adjust_Chain_Removing --
+   ---------------------------
+
+   procedure Adjust_Chain_Removing (This : in out Object;
+                                    Job  : in     Task_Context_Access) is
+      Prev : constant Task_Context_Access := This.Get_Task_Context (Job.Prev);
+      Next : constant Task_Context_Access := This.Get_Task_Context (Job.Next);
+   begin
+      --  Adjust task chaining
+      if Prev /= null then
+         Prev.Next := Job.Next;
+      end if;
+      if Next /= null then
+         Next.Prev := Job.Prev;
+      end if;
+      Job.Prev := No_Task;
+      Job.Next := No_Task;
+   end Adjust_Chain_Removing;
+
    ------------------------
    -- Clear_Dynamic_Part --
    ------------------------
@@ -213,7 +267,10 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Debug_Dump (This : in Task_Context) is
    begin
-      Log ("Task Id:" & This.Job'Img, Always);
+      Log ("Task Id:" & This.Job'Img & "; " &
+           "Prev:" & This.Prev'Img & "; " &
+           "Next:" & This.Next'Img,
+           Always);
    end Debug_Dump;
 
    procedure Debug_Dump (This : in Or_Node_Context)
@@ -317,23 +374,39 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Do_Move_Task --
    ------------------
 
-   procedure Do_Move_Task (This       : in out Object;
-                           Src        : in Task_Context_Access;
-                           Bfr        : in Task_Context_Access;
-                           New_Owner  : in Ustring)
+   procedure Do_Move_Task (This        : in out Object;
+                           After_This  : in     Task_Context_Access;
+                           Src         : in     Task_Context_Access;
+                           Before_This : in     Task_Context_Access;
+                           New_Owner   : in     Ustring)
    is
-      function Coalesce is new If_Function (Task_Context_Access);
+      Aft : Task_Context_Access renames After_This;
+      Bfr : Task_Context_Access renames Before_This;
+      Old_Owner : constant String :=
+                    Get_Attribute (Src.all'Access, Owner);
    begin
       Set_Attribute (Solution_Context_Pointer (Src), Owner, +New_Owner);
 
       This.Update_Costs_Removing (This.Get_Task_Context (Src.Prev),
                                   Src,
-                                  This.Get_Task_Context (Src.Next));
+                                  This.Get_Task_Context (Src.Next),
+                                  Old_Owner);
 
       This.Update_Costs_Inserting
-        (Coalesce (Bfr /= null, This.Get_Task_Context (Bfr.Prev), null),
+        (Aft,
          Src,
-         Bfr);
+         Bfr,
+         +New_Owner);
+
+      This.Adjust_Chain_Removing (Src);
+      This.Adjust_Chain_Inserting (After_This  => Aft,
+                                   Job         => Src,
+                                   Before_This => Bfr);
+
+      Log ("Moving" & Src.Job'Img &
+           " after" & Src.Prev'Img &
+           " and before" & Src.Next'Img,
+           Debug, Detail_Section);
    end Do_Move_Task;
 
    ------------------
@@ -355,25 +428,55 @@ package body Agpl.Cr.Mutable_Assignment is
                          (Tasks.Vector (Src_Idx).Ref);
 
          Dst_Idx   : Positive;
-         Dst       : Task_Context_Access;
+         Target    : Task_Context_Access;
 
-         Undo_Move : Undo_Move_Task_Info;
+         New_Prev,
+         New_Next  : Task_Context_Access;
+         New_Owner : Ustring;
+
+         Before    : Boolean;
       begin
          loop
             Dst_Idx := Random.Get_Integer (Tasks.First, Tasks.Last);
             exit when Dst_Idx /= Src_Idx;
          end loop;
-         Dst := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
 
-         Desc := + ("Move" & Src.Job'Img & " before" & Dst.Job'Img);
-         Undo_Move.Moved_One  := Src.Job;
-         Undo_Move.Was_Before := Src.Next;
-         Undo.Move_Stack.Append (Undo_Move);
+         Target := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
 
-         This.Do_Move_Task (Src,
-                            This.Get_Task_Context (Dst.Next),
-                            +Get_Attribute
-                              (Solution_Context_Pointer (Dst), Owner));
+         if Src.Prev = Target.Job then
+            Before := True; -- After would be no move
+         elsif Src.Next = Target.Job then
+            Before := False; -- Before would be no move
+         else
+            Before := Random.Get_Integer (1, 2) = 1;
+         end if;
+
+         --  Chose before *or* after the target
+         if Before then
+            --  Before
+            New_Next  := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+            New_Prev  := This.Get_Task_Context (New_Next.Prev);
+            New_Owner := +Get_Attribute (New_Next.all'Access, Owner);
+            Desc := + ("Move" & Src.Job'Img & " before" & New_Next.Job'Img);
+         else
+            --  After
+            New_Prev  := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+            New_Next  := This.Get_Task_Context (New_Prev.Next);
+            New_Owner := +Get_Attribute (New_Prev.all'Access, Owner);
+            Desc := + ("Move" & Src.Job'Img & " after" & New_Prev.Job'Img);
+         end if;
+
+         Undo.Move_Stack.Append
+           ((Moved_One  => Src.Job,
+             Was_After  => Src.Prev,
+             Was_Before => Src.Next,
+             Owner_Was  => +Get_Attribute (Src.all'Access, Owner),
+             Minsum_Was => This.Minsum));
+
+         This.Do_Move_Task (New_Prev,
+                            Src,
+                            New_Next,
+                            New_Owner);
       end Do_It;
    begin
       if This.Num_Assigned_Tasks <= 1 then
@@ -423,17 +526,10 @@ package body Agpl.Cr.Mutable_Assignment is
          Update_Costs_Removing (This,
                                 Prev,
                                 Job,
-                                Next);
+                                Next,
+                                Get_Attribute (Job.all'Access, Owner));
 
-         --  Adjust task chaining
-         if Prev /= null then
-            Prev.Next := Job.Next;
-         end if;
-         if Next /= null then
-            Next.Prev := Job.Prev;
-         end if;
-         Job.Prev := No_Task;
-         Job.Next := No_Task;
+         This.Adjust_Chain_Removing (Job);
       end;
 
       declare
@@ -450,6 +546,15 @@ package body Agpl.Cr.Mutable_Assignment is
 
       This.Contexts.Delete (Task_Key (Job.Job));
    end Do_Remove_Task;
+
+   --------------
+   -- Evaluate --
+   --------------
+
+   function Evaluate (This      : in Object) return Costs is
+   begin
+      return This.Evaluate (This.Context.Ref.Criterion);
+   end Evaluate;
 
    --------------
    -- Evaluate --
@@ -609,18 +714,35 @@ package body Agpl.Cr.Mutable_Assignment is
       M    :          Mutation_Vectors.Object renames
         This.Context.Ref.Mutations;
    begin
+      --  This.Debug_Dump_Contexts;
+      --  Log ("** Minsum is " & To_String (This.Minsum), Always);
+
       for I in M.First .. M.Last loop
          if Luck <= M.Vector (I).Prob then
             Log ("Performing mutation" & I'Img,
                  Debug, Section => Detail_Section);
+            Reset (This.Last_Mutation_Undo);
             This.Last_Mutation_Index  := I;
             This.Last_Mutation_Exists := True;
             M.Vector (I).Doer (This,
                                This.Last_Mutation_Description,
                                This.Last_Mutation_Undo);
+            Log ("Mutated: " & (+This.Last_Mutation_Description),
+                 Debug, Section => Detail_Section);
+            --  This.Debug_Dump_Contexts;
+            --  Log ("** Minsum is " & To_String (This.Minsum), Always);
+            declare
+               Old_Cost : constant Costs :=
+                            This.Evaluate (This.Context.Ref.Criterion);
+            begin
+               pragma Remove_This_Expensive_Check;
+               This.Reevaluate_Costs;
+               pragma Assert (Old_Cost = This.Evaluate (This.Context.Ref.Criterion));
+            end;
             return;
          end if;
       end loop;
+
       Log ("Mutate: No mutation performed!", Error);
       raise Program_Error with "No mutation performed";
    end Mutate;
@@ -873,6 +995,16 @@ package body Agpl.Cr.Mutable_Assignment is
       Solution_Context_Bag_Maps.Update_Element (This.Bags, Bag, Remove'Access);
    end Remove_From_Bag;
 
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset (This : in out Undo_Info) is
+   begin
+      This.Ass.Clear;
+      This.Move_Stack.Clear;
+   end Reset;
+
    --------------------
    -- Set_Assignment --
    --------------------
@@ -958,6 +1090,9 @@ package body Agpl.Cr.Mutable_Assignment is
       --  that weren't in the assignment received. We are going to assign them
       --  in some greedy fashion.
 
+      Log ("There are" & Pending_Tasks.Length'Img & " new pending tasks.",
+           Debug, Log_Section);
+
       --  Do something with unassigned plan tasks
       while not Pending_Tasks.Is_Empty loop
          declare
@@ -1010,6 +1145,8 @@ package body Agpl.Cr.Mutable_Assignment is
 
       Log ("Set_Assignment: Costs reevaluated",
            Debug, Section => Detail_Section);
+
+      This.To_Assignment.Print_Assignment;
    end Set_Assignment;
 
    ---------------
@@ -1179,8 +1316,27 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------
 
    procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info) is
+      U : Undo_Info := Undo;
    begin
-      null;
+      while not U.Move_Stack.Is_Empty loop
+         declare
+            Move : Undo_Move_Task_Info renames
+              U.Move_Stack.Vector (U.Move_Stack.Last);
+         begin
+            This.Do_Move_Task
+              (After_This  => This.Get_Task_Context (Move.Was_After),
+               Src         => This.Get_Task_Context (Move.Moved_One),
+               Before_This => This.Get_Task_Context (Move.Was_Before),
+               New_Owner   => Move.Owner_Was);
+
+            if Move.Minsum_Was /= This.Minsum then
+               Log ("Cost was " & To_String (Move.Minsum_Was) &
+                    " but is " & To_String (This.Minsum), Error, Log_Section);
+               raise Program_Error with "Undo breached cost integrity!";
+            end if;
+         end;
+         U.Move_Stack.Delete (U.Move_Stack.Last);
+      end loop;
    end Undo_Move_Task;
 
    ----------------------------
@@ -1191,10 +1347,54 @@ package body Agpl.Cr.Mutable_Assignment is
      (This                : in out Object;
       Prev_In_List        : in     Task_Context_Access;
       Curr_To_Be_Inserted : in     Task_Context_Access;
-      Next_In_List        : in     Task_Context_Access)
+      Next_In_List        : in     Task_Context_Access;
+      New_Owner           : in     String)
    is
+      Prev : Task_Context_Access renames Prev_In_List;
+      Next : Task_Context_Access renames Next_In_List;
+      Curr : Task_Context_Access renames Curr_To_Be_Inserted;
+
+      Agent    : constant Agent_Id := Agent_Id (New_Owner);
+      Plus_1   : Costs := 0.0;
+      Plus_2   : Costs := 0.0;
+      Minus    : Costs := 0.0;
+      Cost     : Costs := Acm.Element (This.Agent_Costs.Find (Agent));
+      Cm       : Cost_Matrix.Object renames This.Context.Ref.Costs;
+
+      Pr, Ne   : Htn.Tasks.Task_Id := No_Task;
    begin
-      null;
+      This.Agent_Costs.Delete (Agent);
+      This.MinMax.Delete ((Cost, +String (Agent)));
+
+      if Prev /= null then
+         Pr := Prev.Job;
+      end if;
+      if Next /= null then
+         Ne := Next.Job;
+      end if;
+
+      Plus_1 := Cost_Matrix.Get_Cost (Cm,
+                                      New_Owner,
+                                      Pr,
+                                      Curr.Job);
+
+      if Next /= null then
+         Plus_2 := Cost_Matrix.Get_Cost (Cm,
+                                         New_Owner,
+                                         Curr.Job,
+                                         Ne);
+
+         Minus   := Cost_Matrix.Get_Cost (Cm,
+                                          New_Owner,
+                                          Pr,
+                                          Ne);
+      end if;
+
+      Cost := Cost + Plus_1 + Plus_2 - Minus;
+
+      This.Agent_Costs.Insert (Agent_Id (New_Owner), Cost);
+      This.MinMax.Insert ((Cost, +New_Owner));
+      This.Minsum := This.Minsum + Plus_1 + Plus_2 - Minus;
    end Update_Costs_Inserting;
 
    ---------------------------
@@ -1205,14 +1405,14 @@ package body Agpl.Cr.Mutable_Assignment is
      (This               : in out Object;
       Prev_To_Be_Kept    : in     Task_Context_Access;
       Curr_To_Be_Deleted : in     Task_Context_Access;
-      Next_To_Be_Kept    : in     Task_Context_Access)
+      Next_To_Be_Kept    : in     Task_Context_Access;
+      Former_Owner       : in     String)
    is
       Prev : Task_Context_Access renames Prev_To_Be_Kept;
       Next : Task_Context_Access renames Next_To_Be_Kept;
       Curr : Task_Context_Access renames Curr_To_Be_Deleted;
 
-      Agent : constant Agent_Id :=
-                Agent_Id (Get_Attribute (Curr.all'Access, Owner));
+      Agent : constant Agent_Id := Agent_Id (Former_Owner);
       Minus_1  : Costs := 0.0;
       Minus_2  : Costs := 0.0;
       Plus     : Costs := 0.0;
