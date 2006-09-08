@@ -254,31 +254,30 @@ private
       Bag_Indexes : Index_Maps.Map;
       --  A table with all the indexes in bags this thing belongs to.
    end record;
-   type Solution_Context_Pointer is access all Solution_Context'Class;
-   --  Root for all partial info structures we will need to keep in a solution.
+   type Solution_Context_Key is new Ustring;
+
+   function Key (This : in Solution_Context)
+                 return Solution_Context_Key is abstract;
+   --  Should univocally identify this context in the global map of contexts
 
    procedure Debug_Dump (This : in Solution_Context) is abstract;
 
-   package Context_Pointers is new Smart_Access (Solution_Context'Class,
-                                                 Solution_Context_Pointer);
-   subtype Solution_Context_Access is Context_Pointers.Object;
+   package Solution_Context_Maps is new
+     Ada.Containers.Indefinite_Ordered_Maps
+       (Solution_Context_Key,
+        Solution_Context'Class);
 
    type Bag_Context is record
       Key : Ustring; -- A bag_key
    end record;
 
-   package Solution_Context_Bags is new Agpl.Bag (Solution_Context_Access,
+   package Solution_Context_Bags is new Agpl.Bag (Solution_Context_Key,
                                                   Bag_Context);
 
    package Solution_Context_Bag_Maps is new
      Ada.Containers.Indefinite_Ordered_Maps
        (Bag_Key, Solution_Context_Bags.Object,
         "<", Solution_Context_Bags."=");
-
-   type Solution_Context_Key is new String;
-
-   package Solution_Context_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Solution_Context_Key, Solution_Context_Access, "<", Context_Pointers."=");
 
    --  Contains all variable information that is unique to a solution
    type Task_Context is new Solution_Context with record
@@ -290,16 +289,11 @@ private
       --  worse, and we avoid deep copying on Object adjust.
       --  The same applies to Job before and to Or_Parent below.
    end record;
-   type Task_Context_Access is access all Task_Context;
+   type Task_Context_Ptr is access all Task_Context;
 
-   --  Contains all variable information that is unique to a solution
-   type Or_Node_Context is new Solution_Context with record
-      Current_Task      : Htn.Tasks.Task_Id; -- Current selected task
-      --  This could be a pointer which would give O (1) instead of O (log T)
-      --  access time. We prefer to sachrifice that improvement, since all
-      --  mutations are O (log), to avoid deep copy adjusts on Object adjust.
-   end record;
-   type Or_Node_Context_Access is access all Or_Node_Context;
+   function Key (This : in Task_Context) return Solution_Context_Key;
+
+   type Task_Context_Key is new Solution_Context_Key;
 
    type Minimax_Key is record
       Cost  : Costs;
@@ -405,38 +399,45 @@ private
 
    --  Tasks
    procedure Adjust_Chain_Removing (This : in out Object;
-                                    Job  : in     Task_Context_Access);
+                                    Job  : in     Task_Context_Ptr);
    procedure Adjust_Chain_Inserting (This         : in out Object;
-                                     After_This   : in     Task_Context_Access;
-                                     Job          : in     Task_Context_Access;
-                                     Before_This  : in     Task_Context_Access);
+                                     After_This   : in     Task_Context_Ptr;
+                                     Job          : in     Task_Context_Ptr;
+                                     Before_This  : in     Task_Context_Ptr);
 
    function Num_Assigned_Tasks (This : in Object) return Natural;
 
    procedure Do_Move_Task (This        : in out Object;
-                           After_This  : in Task_Context_Access;
-                           Src         : in Task_Context_Access;
-                           Before_This : in Task_Context_Access;
+                           After_This  : in Task_Context_Ptr;
+                           Src         : in Task_Context_Ptr;
+                           Before_This : in Task_Context_Ptr;
                            New_Owner   : in Ustring);
    --  Move a task from one point to another
    --  Must maintain all integrity: adjust costs, before/after links, ownership
    --  New owner is necessary if before and after are null
 
    procedure Do_Remove_Task (This : in out Object;
-                             Job  : not null Task_Context_Access);
+                             Job  : Task_Context_Ptr);
    --  Remove this task from assignation; update all data structures accordingly
 
    function Get_Task_Context (This : in Object;
                               Id   : in Htn.Tasks.Task_Id)
-                              return    Task_Context_Access;
+                              return    Task_Context_Ptr;
+
+   function Ptr (This : in Object;
+                 Key  : in Task_Context_Ptr) return Task_Context_Ptr;
+   --  Gigantic ugly hack probably will blow out everything
 
    --  Attributes
-   function Get_Attribute (This : in Solution_Context_Pointer;
-                           Attr : in Solution_Context_Attributes) return String;
+   function Get_Attribute (This    : in Object;
+                           Context : in Solution_Context_Key;
+                           Attr    : in Solution_Context_Attributes)
+                           return String;
 
-   procedure Set_Attribute (This : in Solution_Context_Pointer;
-                            Attr : in Solution_Context_Attributes;
-                            Val  : in String);
+   procedure Set_Attribute (This    : in out Object;
+                            Context : in     Solution_Context_Key;
+                            Attr    : in     Solution_Context_Attributes;
+                            Val     : in     String);
 
    --  Keys
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
@@ -487,18 +488,18 @@ private
 
    procedure Update_Costs_Inserting
      (This                : in out Object;
-      Prev_In_List        : in     Task_Context_Access;
-      Curr_To_Be_Inserted : in     Task_Context_Access;
-      Next_In_List        : in     Task_Context_Access;
+      Prev_In_List        : in     Task_Context_Ptr;
+      Curr_To_Be_Inserted : in     Task_Context_Ptr;
+      Next_In_List        : in     Task_Context_Ptr;
       New_Owner           : in     String);
    --  Update the costs of inserting the Curr task.
 
    --  O (log R)
    procedure Update_Costs_Removing
      (This               : in out Object;
-      Prev_To_Be_Kept    : in     Task_Context_Access;
-      Curr_To_Be_Deleted : in     Task_Context_Access;
-      Next_To_Be_Kept    : in     Task_Context_Access;
+      Prev_To_Be_Kept    : in     Task_Context_Ptr;
+      Curr_To_Be_Deleted : in     Task_Context_Ptr;
+      Next_To_Be_Kept    : in     Task_Context_Ptr;
       Former_Owner       : in     String);
    --  Update the costs of removing the Curr task.
    --  Prev or Next can be null
