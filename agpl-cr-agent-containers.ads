@@ -31,6 +31,7 @@ with Agpl.Containers.Bulk;
 package Agpl.Cr.Agent.Containers is
 new Agpl.Containers.Bulk (Object'Class,
                           "=",
-                          Positive);
+                          Positive,
+                          String, "<");
 
 pragma Preelaborate (Agpl.Cr.Agent.Containers);

@@ -31,6 +31,7 @@ with Agpl.Containers.Bulk;
 package Agpl.Htn.Tasks.Containers is
 new Agpl.Containers.Bulk (Object'Class,
                           "=",
-                          Positive);
+                          Positive,
+                          Task_Id, "<");
 
 pragma Preelaborate (Agpl.Htn.Tasks.Containers);

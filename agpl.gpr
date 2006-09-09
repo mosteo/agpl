@@ -59,7 +59,7 @@ project Agpl is
 
             for Default_Switches ("ada") use 
                Compiler'Default_Switches ("ada") & 
-               ("-O2", "-gnatn", "-gnatN");
+               ("-O3", "-gnatn");
             --  Could use O3 and see the difference.
 
          when "No_Options" =>

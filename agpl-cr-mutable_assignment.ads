@@ -30,6 +30,7 @@
 --  This one strives to be a really general, problem-independent solution.
 
 with Agpl.Bag; pragma Elaborate_All (Agpl.Bag);
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
@@ -41,29 +42,25 @@ with Agpl.Smart_Access; pragma Elaborate_All (Agpl.Smart_Access);
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Ordered_Sets;
 with Ada.Finalization;
 
 package Agpl.Cr.Mutable_Assignment is
 
-   --  pragma Elaborate_Body;
+   pragma Elaborate_Body;
 
    Log_Section    : constant String := "agpl.cr.mutable_assignment";
    Detail_Section : constant String := "agpl.cr.mutable_assignment.detail";
 
-   type Agent_Id is new String;
-
-   Any_Agent    : constant Agent_Id;
-   No_Agent     : constant Agent_Id;
-   Any_Position : constant Positive;
-
    type Object is tagged private;
+   type Object_Access is access all Object;
    --  No longer is necessary for it to be lightweight, since it's only
    --  copied when a better solution is found, and this doesn't happen
    --  a lot of times. We'll try, however.
 
    --  Copying should be O(n)
+
+   subtype Agent_Id is String;
 
    type Undo_Info is private;
 
@@ -109,10 +106,10 @@ package Agpl.Cr.Mutable_Assignment is
    -- MANAGEMENT SUBPROGRAMS --
    ----------------------------
 
-   procedure Add_Agent (This : in out Object; Name : in Agent_Id);
+   procedure Add_Agent (This : in out Object; A : in Cr.Agent.Object'class);
    --  No problem to add the same one several times
 
-   procedure Remove_Agent (This : in out Object; Name : in Agent_Id);
+   procedure Remove_Agent (This : in out Object; Name : in String);
    --  Cut out this agent; its tasks will go to others
 
    procedure Set_Costs (This  : in out Object;
@@ -184,6 +181,11 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info);
    --  Will un-move all movements, in the Undo_Info stack, not just one.
 
+--     procedure Do_Move_Task_Changing_Owner (This : in out Object;
+--                                            Desc :    out Ustring;
+--                                            Undo :    out Undo_Info);
+   --  As undo, use the Undo_Move_Task
+
    -----------------
    -- CONVERSIONS --
    -----------------
@@ -219,11 +221,11 @@ private
 
    package Mutation_Vectors is new Dynamic_Vector (Mutation_Handler);
 
-   package Agent_Sets is new Ada.Containers.Indefinite_Ordered_Sets (Agent_Id);
+   package Agent_Maps renames Cr.Agent.Containers.Maps;
 
    --  This holds all invariant data accross solutions.
    type Static_Context is record
-      Agents    : Agent_Sets.Set;
+      Agents    : Agent_Maps.Map;
 
       Costs     : Cr.Cost_Matrix.Object;
       Plan      : Htn.Plan.Object;
@@ -255,12 +257,14 @@ private
       --  A table with all the indexes in bags this thing belongs to.
    end record;
    type Solution_Context_Key is new Ustring;
+   type Solution_Context_Ptr is access all Solution_Context'Class;
 
    function Key (This : in Solution_Context)
                  return Solution_Context_Key is abstract;
    --  Should univocally identify this context in the global map of contexts
 
    procedure Debug_Dump (This : in Solution_Context) is abstract;
+   procedure Common_Dump (This : in Solution_Context'Class);
 
    package Solution_Context_Maps is new
      Ada.Containers.Indefinite_Ordered_Maps
@@ -268,7 +272,8 @@ private
         Solution_Context'Class);
 
    type Bag_Context is record
-      Key : Ustring; -- A bag_key
+      Key    : Ustring;       -- A bag_key
+      Parent : Object_Access; -- Necessary to known the object this bag belongs.
    end record;
 
    package Solution_Context_Bags is new Agpl.Bag (Solution_Context_Key,
@@ -278,6 +283,10 @@ private
      Ada.Containers.Indefinite_Ordered_Maps
        (Bag_Key, Solution_Context_Bags.Object,
         "<", Solution_Context_Bags."=");
+
+   ------------------
+   -- Task_Context --
+   ------------------
 
    --  Contains all variable information that is unique to a solution
    type Task_Context is new Solution_Context with record
@@ -289,11 +298,23 @@ private
       --  worse, and we avoid deep copying on Object adjust.
       --  The same applies to Job before and to Or_Parent below.
    end record;
-   type Task_Context_Ptr is access all Task_Context;
+   type Task_Context_Ptr is access all Task_Context'Class;
 
    function Key (This : in Task_Context) return Solution_Context_Key;
+   pragma Inline (Key);
 
    type Task_Context_Key is new Solution_Context_Key;
+
+   -------------------
+   -- Agent_Context --
+   -------------------
+
+   type Agent_Context is new Solution_Context with record
+      Agent_Name : Ustring;
+   end record;
+
+   function Key (This : in Agent_Context) return Solution_Context_Key;
+   procedure Debug_Dump (This : in Agent_Context);
 
    type Minimax_Key is record
       Cost  : Costs;
@@ -312,8 +333,6 @@ private
    ------------------
    -- UNDO SUPPORT --
    ------------------
-
-   procedure Clear_Undo (This : in out Object);
 
    procedure Undo_From_Scratch (This : in out Object;
                                 Undo : in     Undo_Info);
@@ -338,6 +357,9 @@ private
 
       Move_Stack : Undo_Move_Vectors.Object (First => 1);
       --  LIFO stack of moved tasks. To undo, just undo movements from tail to H
+
+      Was_Valid  : Boolean;
+      --  Says if the previous state was a valid solution.
    end record;
 
    procedure Reset (This : in out Undo_Info);
@@ -351,18 +373,21 @@ private
       --  Invariant information
       Context     : Smart_Static_Contexts.Object;
 
-      Valid       : Boolean; -- Is the plan valid?
+      Valid       : Boolean; -- Is the assignment valid?
 
       Contexts    : Solution_Context_Maps.Map;
       --  All contextual infos (tasks, Or-nodes, etc)
       --  This is the main store where everything can be located.
       --  For now this contains:
-      --  All assigned tasks
+      --  All assigned tasks (Task_Context)
+      --  All agents (Agent_Context)
 
       Bags        : Solution_Context_Bag_Maps.Map;
       --  All the different bags
       --  For now this contains:
-      --  All assigned tasks
+      --  All assigned tasks (Task_Context.Key)
+      --  A bag for each agent, containing its tasks (Task_Context.Key)
+      --  A bag with agent contexts (Agent_Context.Key)
 
       --  The current solution costs
       MinSum      : Costs;
@@ -379,10 +404,6 @@ private
    --  Controlling...
    procedure Initialize (This : in out Object);
    procedure Adjust     (This : in out Object);
-
-   Any_Agent    : constant Agent_Id := "";
-   No_Agent     : constant Agent_Id := "";
-   Any_Position : constant Positive := Positive'Last;
 
    Cost_For_Invalid_Task : constant Costs := 0.0;
    --  We use this as a hack to be able to do cost computations with O (1).
@@ -417,7 +438,7 @@ private
    --  New owner is necessary if before and after are null
 
    procedure Do_Remove_Task (This : in out Object;
-                             Job  : Task_Context_Ptr);
+                             Job  : not null Task_Context_Ptr);
    --  Remove this task from assignation; update all data structures accordingly
 
    function Get_Task_Context (This : in Object;
@@ -425,47 +446,72 @@ private
                               return    Task_Context_Ptr;
 
    function Ptr (This : in Object;
-                 Key  : in Task_Context_Ptr) return Task_Context_Ptr;
+                 Key  : in Task_Context_Key) return Task_Context_Ptr;
+   --  pragma Inline (Ptr);
    --  Gigantic ugly hack probably will blow out everything
 
+   function Ptr (This : in Object;
+                 Key  : in Solution_Context_Key) return Solution_Context_Ptr;
+   --  pragma Inline (Ptr);
+
+   function Ptr (This : in Object;
+                 Key  : in Solution_Context_Key) return Task_Context_Ptr;
+   --  pragma Inline (Ptr);
+
    --  Attributes
-   function Get_Attribute (This    : in Object;
-                           Context : in Solution_Context_Key;
+   function Get_Attribute (Context : not null access Solution_Context'Class;
                            Attr    : in Solution_Context_Attributes)
                            return String;
+   pragma Inline (Get_Attribute);
+   function Get_Attribute (Context : in Solution_Context'Class;
+                           Attr    : in Solution_Context_Attributes)
+                           return String;
+   pragma Inline (Get_Attribute);
 
-   procedure Set_Attribute (This    : in out Object;
-                            Context : in     Solution_Context_Key;
+   procedure Set_Attribute (Context : not null access Solution_Context'Class;
                             Attr    : in     Solution_Context_Attributes;
                             Val     : in     String);
+   pragma Inline (Set_Attribute);
 
    --  Keys
+   function Agent_Key (Name : Agent_Id) return Solution_Context_Key;
+   pragma Inline (Agent_Key);
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
    pragma Inline (Task_Key);
 
    All_Assigned_Tasks : constant Bag_Key := "aat";
+   All_Agents         : constant Bag_Key := "aag";
+
+   function Agent_Tasks_Bag (Name : in Agent_Id) return Bag_Key;
+   pragma Inline (Agent_Tasks_Bag);
+   --  Index for a bag containing some agent all tasks.
+
+   function No_Task_Key return Task_Context_Key; pragma Inline (No_Task_Key);
 
    --  Bags
+   procedure Create_Empty_Bag (This : in out Object;
+                               Key  : in     Bag_Key);
+
    procedure Create_Empty_Bags (This : in out Object);
    --  Create the bags that have to be there, even if empty.
 
    procedure Add_To_Bag (This    : in out Object;
-                         Context : in Solution_Context_Access;
+                         Context : in out Solution_Context'Class;
                          Bag     : in Bag_Key);
 
    procedure Remove_From_Bag (This    : in out Object;
-                              Context : in     Solution_Context_Pointer;
+                              Context : in out Solution_Context'Class;
                               Bag     : in     Bag_Key);
 
    procedure Remove_From_Bag
      (This    : in out Object;
-      Context : in     Solution_Context_Pointer;
+      Context : in out Solution_Context'Class;
       Bag     : in     Solution_Context_Bag_Maps.Cursor);
 
    procedure Remove_From_All_Bags (This    : in out Object;
-                                   Context : in     Solution_Context_Pointer);
+                                   Context : in     Solution_Context_Ptr);
 
-   procedure Moving_Solution_Context (Context : in out Solution_Context_Access;
+   procedure Moving_Solution_Context (Context : in out Solution_Context_Key;
                                       Bag     : in out Bag_Context;
                                       Prev,
                                       Curr    : in     Integer);
@@ -475,12 +521,17 @@ private
 
    --  Costs
 
-   function Reevaluate_Agent_Cost (This : in Object; Agent : in Agent_Id)
-                                   return    Costs;
-   function Reevaluate_Totalsum   (This : in Object)
-                                   return    Costs;
-   function Reevaluate_Minimax    (This : in Object)
-                                   return    Costs;
+   procedure Reevaluate_Agent_Cost (This  : in out Object;
+                                    Agent : in     Agent_Id;
+                                    Cost  :    out Costs);
+   --  This can set This.Valid as false if the agent has invalid costs.
+   --  Though, the returned cost will use Cost_For_Invalid_Task and will be
+   --  apt for incremental evaluations
+
+   procedure Reevaluate_Minsum (This : in out Object;
+                                Cost :    out Costs);
+   procedure Reevaluate_Minmax (This : in out Object;
+                                Cost :    out Costs);
 
    --  O (T + log R)
    procedure Reevaluate_Costs (This : in out Object);
@@ -506,8 +557,5 @@ private
 
    overriding
    procedure Debug_Dump (This : in Task_Context);
-
-   overriding
-   procedure Debug_Dump (This : in Or_Node_Context);
 
 end Agpl.Cr.Mutable_Assignment;

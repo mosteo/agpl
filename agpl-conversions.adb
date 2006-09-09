@@ -44,6 +44,14 @@ with System.Img_Real; use System.Img_Real;
 package body Agpl.Conversions is
 
    ------------------------------------------------------------------------
+   -- Trim                                                               --
+   ------------------------------------------------------------------------
+   function Trim (This : in String) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (This, Ada.Strings.Both);
+   end Trim;
+
+   ------------------------------------------------------------------------
    -- From_Hex                                                           --
    ------------------------------------------------------------------------
    FHex : constant array (Character) of Interfaces.Unsigned_8 := (
@@ -146,13 +154,5 @@ package body Agpl.Conversions is
          return To_String (Integer (N));
       end if;
    end To_Str;
-
-   ------------------------------------------------------------------------
-   -- Trim                                                               --
-   ------------------------------------------------------------------------
-   function Trim (This : in String) return String is
-   begin
-      return Ada.Strings.Fixed.Trim (This, Ada.Strings.Both);
-   end Trim;
 
 end Agpl.Conversions;

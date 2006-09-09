@@ -66,6 +66,6 @@ package Agpl.Conversions is
                     return     String;
 
    function Trim (This : in String) return String;
-   pragma Inline (Trim);
+--   pragma Inline (Trim);
 
 end Agpl.Conversions;

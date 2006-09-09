@@ -31,8 +31,6 @@
 
 with Agpl.Conversions;
 use  Agpl.Conversions;
-with Agpl.Cr.Agent.Dummy;
-with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;
 with Agpl.Cr.Plan_Assigner;
 with Agpl.Cr.Plan_Assigner.Greedy1;
@@ -47,6 +45,8 @@ with Agpl.Trace;   use Agpl.Trace;
 with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Agpl.Cr.Mutable_Assignment is
+
+   Expensive_Checks : constant Boolean := False;
 
    File : constant String := "[Mutable_Assignment] ";
 
@@ -69,13 +69,25 @@ package body Agpl.Cr.Mutable_Assignment is
         L.Cost < R.Cost or else (L.Cost = R.Cost and then L.Agent < R.Agent);
    end "<";
 
+   function "+" (Cp : Solution_Context_Ptr) return Task_Context_Ptr;
+   pragma Inline ("+");
+   function "+" (Cp : Solution_Context_Ptr) return Task_Context_Ptr is
+   begin
+      return Task_Context_Ptr (Cp);
+   end "+";
+
+   function S (Key : in Solution_Context_Key) return String is
+   begin
+      return +Ustring (Key);
+   end S;
+
    ---------------
    -- Add_Agent --
    ---------------
 
-   procedure Add_Agent (This : in out Object; Name : in Agent_Id) is
+   procedure Add_Agent (This : in out Object; A : in Cr.Agent.Object'Class) is
    begin
-      This.Context.Ref.all.Agents.Include (Name);
+      This.Context.Ref.all.Agents.Include (A.Get_Name, A);
    end Add_Agent;
 
    ------------------
@@ -124,30 +136,38 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------
 
    procedure Add_To_Bag (This    : in out Object;
-                         Context : in Solution_Context_Access;
+                         Context : in out Solution_Context'Class;
                          Bag     : in Bag_Key)
    is
       procedure Add (Key : in Bag_Key;
                      Bag : in out Solution_Context_Bags.Object)
       is
       begin
+         --  Log ("Adding " & S (Context.Key) & " to bag " & String (Key), Always);
          pragma Assert (String (Key) = +Bag.Get_Context.Key);
-         Bag.Append (Context);
-         Context.Ref.all.Bag_Indexes.Insert (Key, Solution_Context_Bags.Last (Bag));
+         Bag.Append (Context.Key);
+         Context.Bag_Indexes.Insert (Key, Bag.Last);
       end Add;
    begin
-      Solution_Context_Bag_Maps.Update_Element
-        (This.Bags, This.Bags.Find (Bag), Add'Access);
+      This.Bags.Update_Element (This.Bags.Find (Bag), Add'Access);
    end Add_To_Bag;
 
    ------------
    -- Adjust --
    ------------
 
-   procedure Adjust     (This : in out Object) is
-      pragma Unreferenced (This);
+   procedure Adjust (This : in out Object) is
+      procedure Do_It (Key : in     Bag_Key;
+                       Bag : in out Solution_Context_Bags.Object) is
+      begin
+         Bag.Set_Context ((+String (Key), This'Unchecked_Access));
+      end Do_It;
+      procedure Do_Check (I : Solution_Context_Bag_Maps.Cursor) is
+      begin
+         This.Bags.Update_Element (I, Do_It'Access);
+      end Do_Check;
    begin
-      null;
+      This.Bags.Iterate (Do_Check'Access);
    end Adjust;
 
    ----------------------------
@@ -155,13 +175,13 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------------
 
    procedure Adjust_Chain_Inserting (This         : in out Object;
-                                     After_This   : in     Task_Context_Access;
-                                     Job          : in     Task_Context_Access;
-                                     Before_This  : in     Task_Context_Access)
+                                     After_This   : in     Task_Context_Ptr;
+                                     Job          : in     Task_Context_Ptr;
+                                     Before_This  : in     Task_Context_Ptr)
    is
       pragma Unreferenced (This);
-      Aft : Task_Context_Access renames After_This;
-      Bfr : Task_Context_Access renames Before_This;
+      Aft : Task_Context_Ptr renames After_This;
+      Bfr : Task_Context_Ptr renames Before_This;
    begin
       if (Aft /= null and then Bfr /= null and then Aft.Next /= Bfr.Job) or else
         (Aft /= null and then Bfr = null and then Aft.Next /= No_Task) or else
@@ -190,9 +210,9 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------------------
 
    procedure Adjust_Chain_Removing (This : in out Object;
-                                    Job  : in     Task_Context_Access) is
-      Prev : constant Task_Context_Access := This.Get_Task_Context (Job.Prev);
-      Next : constant Task_Context_Access := This.Get_Task_Context (Job.Next);
+                                    Job  : in     Task_Context_Ptr) is
+      Prev : constant Task_Context_Ptr := This.Get_Task_Context (Job.Prev);
+      Next : constant Task_Context_Ptr := This.Get_Task_Context (Job.Next);
    begin
       --  Adjust task chaining
       if Prev /= null then
@@ -205,6 +225,24 @@ package body Agpl.Cr.Mutable_Assignment is
       Job.Next := No_Task;
    end Adjust_Chain_Removing;
 
+   ---------------
+   -- Agent_Key --
+   ---------------
+
+   function Agent_Key (Name : Agent_Id) return Solution_Context_Key is
+   begin
+      return Solution_Context_Key (+("A:" & Name));
+   end Agent_Key;
+
+   ---------------------
+   -- Agent_Tasks_Bag --
+   ---------------------
+
+   function Agent_Tasks_Bag (Name : in Agent_Id) return Bag_Key is
+   begin
+      return Bag_Key ("A:" & Name);
+   end Agent_Tasks_Bag;
+
    ------------------------
    -- Clear_Dynamic_Part --
    ------------------------
@@ -216,24 +254,28 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Create_Empty_Bags;
    end Clear_Dynamic_Part;
 
-   ----------------
-   -- Clear_Undo --
-   ----------------
+   ----------------------
+   -- Create_Empty_Bag --
+   ----------------------
 
-   procedure Clear_Undo (This : in out Object) is
+   procedure Create_Empty_Bag (This : in out Object;
+                               Key  : in     Bag_Key)
+   is
+      Empty_Bag : Solution_Context_Bags.Object (First => 1);
    begin
-      This.Last_Mutation_Undo.Ass.Clear;
-   end Clear_Undo;
+      Empty_Bag.Set_Context ((Key    => +String (Key),
+                              Parent => This'Unchecked_Access));
+      This.Bags.Insert (Key, Empty_Bag);
+   end Create_Empty_Bag;
 
    -----------------------
    -- Create_Empty_Bags --
    -----------------------
 
    procedure Create_Empty_Bags (This : in out Object) is
-      Empty_Bag : Solution_Context_Bags.Object (First => 1);
    begin
-      Empty_Bag.Set_Context ((Key => + String (All_Assigned_Tasks)));
-      This.Bags.Insert (All_Assigned_Tasks, Empty_Bag);
+      This.Create_Empty_Bag (All_Assigned_Tasks);
+      This.Create_Empty_Bag (All_Agents);
    end Create_Empty_Bags;
 
    --------------------------
@@ -244,15 +286,13 @@ package body Agpl.Cr.Mutable_Assignment is
                                    Criterion : in Assignment_Criteria) is
       A : Cr.Assignment.Object;
 
-      procedure Put_Agent (I : Agent_Sets.Cursor) is
-         Ag : Cr.Agent.Dummy.Object;
+      procedure Put_Agent (I : Agent_Maps.Cursor) is
       begin
-         Ag.Set_Name (String (Agent_Sets.Element (I)));
-         A.Set_Agent (Ag);
+         A.Set_Agent (Agent_Maps.Element (I));
       end Put_Agent;
    begin
       A.Set_Valid;
-      Agent_Sets.Iterate (This.Context.Ref.Agents, Put_Agent'Access);
+      This.Context.Ref.Agents.Iterate (Put_Agent'Access);
       --  This ensures that all agents appear in the assignment, even if some
       --  haven't tasks.
 
@@ -260,6 +300,27 @@ package body Agpl.Cr.Mutable_Assignment is
       --  Using an empty assignment we ensure that a greedy allocation will
       --  occur with all tasks in the plan.
    end Create_Some_Solution;
+
+   -----------------
+   -- Common_Dump --
+   -----------------
+
+   procedure Common_Dump (This : in Solution_Context'Class) is
+      procedure Dump_Attrs (I : Attribute_Maps.Cursor) is
+      begin
+         Log (Attribute_Maps.Key (I)'Img & " = " &
+              Attribute_Maps.Element (I), Always);
+      end Dump_Attrs;
+      procedure Dump_Bags (I : Index_Maps.Cursor) is
+         use Index_Maps;
+      begin
+         Log ("Bag idx for " & String (Key (I)) & " =" & Element (I)'Img,
+              Always);
+      end Dump_Bags;
+   begin
+      This.Attributes.Iterate (Dump_Attrs'Access);
+      This.Bag_Indexes.Iterate (Dump_Bags'Access);
+   end Common_Dump;
 
    ----------------
    -- Debug_Dump --
@@ -273,28 +334,18 @@ package body Agpl.Cr.Mutable_Assignment is
            Always);
    end Debug_Dump;
 
-   procedure Debug_Dump (This : in Or_Node_Context)
-   is
-   begin
-      Log ("Selected branch:" & This.Current_Task'Img, Always);
-   end Debug_Dump;
-
    -------------------------
    -- Debug_Dump_Contexts --
    -------------------------
 
    procedure Debug_Dump_Contexts (This : in Object) is
       procedure Debug_Dump_Context (I : Solution_Context_Maps.Cursor) is
-         C : Solution_Context_Access renames Solution_Context_Maps.Element (I);
-         procedure Debug_Dump_Attrs (I : Attribute_Maps.Cursor) is
-         begin
-            Log (Attribute_Maps.Key (I)'Img & " = " &
-                 Attribute_Maps.Element (I), Always);
-         end Debug_Dump_Attrs;
+         C : constant Solution_Context'Class :=
+               Solution_Context_Maps.Element (I);
       begin
-         Log ("Tag: " & External_Tag (C.Ref.all'Tag), Always);
-         C.Ref.Debug_Dump;
-         C.Ref.Attributes.Iterate (Debug_Dump_Attrs'Access);
+         Log ("Tag: " & External_Tag (C'Tag), Always);
+         C.Debug_Dump;
+         Common_Dump (C);
       end Debug_Dump_Context;
    begin
       Log ("************ CONTEXTS DUMP FOLLOWS *****************", Always);
@@ -375,17 +426,17 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------------
 
    procedure Do_Move_Task (This        : in out Object;
-                           After_This  : in     Task_Context_Access;
-                           Src         : in     Task_Context_Access;
-                           Before_This : in     Task_Context_Access;
+                           After_This  : in     Task_Context_Ptr;
+                           Src         : in     Task_Context_Ptr;
+                           Before_This : in     Task_Context_Ptr;
                            New_Owner   : in     Ustring)
    is
-      Aft : Task_Context_Access renames After_This;
-      Bfr : Task_Context_Access renames Before_This;
+      Aft : Task_Context_Ptr renames After_This;
+      Bfr : Task_Context_Ptr renames Before_This;
       Old_Owner : constant String :=
-                    Get_Attribute (Src.all'Access, Owner);
+                    Get_Attribute (Src, Owner);
    begin
-      Set_Attribute (Solution_Context_Pointer (Src), Owner, +New_Owner);
+      Set_Attribute (Src, Owner, +New_Owner);
 
       This.Update_Costs_Removing (This.Get_Task_Context (Src.Prev),
                                   Src,
@@ -402,6 +453,14 @@ package body Agpl.Cr.Mutable_Assignment is
       This.Adjust_Chain_Inserting (After_This  => Aft,
                                    Job         => Src,
                                    Before_This => Bfr);
+
+      if Old_Owner /= +New_Owner then
+--           Log ("MOVING*************************************", Always);
+--           Common_Dump (Src.all);
+--           Src.Debug_Dump;
+         This.Remove_From_Bag (Src.all, Agent_Tasks_Bag (Old_Owner));
+         This.Add_To_Bag (Src.all, Agent_Tasks_Bag (+New_Owner));
+      end if;
 
       Log ("Moving" & Src.Job'Img &
            " after" & Src.Prev'Img &
@@ -423,15 +482,14 @@ package body Agpl.Cr.Mutable_Assignment is
          pragma Unreferenced (Key);
          Src_Idx   : constant Positive :=
                        Random.Get_Integer (Tasks.First, Tasks.Last);
-         Src       : constant Task_Context_Access :=
-                       Task_Context_Access
-                         (Tasks.Vector (Src_Idx).Ref);
+         Src       : constant Task_Context_Ptr :=
+                       +This.Ptr (Tasks.Vector (Src_Idx));
 
          Dst_Idx   : Positive;
-         Target    : Task_Context_Access;
+         Target    : Task_Context_Ptr;
 
          New_Prev,
-         New_Next  : Task_Context_Access;
+         New_Next  : Task_Context_Ptr;
          New_Owner : Ustring;
 
          Before    : Boolean;
@@ -441,7 +499,7 @@ package body Agpl.Cr.Mutable_Assignment is
             exit when Dst_Idx /= Src_Idx;
          end loop;
 
-         Target := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+         Target := +This.Ptr (Tasks.Vector (Dst_Idx));
 
          if Src.Prev = Target.Job then
             Before := True; -- After would be no move
@@ -454,15 +512,15 @@ package body Agpl.Cr.Mutable_Assignment is
          --  Chose before *or* after the target
          if Before then
             --  Before
-            New_Next  := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+            New_Next  := +This.Ptr (Tasks.Vector (Dst_Idx));
             New_Prev  := This.Get_Task_Context (New_Next.Prev);
-            New_Owner := +Get_Attribute (New_Next.all'Access, Owner);
+            New_Owner := +Get_Attribute (New_Next, Owner);
             Desc := + ("Move" & Src.Job'Img & " before" & New_Next.Job'Img);
          else
             --  After
-            New_Prev  := Task_Context_Access (Tasks.Vector (Dst_Idx).Ref);
+            New_Prev  := +This.Ptr (Tasks.Vector (Dst_Idx));
             New_Next  := This.Get_Task_Context (New_Prev.Next);
-            New_Owner := +Get_Attribute (New_Prev.all'Access, Owner);
+            New_Owner := +Get_Attribute (New_Prev, Owner);
             Desc := + ("Move" & Src.Job'Img & " after" & New_Prev.Job'Img);
          end if;
 
@@ -506,23 +564,16 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------
 
    procedure Do_Remove_Task (This : in out   Object;
-                             Job  : not null Task_Context_Access)
+                             Job  : not null Task_Context_Ptr)
    is
    begin
       --  Costs to be updated
       declare
          use Solution_Context_Maps;
-         P, N       : Cursor;
-         Prev, Next : Task_Context_Access;
+         Prev, Next : Task_Context_Ptr;
       begin
-         P := This.Contexts.Find (Task_Key (Job.Prev));
-         N := This.Contexts.Find (Task_Key (Job.Next));
-         if Has_Element (P) then
-            Prev := Task_Context_Access (Element (P).Ref);
-         end if;
-         if Has_Element (N) then
-            Next := Task_Context_Access (Element (N).Ref);
-         end if;
+         Prev := This.Ptr (Task_Key (Job.Prev));
+         Next := This.Ptr (Task_Key (Job.Next));
          Update_Costs_Removing (This,
                                 Prev,
                                 Job,
@@ -535,10 +586,13 @@ package body Agpl.Cr.Mutable_Assignment is
       declare
          Agent : constant Agent_Id :=
                    Agent_Id (Get_Attribute (Job.all'Access, Owner));
+         Cost  : Costs;
       begin
-         pragma Assert (Acm.Element (This.Agent_Costs.Find (Agent)) =
-                          Reevaluate_Agent_Cost (This, Agent));
-         null;
+         pragma Remove_Expensive_Check;
+         if Expensive_Checks then
+            Reevaluate_Agent_Cost (This, Agent, Cost);
+            pragma Assert (Acm.Element (This.Agent_Costs.Find (Agent)) = Cost);
+         end if;
       end;
 
       --  Remove from bags
@@ -599,12 +653,25 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Get_Attribute --
    -------------------
 
-   function Get_Attribute (This : in Solution_Context_Pointer;
-                           Attr : in Solution_Context_Attributes) return String
+   function Get_Attribute (Context : not null access Solution_Context'Class;
+                           Attr    : in Solution_Context_Attributes)
+                           return       String
+   is
+   begin
+      return Get_Attribute (Context.all, Attr);
+   end Get_Attribute;
+
+   -------------------
+   -- Get_Attribute --
+   -------------------
+
+   function Get_Attribute (Context : in Solution_Context'Class;
+                           Attr    : in Solution_Context_Attributes)
+                           return String
    is
       use Attribute_Maps;
    begin
-      return Element (Find (This.Attributes, Attr));
+      return Element (Context.Attributes.Find (Attr));
    end Get_Attribute;
 
    ----------------------
@@ -613,7 +680,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Get_Task_Context (This : in Object;
                               Id   : in Htn.Tasks.Task_Id)
-                              return    Task_Context_Access
+                              return    Task_Context_Ptr
    is
       use Solution_Context_Maps;
       use Htn.Tasks;
@@ -621,9 +688,7 @@ package body Agpl.Cr.Mutable_Assignment is
       if Id = No_Task then
          return null;
       else
-         return Task_Context_Access
-           (Element
-              (This.Contexts.Find (Task_Key (Id))).Ref);
+         return This.Ptr (Task_Key (Id));
       end if;
    end Get_Task_Context;
 
@@ -647,22 +712,27 @@ package body Agpl.Cr.Mutable_Assignment is
    function Is_Sane (This : in Object) return Boolean is
 
       procedure Check_Contexts (I : Solution_Context_Maps.Cursor) is
-         X : constant Solution_Context_Access :=
+         X : constant Solution_Context'Class :=
                Solution_Context_Maps.Element (I);
       begin
-         if X.Ref.all in Task_Context then
+         if X in Task_Context then
             declare
                Node : constant Htn.Plan.Subplan :=
                         Htn.Plan.Get_Node
-                          (This.Context.Ref.Plan, Task_Context (X.Ref.all).Job);
+                          (This.Context.Ref.Plan,
+                           Task_Context (X).Job);
                use Htn.Plan_Node;
             begin
                if Get_Finished (Node) or else Get_Expanded (Node) then
-                  raise Constraint_Error;
+                  raise Constraint_Error
+                    with "Compound or finished task is assigned";
                end if;
             end;
+         elsif X in Agent_Context then
+            null;
          else
-            raise Constraint_Error;
+            raise Constraint_Error
+              with "Unexpected context kind: " & External_Tag (X'Tag);
          end if;
       end Check_Contexts;
 
@@ -675,6 +745,15 @@ package body Agpl.Cr.Mutable_Assignment is
          Log ("Checking solution sanity: " & Report (E), Error);
          return False;
    end Is_Sane;
+
+   ---------
+   -- Key --
+   ---------
+
+   function Key (This : in Task_Context) return Solution_Context_Key is
+   begin
+      return Task_Key (This.Job);
+   end Key;
 
    -------------------
    -- Last_Mutation --
@@ -689,18 +768,20 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Moving_Solution_Context --
    -----------------------------
 
-   procedure Moving_Solution_Context (Context : in out Solution_Context_Access;
+   procedure Moving_Solution_Context (Context : in out Solution_Context_Key;
                                       Bag     : in out Bag_Context;
                                       Prev,
                                       Curr    : in     Integer)
    is
       use Index_Maps;
+      C : constant Solution_Context_Ptr := Bag.Parent.Ptr (Context);
    begin
       pragma Assert
-        (Element (Context.Ref.Bag_Indexes.Find (Bag_Key (+Bag.Key))) = Prev);
+        (Element
+           (C.Bag_Indexes.Find (Bag_Key (+Bag.Key))) = Prev);
 
-      Context.Ref.all.Bag_Indexes.Delete (Bag_Key (+Bag.Key));
-      Context.Ref.all.Bag_Indexes.Insert (Bag_Key (+Bag.Key), Curr);
+      C.Bag_Indexes.Delete (Bag_Key (+Bag.Key));
+      C.Bag_Indexes.Insert (Bag_Key (+Bag.Key), Curr);
    end Moving_Solution_Context;
 
    ------------
@@ -724,21 +805,26 @@ package body Agpl.Cr.Mutable_Assignment is
             Reset (This.Last_Mutation_Undo);
             This.Last_Mutation_Index  := I;
             This.Last_Mutation_Exists := True;
+            This.Last_Mutation_Undo.Was_Valid := This.Valid;
+
             M.Vector (I).Doer (This,
                                This.Last_Mutation_Description,
                                This.Last_Mutation_Undo);
+
             Log ("Mutated: " & (+This.Last_Mutation_Description),
                  Debug, Section => Detail_Section);
             --  This.Debug_Dump_Contexts;
             --  Log ("** Minsum is " & To_String (This.Minsum), Always);
-            declare
-               Old_Cost : constant Costs :=
-                            This.Evaluate (This.Context.Ref.Criterion);
-            begin
-               pragma Remove_This_Expensive_Check;
-               This.Reevaluate_Costs;
-               pragma Assert (Old_Cost = This.Evaluate (This.Context.Ref.Criterion));
-            end;
+            if Expensive_Checks then
+               declare
+                  Old_Cost : constant Costs :=
+                               This.Evaluate (This.Context.Ref.Criterion);
+               begin
+                  pragma Remove_This_Expensive_Check;
+                  This.Reevaluate_Costs;
+                  pragma Assert (Old_Cost = This.Evaluate (This.Context.Ref.Criterion));
+               end;
+            end if;
             return;
          end if;
       end loop;
@@ -779,6 +865,15 @@ package body Agpl.Cr.Mutable_Assignment is
          raise;
    end Normalize;
 
+   -----------------
+   -- No_Task_Key --
+   -----------------
+
+   function No_Task_Key return Task_Context_Key is
+   begin
+      return Task_Context_Key (Task_Key (No_Task));
+   end No_Task_Key;
+
    ------------------------
    -- Num_Assigned_Tasks --
    ------------------------
@@ -799,32 +894,109 @@ package body Agpl.Cr.Mutable_Assignment is
       return Len;
    end Num_Assigned_Tasks;
 
+   ---------
+   -- Ptr --
+   ---------
+
+   function Ptr (This : in Object;
+                 Key  : in Task_Context_Key) return Task_Context_Ptr
+   is
+      Result : Task_Context_Ptr;
+      procedure Do_It (Key : Solution_Context_Key; C : Solution_Context'Class)
+      is
+         pragma Unreferenced (Key);
+      begin
+         pragma Unrestricted_Access;
+         Result := Task_Context (C)'Unrestricted_Access;
+      end Do_It;
+   begin
+      if Key = No_Task_Key then
+         return null;
+      else
+         Solution_Context_Maps.Query_Element
+           (This.Contexts.Find (Solution_Context_Key (Key)), Do_It'Access);
+         return Result;
+      end if;
+   end Ptr;
+   --  Gigantic ugly hack probably will blow out everything
+
+   ---------
+   -- Ptr --
+   ---------
+
+   function Ptr (This : in Object;
+                 Key  : in Solution_Context_Key) return Solution_Context_Ptr
+   is
+      Result : Solution_Context_Ptr;
+      procedure Do_It (Key : Solution_Context_Key; C : Solution_Context'Class)
+      is
+         pragma Unreferenced (Key);
+      begin
+         pragma Unrestricted_Access;
+         Result := C'Unrestricted_Access;
+      end Do_It;
+   begin
+      Solution_Context_Maps.Query_Element
+        (This.Contexts.Find (Key), Do_It'Access);
+      return Result;
+   end Ptr;
+
+   ---------
+   -- Ptr --
+   ---------
+
+   function Ptr (This : in Object;
+                 Key  : in Solution_Context_Key) return Task_Context_Ptr
+   is
+      Result : Task_Context_Ptr;
+      procedure Do_It (Key : Solution_Context_Key; C : Solution_Context'Class)
+      is
+         pragma Unreferenced (Key);
+      begin
+         pragma Unrestricted_Access;
+         Result := Task_Context (C)'Unrestricted_Access;
+      end Do_It;
+   begin
+      if Task_Context_Key (Key) = No_Task_Key then
+         return null;
+      else
+         Solution_Context_Maps.Query_Element
+           (This.Contexts.Find (Key), Do_It'Access);
+         return Result;
+      end if;
+   end Ptr;
+
    --------------------
    -- Reassign_Tasks --
    --------------------
 
    procedure Reassign_Tasks (This : in out Object; From, To : in Agent_Id) is
-      procedure It (I : in Solution_Context_Maps.Cursor) is
-         X : constant Solution_Context_Pointer :=
-               Solution_Context_Maps.Element (I).Ref;
-      begin
-         if X.Attributes.Contains (Owner) then
-            if Get_Attribute (X, Owner) = String (From) then
-               Set_Attribute (X, Owner, String (To));
+      procedure Do_It (I : in Solution_Context_Maps.Cursor) is
+         procedure Do_It (Key : in     Solution_Context_Key;
+                          X   : in out Solution_Context'Class)
+         is
+            pragma Unreferenced (Key);
+         begin
+            if X.Attributes.Contains (Owner) then
+               if Get_Attribute (X'Access, Owner) = String (From) then
+                  Set_Attribute (X'Access, Owner, String (To));
+               end if;
             end if;
-         end if;
-      end It;
+         end Do_It;
+      begin
+         This.Contexts.Update_Element (I, Do_It'Access);
+      end Do_It;
    begin
-      Solution_Context_Maps.Iterate (This.Contexts, It'Access);
+      This.Contexts.Iterate (Do_It'Access);
    end Reassign_Tasks;
 
    ---------------------------
    -- Reevaluate_Agent_Cost --
    ---------------------------
 
-   function Reevaluate_Agent_Cost (This  : in Object;
-                                   Agent : in Agent_Id)
-                                   return     Costs
+   procedure Reevaluate_Agent_Cost (This  : in out Object;
+                                    Agent : in     Agent_Id;
+                                    Cost  :    out Costs)
    is
       C     : Cr.Cost_Matrix.Object renames This.Context.Ref.Costs;
       Total : Costs;
@@ -832,39 +1004,40 @@ package body Agpl.Cr.Mutable_Assignment is
       use Solution_Context_Maps;
 
       --  Well use always the cost from prev to current
-      procedure Add (I : Cursor) is
-         X    : constant Solution_Context_Pointer := Element (I).Ref;
-         Curr :          Costs;
-      begin
-         if X.all in Task_Context then
-            if Agent_Id (Get_Attribute (X, Owner)) = Agent then
-               declare
-                  use Cost_Matrix;
-                  use Htn.Tasks;
-                  T : Task_Context renames Task_Context (X.all);
-               begin
-                  --  The case when Prev = No_Task is contemplated in the
-                  --  Cost_Matrix object
-                  Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
-                  if Curr = Infinite then
-                     Total := Infinite;
-                  else
+      procedure Do_It (I : Cursor) is
+         procedure Do_It (Key : in Solution_Context_Key;
+                          X   : in Solution_Context'Class)
+         is
+            pragma Unreferenced (Key);
+            Curr :          Costs;
+         begin
+            if X in Task_Context then
+               if Agent_Id (Get_Attribute (X, Owner)) = Agent then
+                  declare
+                     use Cost_Matrix;
+                     use Htn.Tasks;
+                     T : Task_Context renames Task_Context (X);
+                  begin
+                     --  The case when Prev = No_Task is contemplated in the
+                     --  Cost_Matrix object
+                     Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
+                     if Curr = Infinite then
+                        Curr := Cost_For_Invalid_Task;
+                        This.Valid := False;
+                     end if;
+
                      Total := Total + Curr;
-                  end if;
-               end;
+                  end;
+               end if;
             end if;
-         end if;
-      end Add;
+         end Do_It;
+      begin
+         Solution_Context_Maps.Query_Element (I, Do_It'Access);
+      end Do_It;
 
-      I : Cursor := This.Contexts.First;
    begin
-      while Has_Element (I) loop
-         Add (I);
-         exit when Total = Infinite;
-         Next (I);
-      end loop;
-
-      return Total;
+      This.Contexts.Iterate (Do_It'Access);
+      Cost := Total;
    end Reevaluate_Agent_Cost;
 
    ----------------------
@@ -872,19 +1045,20 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------
 
    procedure Reevaluate_Costs (This : in out Object) is
-      procedure Ev (I : Agent_Sets.Cursor) is
-         Id   : constant Agent_Id := Agent_Sets.Element (I);
-         Cost : constant Costs    := Reevaluate_Agent_Cost (This, Id);
+      procedure Ev (I : Agent_Maps.Cursor) is
+         Id   : constant Agent_Id := Agent_Maps.Key (I);
+         Cost : Costs;
       begin
+         Reevaluate_Agent_Cost (This, Id, Cost);
          This.MinMax.Insert ((Cost, +String (Id)));
          This.Agent_Costs.Insert (Id, Cost);
       end Ev;
    begin
-      This.MinSum := Reevaluate_Totalsum (This);
+      Reevaluate_Minsum (This, This.Minsum);
 
       This.MinMax.Clear;
       This.Agent_Costs.Clear;
-      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
+      Agent_Maps.Iterate (This.Context.Ref.Agents, Ev'Access);
 
       This.Valid := This.MinSum < Infinite;
    end Reevaluate_Costs;
@@ -893,38 +1067,39 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Reevaluate_Minimax --
    ------------------------
 
-   function Reevaluate_Minimax    (This : in Object)
-                                   return    Costs
+   procedure Reevaluate_Minmax (This : in out Object;
+                                Cost :    out Costs)
    is
       Minimax : Cost_Agent_Sets.Set;
 
-      procedure Ev (I : Agent_Sets.Cursor) is
-         Id   : constant Agent_Id := Agent_Sets.Element (I);
-         Cost : constant Costs    := Reevaluate_Agent_Cost (This, Id);
+      procedure Ev (I : Agent_Maps.Cursor) is
+         Id   : constant Agent_Id := Agent_Maps.Key (I);
       begin
+         This.Reevaluate_Agent_Cost (Id, Cost);
          Minimax.Insert ((Cost, +String (Id)));
       end Ev;
    begin
-      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
-      return Minimax.Last_Element.Cost;
-   end Reevaluate_Minimax;
+      Agent_Maps.Iterate (This.Context.Ref.Agents, Ev'Access);
+      Cost := Minimax.Last_Element.Cost;
+   end Reevaluate_Minmax;
 
    -------------------------
    -- Reevaluate_Totalsum --
    -------------------------
 
-   function Reevaluate_Totalsum   (This : in Object)
-                                   return    Costs
+   procedure Reevaluate_Minsum (This : in out Object;
+                                Cost :    out Costs)
    is
-      Total : Costs := 0.0;
-      procedure Ev (I : Agent_Sets.Cursor) is
+      procedure Ev (I : Agent_Maps.Cursor) is
+         Local : Costs;
       begin
-         Total := Total + Reevaluate_Agent_Cost (This, Agent_Sets.Element (I));
+         This.Reevaluate_Agent_Cost (Agent_Maps.Element (I).Get_Name, Local);
+         Cost := Cost + Local;
       end Ev;
    begin
-      Agent_Sets.Iterate (This.Context.Ref.Agents, Ev'Access);
-      return Total;
-   end Reevaluate_Totalsum;
+      Cost := 0.0;
+      Agent_Maps.Iterate (This.Context.Ref.Agents, Ev'Access);
+   end Reevaluate_Minsum;
 
    ------------------
    -- Remove_Agent --
@@ -940,7 +1115,8 @@ package body Agpl.Cr.Mutable_Assignment is
       if This.Context.Ref.Agents.Is_Empty then
          Log ("Remove_Agent: No remaining agents!", Warning);
       else
-         Reassign_Tasks (This, Name, Agent_Sets.First_Element (C.Agents));
+         Reassign_Tasks
+           (This, Name, Agent_Maps.First_Element (C.Agents).Get_Name);
          Do_Heuristic_1 (This, Dummy_Desc, Dummy_Undo);
       end if;
    end Remove_Agent;
@@ -950,14 +1126,14 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------------
 
    procedure Remove_From_All_Bags (This    : in out Object;
-                                   Context : in     Solution_Context_Pointer)
+                                   Context : in     Solution_Context_Ptr)
    is
-      procedure Remove (Bag : in Solution_Context_Bag_Maps.Cursor) is
+      procedure Do_It (Bag : in Solution_Context_Bag_Maps.Cursor) is
       begin
-         Remove_From_Bag (This, Context, Bag);
-      end Remove;
+         This.Remove_From_Bag (Context.all, Bag);
+      end Do_It;
    begin
-      Solution_Context_Bag_Maps.Iterate (This.Bags, Remove'Access);
+      This.Bags.Iterate (Do_It'Access);
    end Remove_From_All_Bags;
 
    ---------------------
@@ -965,11 +1141,11 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------------
 
    procedure Remove_From_Bag (This    : in out Object;
-                              Context : in     Solution_Context_Pointer;
+                              Context : in out Solution_Context'Class;
                               Bag     : in     Bag_Key)
    is
    begin
-      Remove_From_Bag (This, Context, This.Bags.Find (Bag));
+      This.Remove_From_Bag (Context, This.Bags.Find (Bag));
    end Remove_From_Bag;
 
    ---------------------
@@ -978,21 +1154,28 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Remove_From_Bag
      (This    : in out Object;
-      Context : in     Solution_Context_Pointer;
+      Context : in out Solution_Context'Class;
       Bag     : in     Solution_Context_Bag_Maps.Cursor)
    is
-      procedure Remove (Key : in     Bag_Key;
-                        Bag : in out Solution_Context_Bags.Object)
+      procedure Do_It (Key : in     Bag_Key;
+                       Bag : in out Solution_Context_Bags.Object)
       is
          use Index_Maps;
       begin
+--           Log ("Remove from bag: Ctx: " & (+Ustring (Context.Key)) &
+--                "; Bag: " & String (Key), Always, Detail_Section);
+--           Log ("Bag index:" & Element (Find (Context.Bag_Indexes, Key))'Img,
+--                Always, Detail_Section);
+
          Solution_Context_Bags.Delete
            (Bag,
             Element (Find (Context.Bag_Indexes, Key)),
             Moving_Solution_Context'Access);
-      end Remove;
+
+         Context.Bag_Indexes.Delete (Key);
+      end Do_It;
    begin
-      Solution_Context_Bag_Maps.Update_Element (This.Bags, Bag, Remove'Access);
+      This.Bags.Update_Element (Bag, Do_It'Access);
    end Remove_From_Bag;
 
    -----------
@@ -1034,9 +1217,20 @@ package body Agpl.Cr.Mutable_Assignment is
          T : constant Htn.Tasks.Containers.Lists.List   := A.Get_Tasks;
          J :          Htn.Tasks.Containers.Lists.Cursor := T.First;
       begin
+         --  Create its task assignment and bag
+         declare
+            Ag_Ctx : Agent_Context := (Solution_Context with
+                                       Agent_Name => +A.Get_Name);
+         begin
+            Add_To_Bag (This, Ag_Ctx, All_Agents);
+            This.Create_Empty_Bag (Agent_Tasks_Bag (A.Get_Name));
+            This.Contexts.Insert (Agent_Key (A.Get_Name), Ag_Ctx);
+         end;
+
+         --  Create task contexts
          while Has_Element (J) loop
             declare
-               C : constant Task_Context_Access := new Task_Context;
+               C : aliased Task_Context;
             begin
                C.Job := Element (J).Get_Id;
                if Has_Element (Previous (J)) then
@@ -1045,15 +1239,16 @@ package body Agpl.Cr.Mutable_Assignment is
                if Has_Element (Next (J)) then
                   C.Next := Element (Next (J)).Get_Id;
                end if;
-               Set_Attribute (C.all'Access, Owner, Cr.Agent.Get_Name (A));
+               Set_Attribute (C'Access, Owner, Cr.Agent.Get_Name (A));
 
-               declare
-                  Cc : constant Solution_Context_Access :=
-                         Context_Pointers.Bind (Solution_Context_Pointer (C));
-               begin
-                  This.Contexts.Insert (Task_Key (C.Job), Cc);
-                  Add_To_Bag (This, Cc, All_Assigned_Tasks);
-               end;
+               --  Add to all tasks
+               This.Add_To_Bag (C, All_Assigned_Tasks);
+               --  Add to its agent
+               This.Add_To_Bag (C, Agent_Tasks_Bag (A.Get_Name));
+
+               This.Contexts.Insert
+                 (Solution_Context_Key (Task_Key (C.Job)), C);
+
                Next (J);
             end;
          end loop;
@@ -1147,6 +1342,7 @@ package body Agpl.Cr.Mutable_Assignment is
            Debug, Section => Detail_Section);
 
       This.To_Assignment.Print_Assignment;
+      --  This.Debug_Dump_Contexts;
    end Set_Assignment;
 
    ---------------
@@ -1174,13 +1370,13 @@ package body Agpl.Cr.Mutable_Assignment is
    -- Set_Attribute --
    -------------------
 
-   procedure Set_Attribute (This : in Solution_Context_Pointer;
-                            Attr : in Solution_Context_Attributes;
-                            Val  : in String)
+   procedure Set_Attribute (Context : not null access Solution_Context'Class;
+                            Attr    : in Solution_Context_Attributes;
+                            Val     : in String)
    is
       use Attribute_Maps;
    begin
-      Include (This.Attributes, Attr, Val);
+      Include (Context.Attributes, Attr, Val);
    end Set_Attribute;
 
    ---------------
@@ -1202,7 +1398,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key is
    begin
-      return Solution_Context_Key ("task:" & Id'Img);
+      return Solution_Context_Key (+("T:" & Id'Img));
    end Task_Key;
 
    -------------------
@@ -1212,55 +1408,56 @@ package body Agpl.Cr.Mutable_Assignment is
    function To_Assignment   (This : in Object) return Cr.Assignment.Object is
       Result : Cr.Assignment.Object;
 
-      function Find_First (Agent : in Agent_Id) return Task_Context_Access is
-         Curr : Task_Context_Access;
+      function Find_First (Agent : in Agent_Id) return Task_Context_Ptr is
+         Curr  : Task_Context;
+         Found : Boolean := False;
          use Solution_Context_Maps;
-         I : Cursor := This.Contexts.First;
+         I     : Cursor := This.Contexts.First;
       begin
          --  Locate any:
          while Has_Element (I) loop
-            if Get_Attribute (Element (I).Ref, Owner) = String (Agent) and then
-              Element (I).Ref.all in Task_Context
-            then
-               Curr := Task_Context_Access (Element (I).Ref);
-               exit;
+            if Element (I) in Task_Context then
+               if Get_Attribute (Element (I), Owner) = String (Agent) and then
+                 Element (I) in Task_Context
+               then
+                  Curr  := Task_Context (Element (I));
+                  Found := True;
+                  exit;
+               end if;
             end if;
             Next (I);
          end loop;
 
          --  Go back to first one:
-         if Curr /= null then
+         if Found then
             while Curr.Prev /= No_Task loop
-               Curr := Task_Context_Access
-                 (Element (This.Contexts.Find (Task_Key (Curr.Prev))).Ref);
+               Curr := Task_Context
+                 (Element (This.Contexts.Find (Task_Key (Curr.Prev))));
             end loop;
+            return This.Ptr (Task_Key (Curr.Job));
+         else
+            return null;
          end if;
-
-         return Curr;
       end Find_First;
 
-      procedure Assign_Agent (I : Agent_Sets.Cursor) is
-         Agent_Name : constant Agent_Id            := Agent_Sets.Element (I);
-         Agent      :          Cr.Agent.Dummy.Object;
-         Curr       :          Task_Context_Access := Find_First (Agent_Name);
+      procedure Assign_Agent (I : Agent_Maps.Cursor) is
+         Agent : constant Cr.Agent.Object'Class := Agent_Maps.Element (I);
+         Curr : Task_Context_Ptr := Find_First (Agent.Get_Name);
       begin
-         Agent.Set_Name (String (Agent_Name));
          --  Add the empty agent so all appear in the assignment, even the ones
          --  without tasks:
-         Assignment.Set_Agent (Result, Agent);
+         Assignment.Set_Agent (Result, Agent_Maps.Element (I));
          while Curr /= null loop
             Assignment.Add
               (Result, Agent,
                Htn.Plan.Get_Task (This.Context.Ref.Plan, Curr.Job).all);
             exit when Curr.Next = No_Task;
-            Curr := Task_Context_Access
-              (Solution_Context_Maps.Element
-                 (This.Contexts.Find (Task_Key (Curr.Next))).Ref);
+            Curr := This.Get_Task_Context (Curr.Next);
          end loop;
       end Assign_Agent;
    begin
 --      This.Debug_Dump_Contexts;
-      Agent_Sets.Iterate (This.Context.Ref.Agents, Assign_Agent'Access);
+      Agent_Maps.Iterate (This.Context.Ref.Agents, Assign_Agent'Access);
       return Result;
    end To_Assignment;
 
@@ -1273,7 +1470,8 @@ package body Agpl.Cr.Mutable_Assignment is
       if This.Last_Mutation_Exists then
          This.Context.Ref.Mutations.Vector
            (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
-         Clear_Undo (This);
+         This.Valid := This.Last_Mutation_Undo.Was_Valid;
+         Reset (This.Last_Mutation_Undo);
          This.Last_Mutation_Exists := False;
       else
          raise Constraint_Error with "No mutation performed to be undone";
@@ -1339,20 +1537,35 @@ package body Agpl.Cr.Mutable_Assignment is
       end loop;
    end Undo_Move_Task;
 
+   function Proper_Cost (This : in Costs) return Costs;
+   pragma Inline (Proper_Cost);
+
+   function Proper_Cost (This : in Costs) return Costs is
+   begin
+      if This = Infinite then
+         return Cost_For_Invalid_Task;
+      else
+         return This;
+      end if;
+   end Proper_Cost;
+   --  If a cost is infinite, turn it into zero.
+   --  Necessary for incremental evaluations of solutions since going to
+   --  Costs'Last will cause loss of the known cost.
+
    ----------------------------
    -- Update_Costs_Inserting --
    ----------------------------
 
    procedure Update_Costs_Inserting
      (This                : in out Object;
-      Prev_In_List        : in     Task_Context_Access;
-      Curr_To_Be_Inserted : in     Task_Context_Access;
-      Next_In_List        : in     Task_Context_Access;
+      Prev_In_List        : in     Task_Context_Ptr;
+      Curr_To_Be_Inserted : in     Task_Context_Ptr;
+      Next_In_List        : in     Task_Context_Ptr;
       New_Owner           : in     String)
    is
-      Prev : Task_Context_Access renames Prev_In_List;
-      Next : Task_Context_Access renames Next_In_List;
-      Curr : Task_Context_Access renames Curr_To_Be_Inserted;
+      Prev : Task_Context_Ptr renames Prev_In_List;
+      Next : Task_Context_Ptr renames Next_In_List;
+      Curr : Task_Context_Ptr renames Curr_To_Be_Inserted;
 
       Agent    : constant Agent_Id := Agent_Id (New_Owner);
       Plus_1   : Costs := 0.0;
@@ -1390,6 +1603,19 @@ package body Agpl.Cr.Mutable_Assignment is
                                           Ne);
       end if;
 
+      if Plus_1 = Infinite then
+         Plus_1 := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+      if Plus_2 = Infinite then
+         Plus_2 := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+      if Minus = Infinite then
+         Minus := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+
       Cost := Cost + Plus_1 + Plus_2 - Minus;
 
       This.Agent_Costs.Insert (Agent_Id (New_Owner), Cost);
@@ -1403,14 +1629,14 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Update_Costs_Removing
      (This               : in out Object;
-      Prev_To_Be_Kept    : in     Task_Context_Access;
-      Curr_To_Be_Deleted : in     Task_Context_Access;
-      Next_To_Be_Kept    : in     Task_Context_Access;
+      Prev_To_Be_Kept    : in     Task_Context_Ptr;
+      Curr_To_Be_Deleted : in     Task_Context_Ptr;
+      Next_To_Be_Kept    : in     Task_Context_Ptr;
       Former_Owner       : in     String)
    is
-      Prev : Task_Context_Access renames Prev_To_Be_Kept;
-      Next : Task_Context_Access renames Next_To_Be_Kept;
-      Curr : Task_Context_Access renames Curr_To_Be_Deleted;
+      Prev : Task_Context_Ptr renames Prev_To_Be_Kept;
+      Next : Task_Context_Ptr renames Next_To_Be_Kept;
+      Curr : Task_Context_Ptr renames Curr_To_Be_Deleted;
 
       Agent : constant Agent_Id := Agent_Id (Former_Owner);
       Minus_1  : Costs := 0.0;
@@ -1446,11 +1672,43 @@ package body Agpl.Cr.Mutable_Assignment is
                                        Pr,
                                        Ne);
 
+
+      if Minus_1 = Infinite then
+         Minus_1 := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+      if Minus_2 = Infinite then
+         Minus_2 := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+      if Plus = Infinite then
+         Plus := Cost_For_Invalid_Task;
+         This.Valid := False;
+      end if;
+
       Cost := Cost - Minus_1 - Minus_2 + Plus;
 
       This.Agent_Costs.Insert (Agent, Cost);
       This.MinMax.Insert ((Cost, +String (Agent)));
       This.Minsum := This.Minsum - Minus_1 - Minus_2 + Plus;
    end Update_Costs_Removing;
+
+   ---------
+   -- Key --
+   ---------
+
+   function Key (This : in Agent_Context) return Solution_Context_Key is
+   begin
+      return Agent_Key (+This.Agent_Name);
+   end Key;
+
+   ----------------
+   -- Debug_Dump --
+   ----------------
+
+   procedure Debug_Dump (This : in Agent_Context) is
+   begin
+      Log ("Agent: " & (+This.Agent_Name), Always, Log_Section);
+   end Debug_Dump;
 
 end Agpl.Cr.Mutable_Assignment;
