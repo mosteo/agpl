@@ -24,11 +24,9 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Strings.Hash;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Agpl.Containers.String_Integer_Maps is
-new Ada.Containers.Indefinite_Hashed_Maps
-  (String, Integer, Ada.Strings.Hash, "=");
+new Ada.Containers.Indefinite_Ordered_Maps (String, Integer);
 
 pragma Preelaborate (Agpl.Containers.String_Integer_Maps);

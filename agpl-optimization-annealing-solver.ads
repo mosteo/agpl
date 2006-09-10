@@ -26,6 +26,7 @@
 
 with Agpl.Generic_Handle;
 
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 
 --  OO implementation of the simulated annealing method
@@ -49,6 +50,8 @@ generic
    with function Last_Mutation (Sol : in Solution) return String;
    --  Informative, to know mutations working well
    --  Just returns a description of what was done.
+   --  Should be unique for the mutation class, since it is used to
+   --  aggregate stats.
 
    with procedure Undo (Sol : in out Solution);
    --  Must undo the last mutation. Only one level of undo is required.
@@ -110,7 +113,8 @@ package Agpl.Optimization.Annealing.Solver is
                    Timeout                  : in     Duration;
                    Converge                 : in     Duration;
                    Progress                 : access procedure
-                     (Continue : out Boolean) := null);
+                     (Continue : out Boolean) := null;
+                   Inform_At_End            : in     Boolean := False);
    --  As previous, but doesn't require an initial solution: assumes one exists
    --  and that everything is ready.
    --  This allows "chunking" the computation
@@ -118,6 +122,14 @@ package Agpl.Optimization.Annealing.Solver is
 private
 
    package Sol_Handle is new Generic_Handle (Solution);
+
+   type Move_Stats is record
+      Taken    : Natural := 0;
+      Accepted : Natural := 0;
+   end record;
+
+   package Stat_Maps is
+      new Ada.Containers.Indefinite_Ordered_Maps (String, Move_Stats);
 
    type Object is tagged limited record
       Best_Sol   : Sol_Handle.Object;
@@ -133,6 +145,14 @@ private
       Iterations : Natural := 0; -- Total iterations run
       Discarded  : Natural := 0; -- Discarded moves
       Wasted     : Natural := 0; -- Invalid mutations seen
+
+      Stats      : Stat_Maps.Map;
    end record;
+
+   procedure Add_Move (This     : in out Object;
+                       Move     : in     String;
+                       Accepted : in     Boolean);
+
+   procedure Print_Stats (Stats : in Stat_Maps.Map);
 
 end Agpl.Optimization.Annealing.Solver;

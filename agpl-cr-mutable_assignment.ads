@@ -175,15 +175,26 @@ package Agpl.Cr.Mutable_Assignment is
    --  This heuristic will consider the best of *all* tasks in every possible
    --  expansion; freeze the plan with the chosen task; repeat until no more T.
 
+   --  O (log)
+   procedure Do_Auction_Task (This : in out Object;
+                              Desc :    out Ustring;
+                              Undo :    out Undo_Info);
+   --  As undo, use the Undo_Move_Task
+   --  Cost is kept logaritmic checking only a log fraction of all insertion points.
+
+   --  O (log)
    procedure Do_Move_Task (This : in out Object;
                            Desc :    out Ustring;
                            Undo :    out Undo_Info);
    procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info);
    --  Will un-move all movements, in the Undo_Info stack, not just one.
 
---     procedure Do_Move_Task_Changing_Owner (This : in out Object;
---                                            Desc :    out Ustring;
---                                            Undo :    out Undo_Info);
+   --  O (log)
+   procedure Do_Move_Task_Changing_Owner (This : in out Object;
+                                          Desc :    out Ustring;
+                                          Undo :    out Undo_Info);
+   --  Moves a task at random, but choses the owner before hand. In this way,
+   --  no agent can end without tasks (as happens when just using Move_Task
    --  As undo, use the Undo_Move_Task
 
    -----------------
@@ -418,7 +429,7 @@ private
    --  Check for data structures sanity
    --  Can be expensive, use it only for debugging.
 
-   --  Tasks
+   --  TASKS --
    procedure Adjust_Chain_Removing (This : in out Object;
                                     Job  : in     Task_Context_Ptr);
    procedure Adjust_Chain_Inserting (This         : in out Object;
@@ -428,18 +439,32 @@ private
 
    function Num_Assigned_Tasks (This : in Object) return Natural;
 
+   procedure Add_Undo_Move (This : in     Object;
+                            Job  : in     Task_Context_Ptr;
+                            Undo : in out Undo_Info);
+
+   procedure Do_Insert_Task (This        : in out Object;
+                             After_This  : in     Task_Context_Ptr;
+                             Src         : in     Task_Context'Class;
+                             Before_This : in     Task_Context_Ptr;
+                             New_Owner   : in     Agent_Id);
+   --  Src is not a pointer because the task is no longer in the list of
+   --  contexts!
+   --  The bag indexes are automatically cleared/created, so no need to do this
+   --  in advance
+
    procedure Do_Move_Task (This        : in out Object;
-                           After_This  : in Task_Context_Ptr;
-                           Src         : in Task_Context_Ptr;
-                           Before_This : in Task_Context_Ptr;
-                           New_Owner   : in Ustring);
-   --  Move a task from one point to another
-   --  Must maintain all integrity: adjust costs, before/after links, ownership
-   --  New owner is necessary if before and after are null
+                           After_This  : in     Task_Context_Ptr;
+                           Src         : in out Task_Context_Ptr;
+                           Before_This : in     Task_Context_Ptr;
+                           New_Owner   : in     Agent_Id);
+   --  Warning: Src will change inside this call
 
    procedure Do_Remove_Task (This : in out Object;
-                             Job  : not null Task_Context_Ptr);
+                             Job  : in out  Task_Context_Ptr);
    --  Remove this task from assignation; update all data structures accordingly
+   --  Job will be null after removal, since there's no longer a context for it.
+   --  Better make a copy before if you need it.
 
    function Get_Task_Context (This : in Object;
                               Id   : in Htn.Tasks.Task_Id)
@@ -458,7 +483,7 @@ private
                  Key  : in Solution_Context_Key) return Task_Context_Ptr;
    --  pragma Inline (Ptr);
 
-   --  Attributes
+   -- ATTRIBUTES --
    function Get_Attribute (Context : not null access Solution_Context'Class;
                            Attr    : in Solution_Context_Attributes)
                            return String;
@@ -473,7 +498,7 @@ private
                             Val     : in     String);
    pragma Inline (Set_Attribute);
 
-   --  Keys
+   -- KEYS --
    function Agent_Key (Name : Agent_Id) return Solution_Context_Key;
    pragma Inline (Agent_Key);
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
@@ -488,7 +513,7 @@ private
 
    function No_Task_Key return Task_Context_Key; pragma Inline (No_Task_Key);
 
-   --  Bags
+   -- BAGS --
    procedure Create_Empty_Bag (This : in out Object;
                                Key  : in     Bag_Key);
 
@@ -499,6 +524,9 @@ private
                          Context : in out Solution_Context'Class;
                          Bag     : in Bag_Key);
 
+   procedure Remove_From_All_Bags (This    : in out Object;
+                                   Context : access Solution_Context'Class);
+
    procedure Remove_From_Bag (This    : in out Object;
                               Context : in out Solution_Context'Class;
                               Bag     : in     Bag_Key);
@@ -508,9 +536,6 @@ private
       Context : in out Solution_Context'Class;
       Bag     : in     Solution_Context_Bag_Maps.Cursor);
 
-   procedure Remove_From_All_Bags (This    : in out Object;
-                                   Context : in     Solution_Context_Ptr);
-
    procedure Moving_Solution_Context (Context : in out Solution_Context_Key;
                                       Bag     : in out Bag_Context;
                                       Prev,
@@ -519,7 +544,25 @@ private
 
    procedure Reassign_Tasks (This : in out Object; From, To : in Agent_Id);
 
-   --  Costs
+   procedure Select_Random_Insertion (This  : in     Object;
+                                      Bag   : in     Bag_Key;
+                                      Prev  :    out Task_Context_Ptr;
+                                      Curr  :    out Task_Context_Ptr;
+                                      Next  :    out Task_Context_Ptr);
+   --  Select a random insertion point in a task bag
+   --  Prev, curr and next can be  both null
+   --  Curr will be equal to prev or next, since we insert before or after
+   --  a random task
+   --  If the bag was empty, the three will be null.
+
+   function Select_Random_Context (This : in     Object;
+                                   Bag  : in     Bag_Key) return Solution_Context_Ptr;
+
+   function Select_Random_Task (This : in     Object;
+                                Bag  : in     Bag_Key) return Task_Context_Ptr;
+   --  Select a random task in a task bag (CURR)
+
+   -- COSTS --
 
    procedure Reevaluate_Agent_Cost (This  : in out Object;
                                     Agent : in     Agent_Id;
@@ -536,6 +579,16 @@ private
    --  O (T + log R)
    procedure Reevaluate_Costs (This : in out Object);
    --  Recompute all costs from scratch and update internal cache
+
+   function Evaluate_Cost_Inserting
+     (This                : in Object;
+      Prev_In_List        : in Task_Context_Ptr;
+      Curr_To_Be_Inserted : in Htn.Tasks.Task_Id;
+      Next_In_List        : in Task_Context_Ptr;
+      New_Owner           : in Agent_Id) return Cr.Costs;
+   --  Gives the criterion evaluated result of inserting a task in a point.
+   --  No changes are made.
+   --  This can return Infinite, unlike the modificators who keep "deltable" costs.
 
    procedure Update_Costs_Inserting
      (This                : in out Object;
@@ -557,5 +610,10 @@ private
 
    overriding
    procedure Debug_Dump (This : in Task_Context);
+
+   --  FUNCTIONS THAT MANIPULATE BAGS AND HAVE TO BE UPDATED ON ADDITION OF
+   --  NEW BAGS:
+   --  Set_Assignment
+   --  Do_Insert_Task
 
 end Agpl.Cr.Mutable_Assignment;

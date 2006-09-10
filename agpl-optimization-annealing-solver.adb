@@ -33,6 +33,36 @@ package body Agpl.Optimization.Annealing.Solver is
 
    use type Cr.Costs;
 
+   --------------
+   -- Add_Move --
+   --------------
+
+   procedure Add_Move (This     : in out Object;
+                       Move     : in     String;
+                       Accepted : in     Boolean)
+   is
+      use Stat_Maps;
+      I : Cursor := This.Stats.Find (Move);
+
+      procedure Do_It (Key : in String; Move : in out Move_Stats) is
+         pragma Unreferenced (Key);
+      begin
+         Move.Taken := Move.Taken + 1;
+         if Accepted then
+            Move.Accepted := Move.Accepted + 1;
+         end if;
+      end Do_It;
+
+      Ok : Boolean;
+   begin
+      if not Has_Element (I) then
+         This.Stats.Insert (Move, (others => <>), I, Ok);
+         pragma Assert (Ok);
+      end if;
+
+      This.Stats.Update_Element (I, Do_It'Access);
+   end Add_Move;
+
    ---------------
    -- Best_Cost --
    ---------------
@@ -104,6 +134,8 @@ package body Agpl.Optimization.Annealing.Solver is
 
          if New_Cost = Infinite then -- Invalid solution
             This.Wasted := This.Wasted + 1;
+            This.Add_Move
+              (Last_Mutation (This.Curr_Sol.Ref.all), Accepted => False);
             Undo (This.Curr_Sol.Ref.all);
          elsif New_Cost < This.Best_Cost or else P < Goodness then
             --  See if we must replace the current solution
@@ -119,11 +151,14 @@ package body Agpl.Optimization.Annealing.Solver is
             end if;
 
             This.Curr_Cost := New_Cost;
+
+            This.Add_Move
+              (Last_Mutation (This.Curr_Sol.Ref.all), Accepted => True);
          else
             This.Discarded := This.Discarded + 1;
             Undo (This.Curr_Sol.Ref.all);
---              Log ("Solver: UNDOINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG!",
---                   Debug, Log_Section);
+            This.Add_Move
+              (Last_Mutation (This.Curr_Sol.Ref.all), Accepted => False);
          end if;
 
          This.Curr_Temp := Anneal (This.Curr_Temp);
@@ -133,6 +168,52 @@ package body Agpl.Optimization.Annealing.Solver is
          Log ("Annealing.Solver.Iterate: " & Report (E), Error);
          raise;
    end Iterate;
+
+   -----------------
+   -- Print_Stats --
+   -----------------
+
+   procedure Print_Stats (Stats : in Stat_Maps.Map) is
+      use Stat_Maps;
+
+      Total_Moves : Natural := 0;
+      Total_Good  : Natural := 0;
+
+      procedure Do_Count (I : Cursor) is
+      begin
+         Total_Moves := Total_Moves + Element (I).Taken;
+         Total_Good  := Total_Good  + Element (I).Accepted;
+      end Do_Count;
+
+      procedure Do_Inform (I : Cursor) is
+         M : constant Move_Stats := Element (I);
+      begin
+         Log ("Mutation [" & Key (I) & "] accept/total: " &
+              To_String (M.Accepted) & "/" & To_String (M.Taken) & " (" &
+              To_String (Float (M.Accepted) * 100.0 / Float (M.Taken)) &
+              "%); global %: " &
+              To_String (Float (M.Accepted) * 100.0 / Float (Total_Good)) &
+              "%/" &
+              To_String (Float (M.Taken) * 100.0 / Float (Total_Moves)) & "%",
+              Debug, Log_Section);
+      end Do_Inform;
+   begin
+      Stats.Iterate (Do_Count'Access);
+
+      Log ("", Debug, Log_Section);
+
+      Stats.Iterate (Do_Inform'Access);
+
+      Log ("", Debug, Log_Section);
+
+      Log ("TOTAL MOVES (accept/total): " &
+           To_String (Total_Good) & "/" & To_String (Total_Moves) & " (" &
+           To_String (Float (Total_Good) * 100.0 / Float (Total_Moves)) &
+           "%)",
+           Debug, Log_Section);
+
+      Log ("", Debug, Log_Section);
+   end Print_Stats;
 
    --------------------------
    -- Set_Initial_Solution --
@@ -212,6 +293,8 @@ package body Agpl.Optimization.Annealing.Solver is
 
       Work (This, Anneal, Iterations, Timeout, Converge, Progress);
 
+      Print_Stats (This.Stats);
+
       Log ("Best cost found: " & To_String (Float (Best_Cost)) &
            " in" & This.Iterations'Img & " iterations run (" &
            Image (Global_Timer) & ", " &
@@ -246,7 +329,8 @@ package body Agpl.Optimization.Annealing.Solver is
                    Timeout                  : in     Duration;
                    Converge                 : in     Duration;
                    Progress                 : access procedure
-                     (Continue : out Boolean) := null)
+                     (Continue : out Boolean) := null;
+                   Inform_At_End            : in     Boolean := False)
    is
       use Chronos;
       Global_Timer,
@@ -294,20 +378,21 @@ package body Agpl.Optimization.Annealing.Solver is
             Progress.all (Continue);
          end if;
 
---           if Elapsed (Info_Timer) >= 1.0 then
---              Reset (Info_Timer);
-
---              if Progress /= null then
---                 Progress.all (Continue);
---              end if;
-
---              Log ("Iteration" & This.Iterations'Img &
---                   "; Curr_Cost: " & Strings.To_String (Float (Current_Cost (This))) &
---                   "; Curr_Temp: " & Strings.To_String (Float (Current_Temperature (This))) &
---                   "; Curr_Move: " & Last_Mutation (Current_Solution (This)),
---                   Debug, Section => Log_Section);
---           end if;
       end loop;
+
+      if Inform_At_End then
+         Print_Stats (This.Stats);
+
+         Log ("Best cost found: " & To_String (Float (Best_Cost)) &
+              " in" & This.Iterations'Img & " iterations run (" &
+              Image (Global_Timer) & ", " &
+              To_String
+                (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
+              " i/s) (" &
+              Integer'Image (This.Wasted * 100 / This.Iterations) & "% wasted moves)" &
+              " (" & Integer'Image (This.Discarded * 100 / This.Iterations) & "% discarded moves)",
+              Debug, Section => Log_Section);
+      end if;
    end Work;
 
 end Agpl.Optimization.Annealing.Solver;
