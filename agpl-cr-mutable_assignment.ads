@@ -197,6 +197,18 @@ package Agpl.Cr.Mutable_Assignment is
    --  no agent can end without tasks (as happens when just using Move_Task
    --  As undo, use the Undo_Move_Task
 
+   procedure Do_Swap_Order (This : in out Object;
+                            Desc :    out Ustring;
+                            Undo :    out Undo_Info);
+   --  Switches two consecutive tasks
+   --  As undo, use the Undo_Move_Task
+
+   procedure Do_Swap_Tasks (This : in out Object;
+                            Desc :    out Ustring;
+                            Undo :    out Undo_Info);
+   --  Switches two arbitrary tasks
+   --  As undo, use the Undo_Move_Task
+
    -----------------
    -- CONVERSIONS --
    -----------------

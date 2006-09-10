@@ -698,6 +698,85 @@ package body Agpl.Cr.Mutable_Assignment is
       end;
    end Do_Move_Task_Changing_Owner;
 
+   -------------------
+   -- Do_Swap_Order --
+   -------------------
+
+   procedure Do_Swap_Order (This : in out Object;
+                            Desc :    out Ustring;
+                            Undo :    out Undo_Info) is
+   begin
+      if This.Num_Assigned_Tasks <= 1 then
+         Do_Identity (This, Desc, Undo);
+         return;
+      end if;
+
+      Desc := + "SWAP ORDER";
+
+      declare
+         Src      : Task_Context_Ptr :=
+                      This.Select_Random_Task (All_Assigned_Tasks);
+         Src_Copy : Task_Context := Task_Context (Src.all);
+         Next     : Task_Context_Ptr :=
+                      This.Get_Task_Context (Src.Next);
+      begin
+         if Next /= null then
+            This.Add_Undo_Move (Src, Undo);
+            This.Do_Remove_Task (Src);
+            This.Do_Insert_Task (Next,
+                                 Src_Copy,
+                                 This.Get_Task_Context (Next.Next),
+                                 Agent_Id (Get_Attribute (Next, Owner)));
+         else
+            Do_Identity (This, Desc, Undo);
+         end if;
+      end;
+   end Do_Swap_Order;
+
+   -------------------
+   -- Do_Swap_Tasks --
+   -------------------
+
+   procedure Do_Swap_Tasks (This : in out Object;
+                            Desc :    out Ustring;
+                            Undo :    out Undo_Info) is
+   begin
+      if This.Num_Assigned_Tasks <= 1 then
+         Do_Identity (This, Desc, Undo);
+         return;
+      end if;
+
+      Desc := + "SWAP ANY";
+
+      declare
+         Src      : Task_Context_Ptr :=
+                      This.Select_Random_Task (All_Assigned_Tasks);
+         Src_Copy : Task_Context := Task_Context (Src.all);
+         Prev_1   : Task_Context_Ptr := This.Get_Task_Context (Src.Prev);
+         Next_1   : Task_Context_Ptr := This.Get_Task_Context (Src.Next);
+         Owner_1  : Agent_Id         := Agent_Id (Get_Attribute (Src, Owner));
+
+         Prev_2,
+         Next_2,
+         Target   : Task_Context_Ptr;
+      begin
+         This.Add_Undo_Move (Src, Undo);
+         This.Do_Remove_Task (Src);
+
+
+         if Next /= null then
+
+            This.Do_Remove_Task (Src);
+            This.Do_Insert_Task (Next,
+                                 Src_Copy,
+                                 This.Get_Task_Context (Next.Next),
+                                 Agent_Id (Get_Attribute (Next, Owner)));
+         else
+            Do_Identity (This, Desc, Undo);
+         end if;
+      end;
+   end Do_Swap_Tasks;
+
    --------------------
    -- Do_Remove_Task --
    --------------------
