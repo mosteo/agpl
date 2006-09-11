@@ -357,13 +357,14 @@ package body Agpl.Optimization.Annealing.Solver is
          declare
             Curr_Best : constant Cost := This.Best_Cost;
          begin
-            if Curr_Best < Best_Cost then
+            if Curr_Best < Best_Cost and then Elapsed (Global_Timer) > 0.0001 then
                Best_Cost := Curr_Best;
                Converge_Timer.Reset;
                Log ("(Iteration" & This.Iterations'Img &
                     " at " & Image (Global_Timer) & ") " &
                     "(speed: " & To_String
-                      (Float (This.Iterations) / Float (Elapsed (Global_Timer))) &
+                    (Float (This.Iterations) /
+                     Float (Elapsed (Global_Timer))) &
                     " i/s)" &" Best solution: " &
                     To_String (Float (Best_Cost)) &
                     " obtained via " & Last_Mutation (This.Best_Solution),

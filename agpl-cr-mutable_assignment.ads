@@ -159,10 +159,12 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Undo_Identity (This : in out Object; Undo : in  Undo_Info);
    --  Test mutation, does nothing!
 
+   procedure Undo_From_Scratch (This : in out Object; Undo : in Undo_Info);
+   --  Undo for heuristics
+
    procedure Do_Heuristic_1 (This : in out Object;
                              Desc :    out Ustring;
                              Undo :    out Undo_Info);
-   procedure Undo_Heuristic_1 (This : in out Object; Undo : in  Undo_Info);
    --  Will consider all agents and tasks to provide some "good" assignment.
    --  The current tasks are re-assigned in a "best pair" greedy fashion.
    --  So no OR node switchings happen.
@@ -170,10 +172,14 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Do_Heuristic_2 (This : in out Object;
                              Desc :    out Ustring;
                              Undo :    out Undo_Info);
-   procedure Undo_Heuristic_2 (This : in out Object; Undo : in  Undo_Info)
-                               renames Undo_Heuristic_1; -- Undo from scratch
    --  This heuristic will consider the best of *all* tasks in every possible
    --  expansion; freeze the plan with the chosen task; repeat until no more T.
+
+   --  O (n^2)
+   procedure Do_Agent_Reorder (This : in out Object;
+                               Desc :    out Ustring;
+                               Undo :    out Undo_Info);
+   --  Greedy reordering of an agent tasks
 
    --  O (log)
    procedure Do_Auction_Task (This : in out Object;
@@ -181,6 +187,12 @@ package Agpl.Cr.Mutable_Assignment is
                               Undo :    out Undo_Info);
    --  As undo, use the Undo_Move_Task
    --  Cost is kept logaritmic checking only a log fraction of all insertion points.
+
+   procedure Do_Guided_Auction_Task (This : in out Object;
+                                     Desc :    out Ustring;
+                                     Undo :    out Undo_Info);
+   --  Guided in both originating agent and inserting agent
+   --  As undo, use the Undo_Move_Task
 
    --  O (log)
    procedure Do_Move_Task (This : in out Object;
@@ -196,6 +208,11 @@ package Agpl.Cr.Mutable_Assignment is
    --  Moves a task at random, but choses the owner before hand. In this way,
    --  no agent can end without tasks (as happens when just using Move_Task
    --  As undo, use the Undo_Move_Task
+
+   procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
+                                                 Desc :    out Ustring;
+                                                 Undo :    out Undo_Info);
+   --  Like previous, but task is chosen from the worst cost agent
 
    procedure Do_Swap_Order (This : in out Object;
                             Desc :    out Ustring;
@@ -356,9 +373,6 @@ private
    ------------------
    -- UNDO SUPPORT --
    ------------------
-
-   procedure Undo_From_Scratch (This : in out Object;
-                                Undo : in     Undo_Info);
 
    --  This record is used to store one moved task so it can be replaced
    --  where it was.
@@ -565,7 +579,7 @@ private
    --  Prev, curr and next can be  both null
    --  Curr will be equal to prev or next, since we insert before or after
    --  a random task
-   --  If the bag was empty, the three will be null.
+   --  If sthe bag was empty, the three will be null.
 
    function Select_Random_Context (This : in     Object;
                                    Bag  : in     Bag_Key) return Solution_Context_Ptr;

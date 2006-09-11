@@ -119,10 +119,11 @@ package Agpl.Cr.Assignment is
    --  DEBUG
 
    procedure Print_Assignment (This : in Object);
+   procedure Print_Summary (This : in Object);
 
 private
 
-      type Object is tagged record
+   type Object is tagged record
       Agents : Agent.Maps.Map;
 
       Ok     : Boolean := True;

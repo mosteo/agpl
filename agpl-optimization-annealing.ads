@@ -67,4 +67,22 @@ package Agpl.Optimization.Annealing is
    --  T := ((Clock - Start) / Period) ^ Power
    --  Note that Start is reset if Clock - Start > Period
 
+   generic
+      Initial_Temperature : Temperature := 1.0;
+   package Manual_Cooling is
+      --  Expected package usage is to manually divide temperature when you need
+      --  it.
+      --  In this way you can keep low temperatures for as long as necessary.
+
+      function Get_Temperature (T : in Temperature) return Temperature;
+      pragma Inline (Get_Temperature);
+      --  returns the same temperature
+
+      procedure Reset (Top : in Temperature := 1.0);
+      --  Resets temperature to 1.0
+
+      procedure Divide (Denom : in Float := 2.0);
+      --  Divide temperature by the given Denominator
+   end Manual_Cooling;
+
 end Agpl.Optimization.Annealing;

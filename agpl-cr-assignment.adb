@@ -438,7 +438,7 @@ package body Agpl.Cr.Assignment is
 
    procedure Print_Assignment (This : in Object) is
    begin
-      Log ("** Assignment summary **", Always);
+      Log ("** Assignment detail **", Always);
 
       if not Is_Valid (This) then
          Log ("Invalid assignment!", Always);
@@ -476,5 +476,17 @@ package body Agpl.Cr.Assignment is
          Log ("", Always);
       end;
    end Print_Assignment;
+
+   -------------------
+   -- Print_Summary --
+   -------------------
+
+   procedure Print_Summary (This : in Object) is
+   begin
+      Log ("** Assignment summary **", Always);
+      Log ("MinSum cost: " & To_String (This.Get_Cummulative_Cost), Always);
+      Log ("MinMax cost: " & To_String (This.Get_Max_Min_Cost), Always);
+      Log ("", Always);
+   end Print_Summary;
 
 end Agpl.Cr.Assignment;

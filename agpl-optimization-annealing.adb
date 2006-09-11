@@ -74,4 +74,38 @@ package body Agpl.Optimization.Annealing is
    --  T := ((Clock - Start) / Period) ^ Power
    --  Note that Start is reset if Clock - Start > Period
 
+   --------------------
+   -- Manual_Cooling --
+   --------------------
+
+   package body Manual_Cooling is
+
+      Local_T : Temperature := Initial_Temperature;
+
+      ---------------------
+      -- Get_Temperature --
+      ---------------------
+
+      function Get_Temperature (T : in Temperature) return Temperature is
+         pragma Unreferenced (T);
+      begin
+         return Local_T;
+      end Get_Temperature;
+
+      -----------
+      -- Reset --
+      -----------
+
+      procedure Reset (Top : in Temperature := 1.0) is
+      begin
+         Local_T := Top;
+      end Reset;
+
+      procedure Divide (Denom : in Float := 2.0) is
+      begin
+         Local_T := Temperature (Float (Local_T) / Denom);
+      end Divide;
+
+   end Manual_Cooling;
+
 end Agpl.Optimization.Annealing;
