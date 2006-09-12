@@ -672,6 +672,82 @@ package body Agpl.Cr.Mutable_Assignment is
       end;
    end Do_Auction_Task;
 
+   --------------------------------
+   -- Do_Exhaustive_Auction_Task --
+   --------------------------------
+
+   procedure Do_Exhaustive_Auction_Task (This : in out Object;
+                                         Desc :    out Ustring;
+                                         Undo : in out Undo_Info)
+   is
+   begin
+      if This.Num_Assigned_Tasks <= 1 then
+         Do_Identity (This, Desc, Undo);
+         return;
+      end if;
+
+      Desc := + "FULL AUCTION";
+
+      declare
+         use Ada.Numerics.Elementary_Functions;
+         Src      : Task_Context_Ptr :=
+                      This.Select_Random_Task (All_Assigned_Tasks);
+         Src_Copy : Task_Context := Task_Context (Src.all);
+
+         Best_Prev,
+         Best_Next   : Task_Context_Ptr;
+         Best_Cost   : Costs := Infinite;
+         Best_Name   : Ustring;
+
+         procedure Do_It (I : in Solution_Context_Maps.Cursor) is
+            use Solution_Context_Maps;
+         begin
+            if Element (I) in Task_Context then
+               declare
+                  C    : constant Task_Context := Task_Context (Element (I));
+                  Prev : constant Task_Context_Ptr :=
+                           This.Get_Task_Context (C.Prev);
+                  Next : constant Task_Context_Ptr :=
+                           This.Get_Task_Context (C.Job);
+                  Cost : Costs;
+               begin
+                  Cost := This.Evaluate_Cost_Inserting
+                    (Prev,
+                     Src_Copy.Job,
+                     Next,
+                     Agent_Id (Get_Attribute (C, Owner)));
+
+                  if Cost < Best_Cost then
+                     Best_Cost := Cost;
+                     Best_Prev := Prev;
+                     Best_Next := Next;
+                     Best_Name := +String (Get_Attribute (C, Owner));
+                  end if;
+               end;
+            end if;
+         end Do_It;
+
+      begin
+         This.Add_Undo_Move (Src, Undo);
+         This.Do_Remove_Task (Src);
+
+         This.Contexts.Iterate (Do_It'Access);
+
+         if Best_Cost < Cr.Infinite then
+            This.Do_Insert_Task (Best_Prev,
+                                 Src_Copy,
+                                 Best_Next,
+                                 Agent_Id (+Best_Name));
+         else
+            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
+                                 Src_Copy,
+                                 This.Get_Task_Context (Src_Copy.Next),
+                                 Get_Attribute (Src_Copy, Owner));
+            This.Do_Identity (Desc, Undo);
+         end if;
+      end;
+   end Do_Exhaustive_Auction_Task;
+
    ----------------------------
    -- Do_Guided_Auction_Task --
    ----------------------------

@@ -32,6 +32,7 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Calendar.Format;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Chronos is
 
@@ -51,6 +52,11 @@ package body Agpl.Chronos is
    function Elapsed (This : in Object) return Duration is
    begin
       return Ada.Calendar.Clock - This.Start;
+   exception
+      when E : others =>
+         Log ("Chronos: " & Report (E), Error);
+         Log ("Chronos: Why???", Error);
+         return This.Elapsed; -- Try again!
    end Elapsed;
 
    ------------------------------------------------------------------------

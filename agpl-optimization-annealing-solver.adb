@@ -215,6 +215,15 @@ package body Agpl.Optimization.Annealing.Solver is
       Log ("", Debug, Log_Section);
    end Print_Stats;
 
+   -----------------
+   -- Print_Stats --
+   -----------------
+
+   procedure Print_Stats (This : in Object) is
+   begin
+      Print_Stats (This.Stats);
+   end Print_Stats;
+
    --------------------------
    -- Set_Initial_Solution --
    --------------------------
@@ -360,16 +369,24 @@ package body Agpl.Optimization.Annealing.Solver is
             if Curr_Best < Best_Cost and then Elapsed (Global_Timer) > 0.0001 then
                Best_Cost := Curr_Best;
                Converge_Timer.Reset;
-               Log ("(Iteration" & This.Iterations'Img &
+               begin
+                  Log ("(Iteration" & This.Iterations'Img &
                     " at " & Image (Global_Timer) & ") " &
                     "(speed: " & To_String
-                    (Float (This.Iterations) /
-                     Float (Elapsed (Global_Timer))) &
-                    " i/s)" &" Best solution: " &
+                      (Float (This.Iterations) /
+                         Float (Elapsed (Global_Timer))) &
+                    " i/s)" & " Best solution: " &
                     To_String (Float (Best_Cost)) &
                     " obtained via " & Last_Mutation (This.Best_Solution),
                     Debug,
                     Section => Log_Section);
+               exception
+                  when E : others =>
+                     Log ("Solver [report]: " & Report (E),
+                          Warning, Log_Section);
+                     Log ("Solver [report]: This is probably safe to ignore (?)",
+                          Warning, Log_Section);
+               end;
             end if;
          end;
 

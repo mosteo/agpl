@@ -119,6 +119,8 @@ package Agpl.Optimization.Annealing.Solver is
    --  and that everything is ready.
    --  This allows "chunking" the computation
 
+   procedure Print_Stats (This : in Object);
+
 private
 
    package Sol_Handle is new Generic_Handle (Solution);

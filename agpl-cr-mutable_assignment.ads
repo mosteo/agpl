@@ -194,6 +194,13 @@ package Agpl.Cr.Mutable_Assignment is
    --  Guided in originating agent
    --  As undo, use the Undo_Move_Task
 
+   --  O (n)
+   procedure Do_Exhaustive_Auction_Task (This : in out Object;
+                                         Desc :    out Ustring;
+                                         Undo : in out Undo_Info);
+   --  As undo, use the Undo_Move_Task
+   --  Will try all possible insertions
+
    --  O (log)
    procedure Do_Move_Task (This : in out Object;
                            Desc :    out Ustring;

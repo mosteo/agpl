@@ -33,6 +33,7 @@
 --  $Id: agpl-calendar-format.adb,v 1.2 2004/02/03 22:52:08 Jano Exp $
 
 with Agpl.Strings;
+with Agpl.Trace; use Agpl.Trace;
 
 with Ada.Strings;
 with Ada.Strings.Fixed;
@@ -65,7 +66,7 @@ package body Agpl.Calendar.Format is
       Put (S (5 .. 6), (Seconds rem 3600) / 60);
       Put (S (9 .. 10), Seconds rem 60);
       Put (S (13 .. 15),
-           Integer (1000.0 * D - Duration (Seconds * 1000)));
+           Integer (1000.0 * Duration'(D - Duration (Seconds))));
       if Seconds / 3600 > 99 then
          Put (S2, Seconds / 3600);
          return Trim (S2, Both) & "h " & S (5 .. S'Last);
@@ -73,6 +74,10 @@ package body Agpl.Calendar.Format is
          Put (S (1 .. 2), Seconds / 3600);
          return S;
       end if;
+   exception
+      when E : others =>
+         Log ("Agpl.Calendar.Format.Image: " & Report (E), Warning);
+         return "??h ??m ??s ???ms";
    end Image;
 
    ------------------------------------------------------------------------
