@@ -379,7 +379,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Heuristic_1 (This : in out Object;
                              Desc :    out Ustring;
-                             Undo :    out Undo_Info)
+                             Undo : in out Undo_Info)
    is
       A : Cr.Assignment.Object := This.To_Assignment;
    begin
@@ -411,7 +411,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Heuristic_2 (This : in out Object;
                              Desc :    out Ustring;
-                             Undo :    out Undo_Info)
+                             Undo : in out Undo_Info)
    is
    begin
       Undo.Ass := This.To_Assignment;
@@ -447,7 +447,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Agent_Reorder (This : in out Object;
                                Desc :    out Ustring;
-                               Undo :    out Undo_Info)
+                               Undo : in out Undo_Info)
    is
       Agent : constant Agent_Id :=
                 Agent_Id
@@ -455,8 +455,8 @@ package body Agpl.Cr.Mutable_Assignment is
                      (This.Select_Random_Context (All_Agents).all).Agent_Name);
    begin
       Desc     := +"AGENT REORDER N²";
-      Log ("Reordering agent", Always);
-      This.To_Assignment.Print_Assignment;
+--      Log ("Reordering agent", Always);
+--      This.To_Assignment.Print_Assignment;
 
       declare
          New_Ass : Assignment.Object := This.To_Assignment;
@@ -465,7 +465,7 @@ package body Agpl.Cr.Mutable_Assignment is
          U       : Undo_Info;
       begin
          U.Ass    := New_Ass;
-         Undo.Ass := New_Ass;
+         Undo     := U;
          Ag.Clear_Tasks;
          while not Tasks.Is_Empty loop
             declare
@@ -489,7 +489,7 @@ package body Agpl.Cr.Mutable_Assignment is
          end loop;
          New_Ass.Set_Agent (Ag);
          New_Ass.Set_Valid;
-         New_Ass.Print_Summary;
+--         New_Ass.Print_Summary;
          This.Set_Assignment (New_Ass, This.Context.Ref.Criterion);
       end;
    end Do_Agent_Reorder;
@@ -602,7 +602,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Auction_Task (This : in out Object;
                               Desc :    out Ustring;
-                              Undo :    out Undo_Info)
+                              Undo : in out Undo_Info)
    is
    begin
       if This.Num_Assigned_Tasks <= 1 then
@@ -647,6 +647,7 @@ package body Agpl.Cr.Mutable_Assignment is
                   Src_Copy.Job,
                   Curr_Next,
                   Agent_Id (Get_Attribute (Curr_Target, Owner)));
+
                if Curr_Cost < Best_Cost then
                   Best_Cost := Curr_Cost;
                   Best_Prev := Curr_Prev;
@@ -655,10 +656,19 @@ package body Agpl.Cr.Mutable_Assignment is
                end if;
             end;
          end loop;
-         This.Do_Insert_Task (Best_Prev,
-                              Src_Copy,
-                              Best_Next,
-                              Agent_Id (+Best_Name));
+
+         if Best_Cost < Cr.Infinite then
+            This.Do_Insert_Task (Best_Prev,
+                                 Src_Copy,
+                                 Best_Next,
+                                 Agent_Id (+Best_Name));
+         else
+            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
+                                 Src_Copy,
+                                 This.Get_Task_Context (Src_Copy.Next),
+                                 Get_Attribute (Src_Copy, Owner));
+            This.Do_Identity (Desc, Undo);
+         end if;
       end;
    end Do_Auction_Task;
 
@@ -668,7 +678,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Guided_Auction_Task (This : in out Object;
                                      Desc :    out Ustring;
-                                     Undo :    out Undo_Info)
+                                     Undo : in out Undo_Info)
    is
    begin
       if This.Num_Assigned_Tasks <= 1 then
@@ -682,6 +692,8 @@ package body Agpl.Cr.Mutable_Assignment is
          use Ada.Numerics.Elementary_Functions;
          Worst_Agent : constant Agent_Id :=
                          Agent_Id (+This.Minmax.Last_Element.Agent);
+         Best_Agent  : constant Agent_Id :=
+                         Agent_Id (+This.Minmax.First_Element.Agent);
          Src         : Task_Context_Ptr :=
                          This.Select_Random_Task (Agent_Tasks_Bag (Worst_Agent));
          Src_Copy    : Task_Context := Task_Context (Src.all);
@@ -706,7 +718,7 @@ package body Agpl.Cr.Mutable_Assignment is
                Curr_Next : Task_Context_Ptr;
                Curr_Cost : Costs;
             begin
-               This.Select_Random_Insertion (Agent_Tasks_Bag (Worst_Agent),
+               This.Select_Random_Insertion (Agent_Tasks_Bag (Best_Agent),
                                              Curr_Prev,
                                              Curr_Target,
                                              Curr_Next);
@@ -723,10 +735,18 @@ package body Agpl.Cr.Mutable_Assignment is
                end if;
             end;
          end loop;
-         This.Do_Insert_Task (Best_Prev,
-                              Src_Copy,
-                              Best_Next,
-                              Agent_Id (+Best_Name));
+         if Best_Cost < Cr.Infinite then
+            This.Do_Insert_Task (Best_Prev,
+                                 Src_Copy,
+                                 Best_Next,
+                                 Agent_Id (+Best_Name));
+         else
+            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
+                                 Src_Copy,
+                                 This.Get_Task_Context (Src_Copy.Next),
+                                 Get_Attribute (Src_Copy, Owner));
+            This.Do_Identity (Desc, Undo);
+         end if;
       end;
    end Do_Guided_Auction_Task;
 
@@ -736,7 +756,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Move_Task (This : in out Object;
                            Desc :    out Ustring;
-                           Undo :    out Undo_Info)
+                           Undo : in out Undo_Info)
    is
       Src      : Task_Context_Ptr :=
                    This.Select_Random_Task (All_Assigned_Tasks);
@@ -780,7 +800,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Move_Task_Changing_Owner (This : in out Object;
                                           Desc :    out Ustring;
-                                          Undo :    out Undo_Info)
+                                          Undo : in out Undo_Info)
    is
    begin
       if This.Num_Assigned_Tasks <= 1 then
@@ -827,7 +847,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
                                                  Desc :    out Ustring;
-                                                 Undo :    out Undo_Info)
+                                                 Undo : in out Undo_Info)
    is
    begin
       if This.Num_Assigned_Tasks <= 1 then
@@ -874,7 +894,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Swap_Order (This : in out Object;
                             Desc :    out Ustring;
-                            Undo :    out Undo_Info) is
+                            Undo : in out Undo_Info) is
    begin
       if This.Num_Assigned_Tasks <= 1 then
          Do_Identity (This, Desc, Undo);
@@ -909,7 +929,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Do_Swap_Tasks (This : in out Object;
                             Desc :    out Ustring;
-                            Undo :    out Undo_Info) is
+                            Undo : in out Undo_Info) is
    begin
       if This.Num_Assigned_Tasks <= 2 then
          Do_Identity (This, Desc, Undo);
@@ -1250,6 +1270,8 @@ package body Agpl.Cr.Mutable_Assignment is
             This.Last_Mutation_Index  := I;
             This.Last_Mutation_Exists := True;
             This.Last_Mutation_Undo.Was_Valid := This.Valid;
+
+            --  This.Debug_Dump_Contexts;
 
             M.Vector (I).Doer (This,
                                This.Last_Mutation_Description,
@@ -1633,9 +1655,9 @@ package body Agpl.Cr.Mutable_Assignment is
    -----------
 
    procedure Reset (This : in out Undo_Info) is
+      Empty_Undo : Undo_Info;
    begin
-      This.Ass.Clear;
-      This.Move_Stack.Clear;
+      This := Empty_Undo;
    end Reset;
 
    -----------------------------
@@ -1825,7 +1847,7 @@ package body Agpl.Cr.Mutable_Assignment is
       --  in some greedy fashion.
 
       Log ("There are" & Pending_Tasks.Length'Img & " new pending tasks.",
-           Debug, Log_Section);
+           Debug, Detail_Section);
 
       --  Do something with unassigned plan tasks
       while not Pending_Tasks.Is_Empty loop
@@ -1915,6 +1937,11 @@ package body Agpl.Cr.Mutable_Assignment is
    is
       use Attribute_Maps;
    begin
+      if Attr = Owner then
+         if Val = "" then
+            raise Program_Error;
+         end if;
+      end if;
       Include (Context.Attributes, Attr, Val);
    end Set_Attribute;
 
@@ -1956,9 +1983,7 @@ package body Agpl.Cr.Mutable_Assignment is
          --  Locate any:
          while Has_Element (I) loop
             if Element (I) in Task_Context then
-               if Get_Attribute (Element (I), Owner) = String (Agent) and then
-                 Element (I) in Task_Context
-               then
+               if Get_Attribute (Element (I), Owner) = String (Agent) then
                   Curr  := Task_Context (Element (I));
                   Found := True;
                   exit;
@@ -2025,7 +2050,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                 Undo : in     Undo_Info)
    is
    begin
-      Log ("Undoing from scratch", Always, Section => Detail_Section);
+      Log ("Undoing from scratch", Debug, Section => Detail_Section);
       Set_Assignment (This, Undo.Ass, This.Context.Ref.Criterion);
    end Undo_From_Scratch;
 
