@@ -80,8 +80,13 @@ package Agpl.Graphs.Bellman_Ford is
 
    function Max_Vertex (This : in Graph) return Vertex_Index;
 
+   function Is_Connected (This : in Graph) return Boolean;
+   --  Says if the graph has a single connex component.
+
+   procedure Clear (This : in out Graph);
+
    procedure Test_Package; -- Run a simple sanity check.
-   --  Will raise Program_Error if bad (!)
+                           --  Will raise Program_Error if bad (!)
 
 private
 

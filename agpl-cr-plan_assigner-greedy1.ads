@@ -29,7 +29,7 @@
 
 package Agpl.Cr.Plan_Assigner.Greedy1 is
 
-   pragma Preelaborate;
+   --  pragma Preelaborate;
 
    Log_Section : constant String := "agpl.cr.plan_assigner.greedy1";
 

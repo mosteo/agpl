@@ -31,6 +31,15 @@ package body Agpl.Random is
       return Discrete'Val (Get_Integer (Min, Max));
    end Uniform_Discrete;
 
+   ---------------
+   -- Get_Float --
+   ---------------
+
+   function Get_Float (Min, Max : in Float) return Float is
+   begin
+      return Uniform * (Max - Min) + Min;
+   end Get_Float;
+
    -----------------
    -- Get_Integer --
    -----------------

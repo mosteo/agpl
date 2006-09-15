@@ -33,6 +33,8 @@ with Agpl.Htn.Tasks.Utils;
 
 package body Agpl.Cr.Assignment is
 
+   package Agent_Lists renames Cr.Agent.Containers.Lists;
+   package Task_Lists renames Htn.Tasks.Containers.Lists;
    function To_String is new Conversions.To_Str (Costs);
 
    ---------
@@ -402,6 +404,61 @@ package body Agpl.Cr.Assignment is
                        Minmax => Get_Max_Min_Cost (This, C),
                        Minsum => Get_Cummulative_Cost (This, C));
    end Get_Cost;
+
+   -------------------------
+   -- Get_Cost_Until_Task --
+   -------------------------
+
+   function Get_Cost_Until_Task (This      : in Object;
+                                 Job       : in Agpl.Htn.Tasks.Task_Id;
+                                 Criterion : in Assignment_Criteria)
+                                 return    Agpl.Cr.Costs
+   is
+      Agents : constant Agent_Lists.List := This.Get_Agents;
+      Minmax,
+      Minsum : Cr.Costs := 0.0;
+
+      -----------------
+      -- Check_Agent --
+      -----------------
+
+      procedure Check_Agent (I : Agent_Lists.Cursor) is
+         Tasks : constant Task_Lists.List := Agent_Lists.Element (I).Get_Tasks;
+         Acum  : Cr.Costs := 0.0;
+         T     : Task_Lists.Cursor := Tasks.First;
+         use Agent_Lists;
+         use Task_Lists;
+         use type Htn.Tasks.Task_Id;
+      begin
+         while Task_Lists.Has_Element (T) loop
+            if T /= Tasks.First then
+               Acum := Acum + Element (I).Get_Cost (Element (Previous (T)),
+                                                    Element (T));
+            else
+               Acum := Acum + Element (I).Get_Cost (Element (T));
+            end if;
+
+            if Element (T).Get_Id = Job then
+               Minmax := Acum;
+               exit;
+            end if;
+            Task_Lists.Next (T);
+         end loop;
+      end Check_Agent;
+
+      procedure Check_Minsum (I : Agent_Lists.Cursor) is
+         use Agent_Lists;
+      begin
+         Minsum := Minsum + Cr.Costs'Min (Minmax, Element (I).Get_Plan_Cost);
+      end Check_Minsum;
+
+   begin
+      Agents.Iterate (Check_Agent'Access);
+      Agents.Iterate (Check_Minsum'Access);
+      return Cr.Evaluate (Criterion,
+                          Minmax => Minmax,
+                          Minsum => Minsum);
+   end Get_Cost_Until_Task;
 
    ------------------------
    -- Invalid_Assignment --

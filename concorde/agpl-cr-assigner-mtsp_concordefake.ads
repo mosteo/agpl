@@ -24,33 +24,22 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Hierarchy starting here provides some utilities for displaying drawings
---  without having to take care of any Gdk/Gtk management. In other words,
---  a new thread for Gtk is created, and all Gtk related code is called from
---  within.
+with Agpl.Cr.Cost_Matrix;
 
-package Agpl.Gdk.Managed is
+package Agpl.Cr.Assigner.MTSP_Concordefake is
 
-   --  pragma Elaborate_Body;
+   type Object is new Assigner.Object with null record;
 
-   type Gtk_Code is abstract tagged null record;
-   --  This type must be extended to provide code to be executed.
-   --  Note that the type is not limited. Any info required for drawing must
-   --  be accessible at all times to the instance, since now the drawing is
-   --  decoupled from other code flown.
+   function Assign
+     (This   : in Object;
+      Agents : in Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List;
+      Costs  : in Cr.Cost_Matrix.Object)
+      return      Assignment.Object;
+   --  Using the concorde solver.
+   --  Works only with homogeneous robots, since costs are provided by the
+   --  first agent in the list.
+   --  Optimization is always MinSum
+   --  Tasks *Mustn't* contain starting tasks
 
-   procedure Start;
-   --  Deprecated. No effect.
-
-   procedure Execute (This : in out Gtk_Code) is abstract;
-   --  Override this with the code required.
-
-   procedure Shutdown;
-   --  Deprecated. No effect.
-
-private
-
-   procedure Execute_In_Gtk (This : in out Gtk_Code'Class);
-   --  Non dispatching. To be used by children of Managed to execute GTK code.
-
-end Agpl.Gdk.Managed;
+end Agpl.Cr.Assigner.Mtsp_Concordefake;

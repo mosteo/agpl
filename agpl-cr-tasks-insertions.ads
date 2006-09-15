@@ -37,7 +37,7 @@ use  Agpl;
 
 package Agpl.Cr.Tasks.Insertions is
 
-   pragma Preelaborate;
+   --  pragma Preelaborate;
 
    type Insertion_Procedures is access
      procedure (A          : in     Agent.Object'Class;
@@ -101,19 +101,23 @@ package Agpl.Cr.Tasks.Insertions is
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
-                     Success   :    out Boolean);
+                     Success   :    out Boolean;
+                     Random    : in     Boolean := False);
    --  Insert a task in the best place of the best agent of an assignment
    --  The results are given in New_Ass, with Success true.
+   --  If random, a random agent is chosen on tie. If not, the first one wins
 
    procedure Greedy (Ass       : in     Assignment.Object;
                      Tasks     : in     Htn.Tasks.Containers.Lists.List;
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
-                     Inserted  :    out Htn.Tasks.Task_Id);
+                     Inserted  :    out Htn.Tasks.Task_Id;
+                     Random    : in     Boolean := False);
    --  Insert the best task of the list in the best agent.
    --  Just *one* task is inserted.
    --  Inserted can be No_Task if failure.
+   --  If random, a random agent is chosen on tie. If not, the first one wins
 
    procedure Greedy_Tail (Agent      : in Cr.Agent.Object'Class;
                           Tasks      : in Htn.Tasks.Containers.Lists.List;

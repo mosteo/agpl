@@ -34,11 +34,14 @@ package Agpl.Cr.Assigner.Greedy_Exhaustive is
 
    --  O (T * A * T * T) ~ O (n^4)
 
-   pragma Preelaborate;
+   --  pragma Preelaborate;
 
    type Object is new Assigner.Object with record
+      Randomize : Boolean             := False;
       Criterion : Assignment_Criteria := Criterion_Time_Critical;
    end record;
+   --  Random is true, when two agents are tied in a step, the winner is chosen
+   --  at random.
 
    function Assign
      (This   : in Object;

@@ -1,22 +1,20 @@
 with Agpl.Trace; use Agpl.Trace;
 
 with Gtk.Main; pragma Elaborate_All (Gtk.Main);
+with Gtk.Widget; use Gtk.Widget;
+with Gtk.Window; use Gtk.Window;
 
 --  with Ada.Tags; use Ada.Tags;
-  with Ada.Text_Io; use Ada.Text_Io;
+--  with Ada.Text_Io; use Ada.Text_Io;
 
 package body Agpl.Gdk.Managed is
 
-   Started : Boolean := False;
+   use Widget_List;
 
    task Gtk_Task is
 
-      entry Start;
-
       entry Execute (This : in out Gtk_Code'Class);
       --  Dispatch on This.Execute inside the Gtk thread.
-
-      entry Shutdown;
 
    end Gtk_Task;
 
@@ -26,11 +24,7 @@ package body Agpl.Gdk.Managed is
 
    procedure Execute_In_Gtk (This : in out Gtk_Code'Class) is
    begin
-      if not Started then
-         raise Program_Error;
-      else
-         Gtk_Task.Execute (This);
-      end if;
+      Gtk_Task.Execute (This);
    end Execute_In_Gtk;
 
    -----------
@@ -39,8 +33,7 @@ package body Agpl.Gdk.Managed is
 
    procedure Start is
    begin
-      Gtk_Task.Start;
-      Started := True;
+      null;
    end Start;
 
    --------------
@@ -49,7 +42,7 @@ package body Agpl.Gdk.Managed is
 
    procedure Shutdown is
    begin
-      Gtk_Task.Shutdown;
+      null;
    end Shutdown;
 
    --------------
@@ -57,44 +50,51 @@ package body Agpl.Gdk.Managed is
    --------------
 
    task body Gtk_Task is
-      Done : Boolean := False;
+
+      function Num_Windows return Natural is
+      begin
+         return Integer'Max (Integer (Length (List_Toplevels)) - 1, 0);
+      end Num_Windows;
+
    begin
-      select
-         accept Start;
-      or
-         accept Shutdown;
-         Done := True;
-      or
-         terminate;
-      end select;
+      Gtk.Main.Init;
 
-      if not Done then
-         Gtk.Main.Init;
-      end if;
-
-      while not Done loop
+      loop
          begin
-            --  Execute codes
-            select
-               accept Execute (This : in out Gtk_Code'Class) do
-                  select
-                     delay 5.0;
-                     Log ("Gtk_Task: Aborted managed code (too busy)", Warning);
-                  then abort
-                     Managed.Execute (This);
-                  end select;
-               exception
-                  when E : others =>
-                     Log ("Gtk_Task: In managed code: " & Report (E), Error);
-               end Execute;
-            or
-               accept Shutdown;
-               Done := True;
-               --  Gtk.Main.Main_Quit;
-               --  No need to leave, since we're not in a blocking loop.
-            or
-               delay 0.01;
-            end select;
+            if Num_Windows = 0 then
+               --  Execute codes
+               select
+                  accept Execute (This : in out Gtk_Code'Class) do
+                     select
+                        delay 5.0;
+                        Log ("Gtk_Task: Aborted managed code (too busy)", Warning);
+                     then abort
+                        Managed.Execute (This);
+                     end select;
+                  exception
+                     when E : others =>
+                        Log ("Gtk_Task: In managed code: " & Report (E), Error);
+                  end Execute;
+               or
+                  terminate;
+               end select;
+            else
+               select
+                  accept Execute (This : in out Gtk_Code'Class) do
+                     select
+                        delay 5.0;
+                        Log ("Gtk_Task: Aborted managed code (too busy)", Warning);
+                     then abort
+                        Managed.Execute (This);
+                     end select;
+                  exception
+                     when E : others =>
+                        Log ("Gtk_Task: In managed code: " & Report (E), Error);
+                  end Execute;
+               or
+                  delay 0.01;
+               end select;
+            end if;
 
             --  Process events
             declare

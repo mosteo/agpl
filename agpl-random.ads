@@ -47,6 +47,9 @@ package Agpl.Random is
    function Uniform return Uniformly_Distributed;
    --  Quick obtention of a random point in [0.0 .. 1.0]
 
+   function Get_Float (Min, Max : in Float) return Float;
+   --  Get a float in [Min .. Max]
+
    generic
       type Discrete is (<>);
    function Uniform_Discrete return Discrete;

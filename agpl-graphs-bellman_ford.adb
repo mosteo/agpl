@@ -175,7 +175,7 @@ package body Agpl.Graphs.Bellman_Ford is
          return This.Costs.Get;
       end if;
 
-      Put_Line ("Computing graph costs...");
+      --  Put_Line ("Computing graph costs...");
       for I in Result.First_Row .. Result.Last_Row loop
          declare
             Row : constant Cost_Array := Costs_From_Source (This, I);
@@ -318,5 +318,37 @@ package body Agpl.Graphs.Bellman_Ford is
          end loop;
       end;
    end Test_Package;
+
+   ------------------
+   -- Is_Connected --
+   ------------------
+
+   function Is_Connected (This : in Graph) return Boolean is
+      C : constant Cost_Matrix := This.Get_Costs;
+   begin
+      for Row in C.First_Row .. C.Last_Row loop
+         for Col in C.First_Col .. C.Last_Col loop
+            if C.Get (Row, Col) > 1_000_000_000 then
+               Put_Line ("Too big cost:" & C.Get (Row, Col)'Img);
+               return False;
+            end if;
+         end loop;
+      end loop;
+
+      return True;
+   end Is_Connected;
+
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (This : in out Graph) is
+   begin
+      This.C_Edges.Clear;
+      This.Vertices.Clear;
+      This.Min_Vertex := Vertex_Index'Last;
+      This.Max_Vertex := Vertex_Index'First;
+      This.Costs.Clear;
+   end Clear;
 
 end Agpl.Graphs.Bellman_Ford;

@@ -1,6 +1,8 @@
 with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Agent.Utils; use Agpl.Cr.Agent.Utils;
+with Agpl.Dynamic_Vector;
 with Agpl.Htn.Tasks.Utils;
+with Agpl.Random;
 --  with Agpl.Text_Io; use Agpl.Text_Io;
 
 package body Agpl.Cr.Tasks.Insertions is
@@ -298,12 +300,17 @@ package body Agpl.Cr.Tasks.Insertions is
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
-                     Success   :    out Boolean)
+                     Success   :    out Boolean;
+                     Random    : in     Boolean := False)
    is
       Agents : constant Agent.Containers.Lists.List := Ass.Get_Agents;
 
-      Best_Agent : Agent.Handle.Object;
-      Best_Cost  : Cr.Costs := Infinite;
+      package Candidate_Vectors is
+        new Dynamic_Vector (Cr.Agent.Handle.Object);
+
+      Candids    : Candidate_Vectors.Object (First => 1);
+
+      Best_Cost  : Cr.Costs := Cr.Infinite;
 
       procedure Check_Agent (I : in Cr.Agent.Containers.Lists.Cursor) is
          New_Agent : Cr.Agent.Handle.Object;
@@ -330,9 +337,12 @@ package body Agpl.Cr.Tasks.Insertions is
                                   Minmax => New_Total,
                                   Minsum => New_Delta);
 
-            if New_Cost < Best_Cost then
-               Best_Cost  := New_Cost;
-               Best_Agent := New_Agent;
+            if New_Cost < Cr.Infinite and then New_Cost = Best_Cost then
+               Candids.Append (New_Agent);
+            elsif New_Cost < Best_Cost then
+               Best_Cost := New_Cost;
+               Candids.Clear;
+               Candids.Append (New_Agent);
             end if;
          end if;
       end Check_Agent;
@@ -341,10 +351,16 @@ package body Agpl.Cr.Tasks.Insertions is
 
       Agent.Containers.Lists.Iterate (Agents, Check_Agent'Access);
 
-      if Best_Agent.Is_Valid then
+      if not Candids.Is_Empty then
          Success := True;
-         New_Ass.Set_Agent (Best_Agent.Get);
---           Put_Line ("Assigned to " & Best_Agent.Get.Get_Name);
+         if Random then
+            New_Ass.Set_Agent
+              (Candids.Vector
+                 (Agpl.Random.Get_Integer
+                    (Candids.First, Candids.Last)).Get);
+         else
+            New_Ass.Set_Agent (Candids.Vector (Candids.First).Get);
+         end if;
       else
          Success := False;
       end if;
@@ -359,7 +375,8 @@ package body Agpl.Cr.Tasks.Insertions is
                      Costs     : in     Cost_Matrix.Object;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
-                     Inserted  :    out Htn.Tasks.Task_Id)
+                     Inserted  :    out Htn.Tasks.Task_Id;
+                     Random    : in     Boolean := False)
    is
       Pending : constant Htn.Tasks.Containers.Vectors.Vector :=
                   Htn.Tasks.Utils.To_Vector (Tasks);
@@ -381,7 +398,8 @@ package body Agpl.Cr.Tasks.Insertions is
                     Costs,
                     Criterion,
                     Temp_Ass,
-                    Partial_Success);
+                    Partial_Success,
+                    Random);
             if Partial_Success then
                Temp_Cost := Temp_Ass.Get_Cost (Costs, Criterion);
                if Temp_Cost < Best_Cost then

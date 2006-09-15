@@ -99,6 +99,12 @@ package Agpl.Cr.Assignment is
                       Criterion : in Assignment_Criteria) return Costs;
    --  Uses one of the two previous according to the Criterion
 
+   function Get_Cost_Until_Task (This      : in Object;
+                                 Job       : in Agpl.Htn.Tasks.Task_Id;
+                                 Criterion : in Assignment_Criteria)
+                                 return    Agpl.Cr.Costs;
+   --  Says the cost incurred until finishing
+
    function Invalid_Assignment return Object;
    --  Returns an invalid assignment.
 

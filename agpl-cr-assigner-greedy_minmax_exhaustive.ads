@@ -34,7 +34,7 @@ package Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
    --  O (T * A * T * T) ~ O (n^4)
 
-   pragma Preelaborate;
+   -- pragma Preelaborate;
 
    type Object (Keep_Order : Boolean) is new Assigner.Object with null record;
    --  If Keep_Order, any tasks in an Agent passed to Agents will be kept in

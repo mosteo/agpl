@@ -24,6 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
+with Agpl.Chronos;
 with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Tasks.Insertions;
@@ -76,6 +77,7 @@ package body Agpl.Cr.Assigner.Greedy_Exhaustive is
          raise Program_Error; -- Shouldn't be reached.
       end Remove_From_Pending;
 
+      Timer : Chronos.Object;
    begin
       --  Set agents
       declare
@@ -90,7 +92,9 @@ package body Agpl.Cr.Assigner.Greedy_Exhaustive is
 
       --  Assign tasks:
       while not Pending.Is_Empty loop
-         Log ("Pending:" & Pending.Length'Img, Always);
+         Log ("Pending:" & Pending.Length'Img & " (" & Timer.Image & ")",
+              Always);
+         Timer.Reset;
 
          declare
             New_Ass : Cr.Assignment.Object;
@@ -98,12 +102,14 @@ package body Agpl.Cr.Assigner.Greedy_Exhaustive is
             use Htn.Tasks;
          begin
             --  Insert best task in best agent:
-            Cr.Tasks.Insertions.Greedy (A,
-                    Pending,
-                    Costs,
-                    This.Criterion,
-                    New_Ass,
-                    Id_Used);
+            Cr.Tasks.Insertions.Greedy
+              (A,
+               Pending,
+               Costs,
+               This.Criterion,
+               New_Ass,
+               Id_Used,
+               This.Randomize);
             if Id_Used /= No_Task then
                A := New_Ass;
                Remove_From_Pending (Id_Used);
