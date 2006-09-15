@@ -13,6 +13,9 @@ package body Agpl.Cr.Tasks.Insertions is
    package Agent_Vectors renames Agent.Containers.Vectors;
    package Task_Lists renames Htn.Tasks.Containers.Lists;
 
+   package Candidate_Vectors is
+        new Dynamic_Vector (Cr.Agent.Handle.Object);
+
    ---------------
    -- Before_Id --
    ---------------
@@ -304,9 +307,6 @@ package body Agpl.Cr.Tasks.Insertions is
                      Random    : in     Boolean := False)
    is
       Agents : constant Agent.Containers.Lists.List := Ass.Get_Agents;
-
-      package Candidate_Vectors is
-        new Dynamic_Vector (Cr.Agent.Handle.Object);
 
       Candids    : Candidate_Vectors.Object (First => 1);
 
