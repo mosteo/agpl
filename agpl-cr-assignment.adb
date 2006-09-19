@@ -35,7 +35,7 @@ package body Agpl.Cr.Assignment is
 
    package Agent_Lists renames Cr.Agent.Containers.Lists;
    package Task_Lists renames Htn.Tasks.Containers.Lists;
-   function To_String is new Conversions.To_Str (Costs);
+   function To_String is new Conversions.Fixed_To_Str (Costs);
 
    ---------
    -- Add --

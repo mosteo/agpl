@@ -120,7 +120,7 @@ package Agpl.Cr.Cost_Matrix is
 private
 
    package ATT_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (String, Costs, Ada.Strings.Hash, "=", Optimization."=");
+     (String, Costs, Ada.Strings.Hash, "=", Cr."=");
 
    use Att_Maps;
 

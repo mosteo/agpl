@@ -1,6 +1,9 @@
+with Agpl.Conversions;
 with Agpl.Strings.Fields;
 
 package body Agpl.Cr is
+
+   function Img is new Conversions.Fixed_To_Str (Costs);
 
    --------------
    -- Evaluate --
@@ -18,6 +21,24 @@ package body Agpl.Cr is
                 Costs (Criterion.Minsum_Weight) * Minsum;
       end if;
    end Evaluate;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image (C : in Costs) return String is
+   begin
+      return Costs'Image (C);
+   end Image;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image (C : in Costs; Decimals : in Natural) return String is
+   begin
+      return Img (C, Decimals);
+   end Image;
 
    -----------
    -- Value --

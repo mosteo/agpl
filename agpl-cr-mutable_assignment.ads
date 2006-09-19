@@ -363,6 +363,11 @@ private
    function Key (This : in Agent_Context) return Solution_Context_Key;
    procedure Debug_Dump (This : in Agent_Context);
 
+   ----------------
+   -- OR_Context --
+   ----------------
+   Continue here
+
    type Minimax_Key is record
       Cost  : Costs;
       Agent : Ustring;
@@ -370,7 +375,7 @@ private
    function "<" (L, R : Minimax_Key) return Boolean;
 
    package Agent_Cost_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Agent_Id, Costs, "<", Optimization."=");
+     (Agent_Id, Costs, "<", Cr."=");
    package Cost_Agent_Sets is new
      Ada.Containers.Ordered_Sets (Minimax_Key);
 

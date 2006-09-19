@@ -26,16 +26,19 @@
 
 --  Root package for Cooperative Robotics
 
-with Agpl.Optimization;
+--  with Agpl.Optimization;
 
 package Agpl.Cr is
 
    pragma Preelaborate;
 
-   subtype Costs is Optimization.Cost; --  Abstract "Cost" to perform some job.
+   type Costs is delta 0.01 digits 18;
+   --  This *must* be a fixed point type, otherwise incremental cost computation
+   --  in annealing will fail.
+
    use type Costs;
 
-   Infinite : constant Costs := Optimization.Infinite;
+   Infinite : constant Costs := Costs'Last;
 
    type Assignment_Criteria is record
       Minmax_Weight : Float := 0.0;
@@ -49,11 +52,23 @@ package Agpl.Cr is
                       Minsum    : in Costs) return Costs;
    pragma Inline (Evaluate);
 
+   function Image (C : in Costs) return String;
+   pragma Inline (Image);
+
+   function Image (C : in Costs; Decimals : in Natural) return String;
+   pragma Inline (Image);
+
    function Value (S : in String) return Assignment_Criteria;
 
    Criterion_Invalid       : constant Assignment_Criteria := (0.0, 0.0);
-   Criterion_Minimax       : constant Assignment_Criteria := (1.0, 0.0);
-   Criterion_Totalsum      : constant Assignment_Criteria := (0.0, 1.0);
-   Criterion_Time_Critical : constant Assignment_Criteria := (1.0, 0.00001);
+   Criterion_Minmax        : constant Assignment_Criteria := (1.0, 0.0);
+   Criterion_Minsum        : constant Assignment_Criteria := (0.0, 1.0);
+   Criterion_Minmix        : constant Assignment_Criteria := (1.0, 1.0);
+   Criterion_Mintim        : constant Assignment_Criteria := (1.0, 0.00001);
+
+   Criterion_Minimax       : Assignment_Criteria renames Criterion_Minmax;
+   Criterion_Totalsum      : Assignment_Criteria renames Criterion_Minsum;
+   Criterion_Time_Critical : Assignment_Criteria renames Criterion_Minmix;
+   Criterion_Best          : Assignment_Criteria renames Criterion_Minmix;
 
 end Agpl.Cr;

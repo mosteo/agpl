@@ -269,6 +269,14 @@ package body Agpl.Cr.Cost_Matrix is
       Fin   : in     Htn.Tasks.Task_Id;
       Cost  : in     Costs)
    is
+      function Rounded (C : in Costs) return Costs is
+      begin
+         if C /= Infinite then
+            return Costs (Float'Floor (Float (C * 100.0)) / 100.0);
+         else
+            return C;
+         end if;
+      end Rounded;
    begin
       Include (This.Matrix, Key (Agent, Ini, Fin), Cost);
    end Set_Cost;

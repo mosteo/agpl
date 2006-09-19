@@ -142,7 +142,7 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
                                    0);
             end if;
 
-            Log ("Adding agent " & Element (I).Get_Name, Always);
+            Log ("Adding agent " & Element (I).Get_Name, Debug, Log_Section);
             A.Set_Agent (Element (I));
             Next (I);
          end loop;
@@ -150,7 +150,7 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
 
       --  Assign tasks:
       while not Pending.Is_Empty loop
-         Log ("Pending:" & Pending.Length'Img, Always);
+         Log ("Pending:" & Pending.Length'Img, Debug, Log_Section);
          declare
             Best_Cost        : Cr.Costs := Cr.Costs'Last;
             Best_Agent       : Agent.Handle.Object;

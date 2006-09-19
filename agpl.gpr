@@ -71,7 +71,7 @@ project Agpl is
    end Compiler;
 
    package Builder is
-      for Default_Switches ("ada") use ("-a", "-g");
+      for Default_Switches ("ada") use ("-a", "-g", "-j2");
    end Builder;
 
    package Binder is

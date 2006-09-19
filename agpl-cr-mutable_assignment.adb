@@ -61,7 +61,7 @@ package body Agpl.Cr.Mutable_Assignment is
    No_Task : Htn.Tasks.Task_Id renames Htn.Tasks.No_Task;
 
    function S is new Conversions.To_Str (Optimization.Annealing.Probability);
-   function To_String is new Conversions.To_Str (Cr.Costs);
+   function To_String is new Conversions.Fixed_To_Str (Cr.Costs);
 
    function "<" (L, R : Minimax_Key) return Boolean is
       use Asu;
@@ -2160,9 +2160,13 @@ package body Agpl.Cr.Mutable_Assignment is
                New_Owner   => Agent_Id (+Move.Owner_Was));
 
             if Move.Minsum_Was /= This.Minsum then
-               Log ("Cost was " & To_String (Move.Minsum_Was) &
-                    " but is " & To_String (This.Minsum), Error, Log_Section);
-               raise Program_Error with "Undo breached cost integrity!";
+               Log ("Cost was " & To_String (Move.Minsum_Was, 10) &
+                    " but is " & To_String (This.Minsum, 10) &
+                    " (" & To_String (This.Minsum - Move.Minsum_Was, 10) & ")",
+                    Error, Log_Section);
+               --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
+               This.Reevaluate_Costs;
+               --  raise Program_Error with "Undo breached cost integrity!";
             end if;
          end;
          U.Move_Stack.Delete (U.Move_Stack.Last);
@@ -2230,6 +2234,11 @@ package body Agpl.Cr.Mutable_Assignment is
                                           Pr,
                                           Ne);
       end if;
+
+      Log ("Inserting: [Plus1/Plus2/Minus] = " &
+           To_String (Plus_1, 10) & " " &
+           To_String (Plus_2, 10) & " " &
+           To_String (Minus, 10), Debug, Detail_Section);
 
       return Cr.Evaluate (This.Context.Ref.Criterion,
                           Minmax => Cost + Plus_1 + Plus_2 - Minus,
@@ -2300,6 +2309,14 @@ package body Agpl.Cr.Mutable_Assignment is
          This.Valid := False;
       end if;
 
+      Log ("Inserting: [Plus1/Plus2/Minus] = " &
+           To_String (Plus_1, 16) & " " &
+           To_String (Plus_2, 16) & " " &
+           To_String (Minus, 16), Debug, Detail_Section);
+
+      Log ("Inserting [Prev/After] " & To_String (Cost, 16) & " " &
+           To_String (Cost + Plus_1 + Plus_2 - Minus, 16),
+           Debug, Detail_Section);
       Cost := Cost + Plus_1 + Plus_2 - Minus;
 
       This.Agent_Costs.Insert (Agent_Id (New_Owner), Cost);
@@ -2369,6 +2386,15 @@ package body Agpl.Cr.Mutable_Assignment is
          Plus := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
+
+      Log ("Removing: [Minus1/Minus2/Plus] = " &
+           To_String (Minus_1, 16) & " " &
+           To_String (Minus_2, 16) & " " &
+           To_String (Plus, 16), Debug, Detail_Section);
+
+      Log ("Removing [Prev/After] " & To_String (Cost, 16) & " " &
+           To_String (Cost - Minus_1 - Minus_2 + Plus, 16),
+           Debug, Detail_Section);
 
       Log ("Removing costs: Prev:" & Pr'Img & "; Next:" & Ne'Img &
            "; Curr:" & Curr.Job'Img,

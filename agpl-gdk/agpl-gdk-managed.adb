@@ -13,6 +13,8 @@ package body Agpl.Gdk.Managed is
 
    task Gtk_Task is
 
+      entry Start;
+
       entry Execute (This : in out Gtk_Code'Class);
       --  Dispatch on This.Execute inside the Gtk thread.
 
@@ -24,6 +26,11 @@ package body Agpl.Gdk.Managed is
 
    procedure Execute_In_Gtk (This : in out Gtk_Code'Class) is
    begin
+      select
+         Gtk_Task.Start;
+      else
+         null;
+      end select;
       Gtk_Task.Execute (This);
    end Execute_In_Gtk;
 
@@ -57,7 +64,15 @@ package body Agpl.Gdk.Managed is
       end Num_Windows;
 
    begin
+
+      select
+         accept Start;
+      or
+         terminate;
+      end select;
+
       Gtk.Main.Init;
+      Log ("Gtk_Task [managed]: Running...", Informative);
 
       loop
          begin

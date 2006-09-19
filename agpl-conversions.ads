@@ -65,6 +65,12 @@ package Agpl.Conversions is
                     Decimals : Natural := 2)
                     return     String;
 
+   generic
+      type Real is delta <> digits <>;
+   function Fixed_To_Str (N        : Real;
+                          Decimals : Natural := 2)
+                          return     String;
+
    function Trim (This : in String) return String;
 --   pragma Inline (Trim);
 

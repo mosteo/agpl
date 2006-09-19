@@ -33,9 +33,10 @@
 --  $Id: agpl.ads,v 1.4 2004/01/21 21:05:25 Jano Exp $
 
 with Agpl.Strings;        use Agpl.Strings;
+with Agpl.Strings.Fields;
 
 with Ada.Strings;
-with Ada.Strings.fixed;
+with Ada.Strings.Fixed;
 
 with Interfaces;
 
@@ -154,5 +155,33 @@ package body Agpl.Conversions is
          return To_String (Integer (N));
       end if;
    end To_Str;
+
+   ------------------
+   -- Fixed_To_Str --
+   ------------------
+
+   function Fixed_To_Str (N        : Real;
+                          Decimals : Natural := 2)
+                          return     String
+   is
+      Result : constant String := N'Img;
+      use Strings.Fields;
+   begin
+      if Decimals > 0 then
+         declare
+            Pos : Natural := Result'First;
+            Cnt : Natural := 0;
+         begin
+            while Result (Pos) /= '.' loop Pos := Pos + 1; end loop;
+            while Pos < Result'Last loop
+               Cnt := Cnt + 1; Pos := Pos + 1;
+               exit when Cnt = Decimals;
+            end loop;
+            return Result (Result'First .. Pos);
+         end;
+      else
+         return Select_Field (Result, 1, '.');
+      end if;
+   end Fixed_To_Str;
 
 end Agpl.Conversions;
