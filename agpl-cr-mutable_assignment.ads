@@ -590,6 +590,8 @@ private
    function No_Task_Key return Task_Context_Key; pragma Inline (No_Task_Key);
 
    -- BAGS --
+   function Bag_Length (This : in Object; Key : in Bag_Key) return Natural;
+
    procedure Create_Empty_Bag (This : in out Object;
                                Key  : in     Bag_Key);
 

@@ -30,6 +30,10 @@ package Agpl.Cr.Cost_Matrix.Utils is
 
    pragma Preelaborate;
 
+   procedure Create (Dst : in out Cost_Matrix.Object;
+                     Ass : in     Assignment.Object);
+   --  Will create all needed costs to evaluate Ass
+
    procedure Prune (Dst :    out Cost_Matrix.Object;
                     Src : in     Cost_Matrix.Object;
                     Ass : in     Assignment.Object);

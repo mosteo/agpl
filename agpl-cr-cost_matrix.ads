@@ -85,6 +85,13 @@ package Agpl.Cr.Cost_Matrix is
    procedure Merge (Dst : in out Object; Src : in Object);
    --  Overwrite Dst costs that are also present in Src, add new ones in Src.
 
+   function Contains
+     (This  : in Object;
+      Agent : in String;
+      Ini   : in Htn.Tasks.Task_Id;
+      Fin   : in Htn.Tasks.Task_Id) return Boolean;
+   --  Say if the cost is in here.
+
    function Get_Cost
      (This  : in Object;
       Agent : in String;

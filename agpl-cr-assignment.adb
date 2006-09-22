@@ -324,6 +324,10 @@ package body Agpl.Cr.Assignment is
       use Agent.Maps;
       I : Cursor := First (This.Agents);
    begin
+      if not This.Ok then
+         return Infinite;
+      end if;
+
       while I /= No_Element loop
          Worst := Costs'Max
            (Worst,
@@ -341,6 +345,10 @@ package body Agpl.Cr.Assignment is
       use Agent.Maps;
       I : Cursor := First (This.Agents);
    begin
+      if not This.Ok then
+         return Infinite;
+      end if;
+
       while I /= No_Element loop
          Worst := Costs'Max
            (Worst,
@@ -360,6 +368,10 @@ package body Agpl.Cr.Assignment is
       use Agent.Maps;
       I : Cursor := First (This.Agents);
    begin
+      if not This.Ok then
+         return Infinite;
+      end if;
+
       while I /= No_Element loop
          Cost := Cost + Agent.Get_Plan_Cost (Element (I));
          Next (I);
@@ -375,6 +387,10 @@ package body Agpl.Cr.Assignment is
       use Agent.Maps;
       I : Cursor := First (This.Agents);
    begin
+      if not This.Ok then
+         return Infinite;
+      end if;
+
       while I /= No_Element loop
          Cost := Cost + Cost_Matrix.Get_Plan_Cost (C, Element (I));
          Next (I);
@@ -391,9 +407,13 @@ package body Agpl.Cr.Assignment is
                       Criterion : in Assignment_Criteria) return Costs
    is
    begin
-      return Evaluate (Criterion,
-                       Minmax => Get_Max_Min_Cost (This),
-                       Minsum => Get_Cummulative_Cost (This));
+      if This.Ok then
+         return Evaluate (Criterion,
+                          Minmax => Get_Max_Min_Cost (This),
+                          Minsum => Get_Cummulative_Cost (This));
+      else
+         return Infinite;
+      end if;
    end Get_Cost;
 
    function Get_Cost (This      : in Object;
@@ -401,9 +421,13 @@ package body Agpl.Cr.Assignment is
                       Criterion : in Assignment_Criteria) return Costs
    is
    begin
-      return Evaluate (Criterion,
-                       Minmax => Get_Max_Min_Cost (This, C),
-                       Minsum => Get_Cummulative_Cost (This, C));
+      if This.Ok then
+         return Evaluate (Criterion,
+                          Minmax => Get_Max_Min_Cost (This, C),
+                          Minsum => Get_Cummulative_Cost (This, C));
+      else
+         return Infinite;
+      end if;
    end Get_Cost;
 
    -------------------------
@@ -454,6 +478,10 @@ package body Agpl.Cr.Assignment is
       end Check_Minsum;
 
    begin
+      if not This.Ok then
+         return Infinite;
+      end if;
+
       Agents.Iterate (Check_Agent'Access);
       Agents.Iterate (Check_Minsum'Access);
       return Cr.Evaluate (Criterion,
@@ -546,5 +574,10 @@ package body Agpl.Cr.Assignment is
       Log ("MinMax cost: " & To_String (This.Get_Max_Min_Cost), Always);
       Log ("", Always);
    end Print_Summary;
+
+--     function Ok (This : in Object) return Boolean is
+--     begin
+--        return True;
+--     end Ok;
 
 end Agpl.Cr.Assignment;

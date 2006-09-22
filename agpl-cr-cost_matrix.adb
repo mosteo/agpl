@@ -42,6 +42,20 @@ package body Agpl.Cr.Cost_Matrix is
       return Tasks_Bis;
    end Add_Starting_Tasks;
 
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains
+     (This  : in Object;
+      Agent : in String;
+      Ini   : in Htn.Tasks.Task_Id;
+      Fin   : in Htn.Tasks.Task_Id) return Boolean
+   is
+   begin
+      return This.Matrix.Contains (Key (Agent, Ini, Fin));
+   end Contains;
+
    ------------
    -- Create --
    ------------
