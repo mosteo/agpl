@@ -34,6 +34,7 @@ with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Matrix;
 with Agpl.Dynamic_Vector;
+with Agpl.Generic_Handle;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
@@ -62,11 +63,10 @@ package Agpl.Cr.Mutable_Assignment is
 
    subtype Agent_Id is String;
 
-   type Undo_Info is private;
+   type Undo_Info (<>) is private;
 
    type Mutation_Doer is access procedure (This : in out Object;
-                                           Desc :    out Ustring;
-                                           Undo : in out Undo_Info);
+                                           Undo :    out Undo_Info);
 
    type Mutation_Undoer is access procedure (This : in out Object;
                                              Undo : in     Undo_Info);
@@ -77,6 +77,11 @@ package Agpl.Cr.Mutable_Assignment is
 
    function Evaluate (This      : in Object) return Costs;
    --  Uses the internal criterion
+   pragma Inline (Evaluate);
+
+   function Evaluate (This      : in Object) return Optimization.Cost;
+   --  For convenience
+   pragma Inline (Evaluate);
 
    function Evaluate (This      : in Object;
                       Criterion : in Assignment_Criteria) return Costs;
@@ -122,15 +127,17 @@ package Agpl.Cr.Mutable_Assignment is
    procedure Set_Criterion (This      : in out Object;
                             Criterion : in     Assignment_Criteria);
 
-   procedure Set_Tasks (This : in out Object;
-                        Plan : in     Htn.Plan.Object);
+   procedure Set_Tasks (This   : in out Object;
+                        Plan   : in     Htn.Plan.Object;
+                        Assign : in     Boolean := True);
    --  The tasks are provided in Plan form, inflated or not.
    --  Warning! The plan *MUST NOT* contain Starting_Pose tasks.
    --  This is managed internally.
    --  *HOWEVER* the Costs must contemplate the starting task!
-   --  No attempt to assignation is made. All dynamic data structures will be
+   --  All dynamic data structures will be
    --  cleared. You should call Create_Some_Solution or To_Assignment
-   --  subsequently.
+   --  subsequently, unless Assign is true that causes:
+   --  This.Set_Assignment (This.To_Assignment);
 
    procedure Create_Some_Solution (This      : in out Object;
                                    Criterion : in Assignment_Criteria);
@@ -154,7 +161,6 @@ package Agpl.Cr.Mutable_Assignment is
    --  weights given here.
 
    procedure Do_Identity   (This : in out Object;
-                            Desc :    out Ustring;
                             Undo :    out Undo_Info);
    procedure Undo_Identity (This : in out Object; Undo : in  Undo_Info);
    --  Test mutation, does nothing!
@@ -163,75 +169,68 @@ package Agpl.Cr.Mutable_Assignment is
    --  Undo for heuristics
 
    procedure Do_Heuristic_1 (This : in out Object;
-                             Desc :    out Ustring;
-                             Undo : in out Undo_Info);
+                             Undo :    out Undo_Info);
    --  Will consider all agents and tasks to provide some "good" assignment.
    --  The current tasks are re-assigned in a "best pair" greedy fashion.
    --  So no OR node switchings happen.
 
    procedure Do_Heuristic_2 (This : in out Object;
-                             Desc :    out Ustring;
-                             Undo : in out Undo_Info);
+                             Undo :    out Undo_Info);
    --  This heuristic will consider the best of *all* tasks in every possible
    --  expansion; freeze the plan with the chosen task; repeat until no more T.
 
    --  O (n^2)
    procedure Do_Agent_Reorder (This : in out Object;
-                               Desc :    out Ustring;
-                               Undo : in out Undo_Info);
+                               Undo :    out Undo_Info);
    --  Greedy reordering of an agent tasks
 
    --  O (log)
    procedure Do_Auction_Task (This : in out Object;
-                              Desc :    out Ustring;
-                              Undo : in out Undo_Info);
+                              Undo :    out Undo_Info);
    --  As undo, use the Undo_Move_Task
    --  Cost is kept logaritmic checking only a log fraction of all insertion points.
 
    procedure Do_Guided_Auction_Task (This : in out Object;
-                                     Desc :    out Ustring;
-                                     Undo : in out Undo_Info);
+                                     Undo :    out Undo_Info);
    --  Guided in originating agent
    --  As undo, use the Undo_Move_Task
 
    --  O (n)
    procedure Do_Exhaustive_Auction_Task (This : in out Object;
-                                         Desc :    out Ustring;
-                                         Undo : in out Undo_Info);
+                                         Undo :    out Undo_Info);
    --  As undo, use the Undo_Move_Task
    --  Will try all possible insertions
 
    --  O (log)
    procedure Do_Move_Task (This : in out Object;
-                           Desc :    out Ustring;
-                           Undo : in out Undo_Info);
+                           Undo :    out Undo_Info);
    procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info);
    --  Will un-move all movements, in the Undo_Info stack, not just one.
 
    --  O (log)
    procedure Do_Move_Task_Changing_Owner (This : in out Object;
-                                          Desc :    out Ustring;
-                                          Undo : in out Undo_Info);
+                                          Undo :    out Undo_Info);
    --  Moves a task at random, but choses the owner before hand. In this way,
    --  no agent can end without tasks (as happens when just using Move_Task
    --  As undo, use the Undo_Move_Task
 
    procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
-                                                 Desc :    out Ustring;
-                                                 Undo : in out Undo_Info);
+                                                 Undo :    out Undo_Info);
    --  Like previous, but task is chosen from the worst cost agent
 
    procedure Do_Swap_Order (This : in out Object;
-                            Desc :    out Ustring;
-                            Undo : in out Undo_Info);
+                            Undo :    out Undo_Info);
    --  Switches two consecutive tasks
    --  As undo, use the Undo_Move_Task
 
    procedure Do_Swap_Tasks (This : in out Object;
-                            Desc :    out Ustring;
-                            Undo : in out Undo_Info);
+                            Undo :    out Undo_Info);
    --  Switches two arbitrary tasks
    --  As undo, use the Undo_Move_Task
+
+   procedure Do_Switch_Or_Node (This : in out Object;
+                                Undo :    out Undo_Info);
+   procedure Undo_Switch (This : in out Object; Undo : in Undo_Info);
 
    -----------------
    -- CONVERSIONS --
@@ -366,7 +365,19 @@ private
    ----------------
    -- OR_Context --
    ----------------
-   Continue here
+   type Or_Context is new Solution_Context with record
+      Node   : Htn.Plan.Subplan;
+      Branch : Htn.Plan.Subplan;
+   end record;
+   --  Since the plan is kept unmodified, there is no problem using accesses
+   --  here.
+
+   function Or_Key (This : in String) return Solution_Context_Key;
+   pragma Inline (Or_Key);
+   --  Get a key form a node ID
+   function Key (This : in Or_Context) return Solution_Context_Key;
+   pragma Inline (Key);
+   procedure Debug_Dump (This : in Or_Context);
 
    type Minimax_Key is record
       Cost  : Costs;
@@ -401,14 +412,34 @@ private
    package Undo_Move_Vectors is
      new Agpl.Dynamic_Vector (Undo_Move_Task_Info, 2);
 
+   type Undo_Kinds is (Identity, From_Scratch, Move_Task, Switch_Or_Node);
+
+   type Undo_Internal (Kind : Undo_Kinds) is record
+      Description : Ustring;
+
+      case Kind is
+         when Identity =>
+            null;
+         when From_Scratch =>
+            Ass : Assignment.Object := Assignment.Empty_Object;
+            --  For scratch starting
+         when Move_Task =>
+            Move_Stack : Undo_Move_Vectors.Object (First => 1);
+            --  LIFO stack of moved tasks. To undo, just undo movements from
+            --  tail to head
+         when Switch_Or_Node =>
+            Actived_Or_Branch : Htn.Plan.Subplan := null;
+            --  We will de-activate this branch when undoing
+            Or_Stack          : Undo_Move_Vectors.Object (First => 1);
+            --  The tasks that were removed must be replaced where they were,
+            --  activating their respective OR nodes...
+      end case;
+   end record;
+
+   package Undo_Handle is new Agpl.Generic_Handle (Undo_Internal);
+
    type Undo_Info is record
-      Ass : Assignment.Object; -- For scratch starting
-
-      Move_Stack : Undo_Move_Vectors.Object (First => 1);
-      --  LIFO stack of moved tasks. To undo, just undo movements from tail to H
-
-      Was_Valid  : Boolean;
-      --  Says if the previous state was a valid solution.
+      Handle : Undo_Handle.Object;
    end record;
 
    procedure Reset (This : in out Undo_Info);
@@ -422,7 +453,8 @@ private
       --  Invariant information
       Context     : Smart_Static_Contexts.Object;
 
-      Valid       : Boolean; -- Is the assignment valid?
+      Valid       : Boolean := True;
+      --  Is the assignment valid? Initially empty (hence valid).
 
       Contexts    : Solution_Context_Maps.Map;
       --  All contextual infos (tasks, Or-nodes, etc)
@@ -437,6 +469,7 @@ private
       --  All assigned tasks (Task_Context.Key)
       --  A bag for each agent, containing its tasks (Task_Context.Key)
       --  A bag with agent contexts (Agent_Context.Key)
+      --  A bag with active OR nodes (Or_Context_Key)
 
       --  The current solution costs
       MinSum      : Costs;
@@ -444,10 +477,14 @@ private
       Agent_Costs : Agent_Cost_Maps.Map;
 
       --  Undo information
-      Last_Mutation_Description : Ustring := +"None";
-      Last_Mutation_Index       : Positive;
-      Last_Mutation_Undo        : Undo_Info;
-      Last_Mutation_Exists      : Boolean := False;
+      Was_Valid          : Boolean            := False;
+      --  Previous object state.
+
+      Last_Mutation      : Ustring; -- Cached copy
+
+      Undo               : Undo_Info := (Handle => Undo_Handle.Null_Object);
+      Undoer             : Mutation_Undoer;
+      --  Info needed to reconstruct object.
    end record;
 
    --  Controlling...
@@ -479,7 +516,7 @@ private
 
    procedure Add_Undo_Move (This : in     Object;
                             Job  : in     Task_Context_Ptr;
-                            Undo : in out Undo_Info);
+                            Undo : in out Undo_Internal);
 
    procedure Do_Insert_Task (This        : in out Object;
                              After_This  : in     Task_Context_Ptr;
@@ -542,8 +579,9 @@ private
    function Task_Key (Id : in Htn.Tasks.Task_Id) return Solution_Context_Key;
    pragma Inline (Task_Key);
 
-   All_Assigned_Tasks : constant Bag_Key := "aat";
-   All_Agents         : constant Bag_Key := "aag";
+   All_Assigned_Tasks  : constant Bag_Key := "aat";
+   All_Agents          : constant Bag_Key := "aag";
+   All_Active_Or_Nodes : constant Bag_Key := "aaon";
 
    function Agent_Tasks_Bag (Name : in Agent_Id) return Bag_Key;
    pragma Inline (Agent_Tasks_Bag);
@@ -649,9 +687,26 @@ private
    overriding
    procedure Debug_Dump (This : in Task_Context);
 
+   -- CONTEXTS --
+   procedure Remove_Context (This : in out Object;
+                             Key  : in Solution_Context_Key);
+   --  Remove from contexts list and bags
+
+   procedure Add_Or_Contexts (This : in out Object;
+                              Node : in     Htn.Plan.Subplan);
+   --  Will check if Id parent is an OR context and if so add it.
+   --  In any case it will climb up until root is reached.
+
+   procedure Descend_Removing (This : in out Object;
+                               Node : in     Htn.Plan.Subplan;
+                               Undo : in out Undo_Internal);
+
    --  FUNCTIONS THAT MANIPULATE BAGS AND HAVE TO BE UPDATED ON ADDITION OF
    --  NEW BAGS:
    --  Set_Assignment
    --  Do_Insert_Task
+   --  Descend_Removing
+   --  Descend_Adding
+   --  Add_Or_Nodes
 
 end Agpl.Cr.Mutable_Assignment;

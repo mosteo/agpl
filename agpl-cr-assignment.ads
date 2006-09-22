@@ -130,10 +130,10 @@ package Agpl.Cr.Assignment is
 private
 
    type Object is tagged record
-      Agents : Agent.Maps.Map;
-
       Ok     : Boolean := True;
       --  An assignment can be invalid.
+
+      Agents : Agent.Maps.Map;
    end record;
 
 end Agpl.Cr.Assignment;

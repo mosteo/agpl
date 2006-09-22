@@ -54,6 +54,8 @@ package Agpl.Htn.Plan_Node is
    type Node_Access is access Object;
    --   for Node_Access'Storage_Pool use Agpl.Debug.Pool;
 
+   subtype Node_Id is String;
+
    function Equivalent (L, R : in Node_Access) return Boolean;
    --  Compares task bodies and node ids
 

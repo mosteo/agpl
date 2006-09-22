@@ -24,6 +24,9 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
+with Agpl.Chronos;
+with Agpl.Trace; use Agpl.Trace;
+
 with Ada.Numerics.Elementary_Functions;
 
 package body Agpl.Optimization.Annealing is
@@ -101,10 +104,57 @@ package body Agpl.Optimization.Annealing is
          Local_T := Top;
       end Reset;
 
+      ------------
+      -- Divide --
+      ------------
+
       procedure Divide (Denom : in Float := 2.0) is
       begin
          Local_T := Temperature (Float (Local_T) / Denom);
       end Divide;
+
+      ------------
+      -- Update --
+      ------------
+
+      Cool_Timer   : Chronos.Object;
+      Settle_Timer : Chronos.Object;
+      Prev_C       : Cost        := Cost'Last;
+      Local_Min    : Cost        := Cost'Last;
+      use Chronos;
+
+      procedure Update (Current_Cost : in Cost) is
+      begin
+         if Current_Cost < Prev_C then
+            Settle_Timer.Reset;
+            Log ("Reseting Settle " & Image (Current_Cost) & " " &
+                 Image (Prev_C), Debug, Detail_Section);
+         end if;
+         if Current_Cost < Local_Min then
+            Local_Min := Current_Cost;
+            Cool_Timer.Reset;
+            Log ("Reseting Cooling " & Image (Current_Cost) & " " &
+                 Image (Local_Min), Debug, Detail_Section);
+         end if;
+
+         if Elapsed (Cool_Timer) > Cool_Time then
+            Divide (Divisor);
+            Cool_Timer.Reset;
+            Log ("Cooling...", Debug, Detail_Section);
+         end if;
+
+         if -- Local_T <= Settle_Umbral and then
+           Elapsed (Settle_Timer) > Settle_Time
+         then
+            Local_T   := Ceiling_Temperature;
+            Local_Min := Cost'Last;
+            Settle_Timer.Reset;
+            Cool_Timer.Reset;
+            Log ("Temperature bump!", Debug, Detail_Section);
+         end if;
+
+         Prev_C := Current_Cost;
+      end Update;
 
    end Manual_Cooling;
 

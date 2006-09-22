@@ -62,6 +62,7 @@ package body Agpl.Cr.Cost_Matrix is
       while A /= AL.No_Element loop
          Ini := TL.First (Tasks);
          while Ini /= TL.No_Element loop
+
             Fin := TL.First (Tasks);
             while Fin /= TL.No_Element loop
 
@@ -92,14 +93,37 @@ package body Agpl.Cr.Cost_Matrix is
                                          Htn.Tasks.Get_Id (Tl.Element (Ini)),
                                          Htn.Tasks.Get_Id (Tl.Element (Fin))));
                   end if;
+               else
+                  --  Same task... may be should be Infinite, maybe zero?
+                  pragma Ummmm;
+                  null;
                end if;
 
                TL.Next (Fin);
             end loop;
+
             TL.Next (Ini);
          end loop;
          AL.Next (A);
       end loop;
+
+      --  Add the No_Task specials
+      A := Agents.First;
+      while Al.Has_Element (A) loop
+         Ini := Tasks.First;
+         while Tl.Has_Element (Ini) loop
+
+            Set_Cost (This,
+                      Cr.Agent.Get_Name (Al.Element (A)),
+                      Htn.Tasks.Get_Id (Tl.Element (Ini)),
+                      Htn.Tasks.No_Task,
+                      0.0);
+
+            Tl.Next (Ini);
+         end loop;
+         Al.Next (A);
+      end loop;
+
    end Create;
 
    ------------
@@ -258,6 +282,28 @@ package body Agpl.Cr.Cost_Matrix is
       This.Matrix.Iterate (Do_It'Access);
    end Print;
 
+   -----------------
+   -- Print_Diffs --
+   -----------------
+
+   procedure Print_Diffs (L, R : in Object) is
+      I : Cursor := L.Matrix.First;
+   begin
+      Log ("DIFFS IN COST MATRIX", Always);
+      while Has_Element (I) loop
+         if not R.Matrix.Contains (Key (I)) then
+            Log ("Missing key: " & Key (I), Always);
+         elsif Element (I) /= Element (R.Matrix.Find (Key (I))) then
+            Log (Key (I) & ":" & Element (I)'Img & " /= " &
+                 Key (I) & ":" & Element (R.Matrix.Find (Key (I)))'Img,
+                 Always);
+         end if;
+
+         Next (I);
+      end loop;
+      Log ("END DIFFS", Always);
+   end Print_Diffs;
+
    --------------
    -- Set_Cost --
    --------------
@@ -269,14 +315,6 @@ package body Agpl.Cr.Cost_Matrix is
       Fin   : in     Htn.Tasks.Task_Id;
       Cost  : in     Costs)
    is
-      function Rounded (C : in Costs) return Costs is
-      begin
-         if C /= Infinite then
-            return Costs (Float'Floor (Float (C * 100.0)) / 100.0);
-         else
-            return C;
-         end if;
-      end Rounded;
    begin
       Include (This.Matrix, Key (Agent, Ini, Fin), Cost);
    end Set_Cost;

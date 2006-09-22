@@ -162,6 +162,15 @@ package body Agpl.Gdk.Drawer is
       Clear (This.Queue);
    end Draw_End;
 
+   ------------------
+   -- Get_Drawable --
+   ------------------
+
+   function Get_Drawable (This : in Object) return Gdk_Drawable is
+   begin
+      return This.Draw;
+   end Get_Drawable;
+
    ---------------
    -- Immediate --
    ---------------

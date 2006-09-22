@@ -132,6 +132,13 @@ package body Agpl.Optimization.Annealing.Solver is
          --         Log ("Move: " & Last_Mutation (New_Sol), Always);
          This.Iterations := This.Iterations + 1;
 
+         Log ("[NC/OC/Rnd/Goodnes]:" &
+              Image (New_Cost) & "/" &
+              Image (This.Curr_Cost) & "/" &
+              Image (Cost (P)) & "/" &
+              Image (Cost (Goodness)),
+              Debug, Detail_Section);
+
          if New_Cost = Infinite then -- Invalid solution
             This.Wasted := This.Wasted + 1;
             This.Add_Move
@@ -195,24 +202,24 @@ package body Agpl.Optimization.Annealing.Solver is
               To_String (Float (M.Accepted) * 100.0 / Float (Total_Good)) &
               "%/" &
               To_String (Float (M.Taken) * 100.0 / Float (Total_Moves)) & "%",
-              Debug, Log_Section);
+              Always, Log_Section);
       end Do_Inform;
    begin
       Stats.Iterate (Do_Count'Access);
 
-      Log ("", Debug, Log_Section);
+      Log ("", Always, Log_Section);
 
       Stats.Iterate (Do_Inform'Access);
 
-      Log ("", Debug, Log_Section);
+      Log ("", Always, Log_Section);
 
       Log ("TOTAL MOVES (accept/total): " &
            To_String (Total_Good) & "/" & To_String (Total_Moves) & " (" &
            To_String (Float (Total_Good) * 100.0 / Float (Total_Moves)) &
            "%)",
-           Debug, Log_Section);
+           Always, Log_Section);
 
-      Log ("", Debug, Log_Section);
+      Log ("", Always, Log_Section);
    end Print_Stats;
 
    -----------------
@@ -223,6 +230,15 @@ package body Agpl.Optimization.Annealing.Solver is
    begin
       Print_Stats (This.Stats);
    end Print_Stats;
+
+   -----------------
+   -- Reset_Stats --
+   -----------------
+
+   procedure Reset_Stats (This : in out Object) is
+   begin
+      This.Stats.Clear;
+   end Reset_Stats;
 
    --------------------------
    -- Set_Initial_Solution --

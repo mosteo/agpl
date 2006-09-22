@@ -120,6 +120,7 @@ package Agpl.Optimization.Annealing.Solver is
    --  This allows "chunking" the computation
 
    procedure Print_Stats (This : in Object);
+   procedure Reset_Stats (This : in out Object);
 
 private
 

@@ -92,7 +92,8 @@ package body Agpl.Cr.Assignment is
 
    function Empty_Object return Object is
    begin
-      return (Cr.Agent.Maps.Empty_Map, True);
+      return (Agents => Cr.Agent.Maps.Empty_Map,
+              Ok     => True);
    end Empty_Object;
 
    -----------------
@@ -465,7 +466,7 @@ package body Agpl.Cr.Assignment is
    ------------------------
 
    function Invalid_Assignment return Object is
-      This : Object;
+      This : Object := (others => <>);
    begin
       This.Ok := False;
       return This;

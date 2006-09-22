@@ -68,11 +68,27 @@ package Agpl.Optimization.Annealing is
    --  Note that Start is reset if Clock - Start > Period
 
    generic
-      Initial_Temperature : Temperature := 1.0;
+      Initial_Temperature : Temperature := 0.0;
+      Ceiling_Temperature : Temperature := 0.002;
+      --  When auto re-heating, go to this temperature
+
+      Settle_Umbral       : Temperature := Temperature'Small * 2.0;
+      --  When checking for no progress, this is the "absolute zero";
+      --  if not reached, no check.
+
+      Cool_Time           : Duration    := 0.5;
+      --  Time without progress that will cause cooling.
+
+      Settle_Time         : Duration    := 10.0;
+      --  Time without progress under Settle_Umbral until re-heating
+
+      Divisor             : Float       := 1.85;
+      --  The amount to divide temperature if no progress
    package Manual_Cooling is
       --  Expected package usage is to manually divide temperature when you need
       --  it.
       --  In this way you can keep low temperatures for as long as necessary.
+      --  Or, using Update, it will be done for you
 
       function Get_Temperature (T : in Temperature) return Temperature;
       pragma Inline (Get_Temperature);
@@ -83,6 +99,9 @@ package Agpl.Optimization.Annealing is
 
       procedure Divide (Denom : in Float := 2.0);
       --  Divide temperature by the given Denominator
+
+      procedure Update (Current_Cost : in Cost);
+      --  To use auto updating
    end Manual_Cooling;
 
 end Agpl.Optimization.Annealing;

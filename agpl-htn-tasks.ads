@@ -105,6 +105,9 @@ package Agpl.Htn.Tasks is
    function Same_Id (L, R : in Object'Class) return Boolean;
    --  Equality by id.
 
+   procedure Force_Id (This : in out Object; Id : in Task_Id);
+   --  Forcefully assign an Id to a task
+
 private
 
    No_Task : constant Task_Id := 0;

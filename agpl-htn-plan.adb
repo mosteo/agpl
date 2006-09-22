@@ -800,6 +800,7 @@ package body Agpl.Htn.Plan is
                           " E:" & Boolean_To_Char (Get_Expanded (X)) &
                           " F:" & Boolean_To_Char (Get_Finished (X)) &
                           " | " &
+                          "[" & Get_Id (X) & "]" &
                           "[" & Strings.To_String (Integer (Htn.Tasks.Get_Id (Job.all))) & "] " &
                           Htn.Tasks.To_String (Job.all) &
                           External_Tag (Job'Tag),

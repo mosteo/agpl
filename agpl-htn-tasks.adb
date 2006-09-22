@@ -53,17 +53,27 @@ package body Agpl.Htn.Tasks is
       Free (This);
    end Delete;
 
+   --------------
+   -- Force_Id --
+   --------------
+
+   procedure Force_Id (This : in out Object; Id : in Task_Id) is
+   begin
+      This.Id := Id;
+   end Force_Id;
+
    ------------
    -- Get_Id --
    ------------
 
    function Get_Id (This : in Object) return Task_Id is
    begin
-      if This.Id = 0 then
-         raise Id_Error;
-      else
-         return This.Id;
-      end if;
+      return This.Id;
+--        if This.Id = 0 then
+--           raise Id_Error;
+--        else
+--           return This.Id;
+--        end if;
    end Get_Id;
 
    ------------------

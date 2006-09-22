@@ -36,13 +36,14 @@ with Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;
 with Agpl.Cr.Plan_Assigner;
 with Agpl.Cr.Plan_Assigner.Greedy1;
 with Agpl.Cr.Tasks.Insertions;
-with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Plan.Utils.Random;
+with Agpl.Htn.Plan_Node;
 with Agpl.Htn.Tasks.Maps;
 with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
+with Ada.Containers;
 with Ada.Numerics.Elementary_Functions;
 with Ada.Numerics.Generic_Elementary_Functions;
 
@@ -52,6 +53,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    File : constant String := "[Mutable_Assignment] ";
 
+   use type Ada.Containers.Count_Type;
    use type Htn.Tasks.Task_Id;
    use type Optimization.Cost;
    use type Optimization.Annealing.Probability;
@@ -90,6 +92,7 @@ package body Agpl.Cr.Mutable_Assignment is
    procedure Add_Agent (This : in out Object; A : in Cr.Agent.Object'Class) is
    begin
       This.Context.Ref.all.Agents.Include (A.Get_Name, A);
+      This.Set_Assignment (This.To_Assignment, This.Context.Ref.Criterion);
    end Add_Agent;
 
    ------------------
@@ -134,6 +137,49 @@ package body Agpl.Cr.Mutable_Assignment is
       end;
    end Add_Mutation;
 
+   ---------------------
+   -- Add_Or_Contexts --
+   ---------------------
+
+   procedure Add_Or_Contexts (This : in out Object;
+                              Node : in     Htn.Plan.Subplan)
+   is
+      use Htn.Plan_Node;
+      Parent    : constant Htn.Plan_Node.Node_Access := Get_Parent (Node);
+   begin
+      if Parent /= null then
+         if Get_Kind (Parent) = Or_Node then
+            if not This.Contexts.Contains (Or_Key (Get_Id (Parent))) then
+               --  Check for duplicates, since we can arrive at an OR node
+               --  from several tasks (children of an AND node underlying.
+               declare
+                  C : Or_Context := (Solution_Context with
+                                     Node   => Parent,
+                                     Branch => Node);
+               begin
+                  This.Add_To_Bag (C, All_Active_Or_Nodes);
+                  This.Contexts.Insert (C.Key, C);
+               end;
+            else
+               --  We may need to update the OR branch if it's the first time
+               --  reaching it
+               declare
+                  Ctx_Ptr : constant Solution_Context_Ptr :=
+                              This.Ptr (Or_Key (Get_Id (Parent)));
+                  C       : Or_Context renames Or_Context (Ctx_Ptr.all);
+               begin
+                  if C.Branch /= Node then
+                     C.Branch := Node;
+                     Log ("Add_Or_Nodes: Corrected Or Branch taken.",
+                          Debug, Detail_Section);
+                  end if;
+               end;
+            end if;
+         end if;
+         This.Add_Or_Contexts (Parent);
+      end if;
+   end Add_Or_Contexts;
+
    ----------------
    -- Add_To_Bag --
    ----------------
@@ -161,7 +207,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Add_Undo_Move (This : in     Object;
                             Job  : in     Task_Context_Ptr;
-                            Undo : in out Undo_Info)
+                            Undo : in out Undo_Internal)
    is
    begin
       Undo.Move_Stack.Append
@@ -296,6 +342,7 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       This.Create_Empty_Bag (All_Assigned_Tasks);
       This.Create_Empty_Bag (All_Agents);
+      This.Create_Empty_Bag (All_Active_Or_Nodes);
    end Create_Empty_Bags;
 
    --------------------------
@@ -378,13 +425,15 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------
 
    procedure Do_Heuristic_1 (This : in out Object;
-                             Desc :    out Ustring;
-                             Undo : in out Undo_Info)
+                             Undo :    out Undo_Info)
    is
+      U : Undo_Internal (From_Scratch);
       A : Cr.Assignment.Object := This.To_Assignment;
    begin
-      Undo.Ass := A;
-      Desc := +"Heuristic 1";
+      U.Ass         := A;
+      U.Description := +"Heuristic 1";
+      Undo.Handle.Set (U);
+
       declare
          use Cr.Assignment;
          New_Assignment : constant Cr.Assignment.Object :=
@@ -410,18 +459,20 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------
 
    procedure Do_Heuristic_2 (This : in out Object;
-                             Desc :    out Ustring;
-                             Undo : in out Undo_Info)
+                             Undo :    out Undo_Info)
    is
+      U : Undo_Internal (From_Scratch);
    begin
-      Undo.Ass := This.To_Assignment;
-      Desc     := +"Heuristic 2";
+      U.Ass         := This.To_Assignment;
+      U.Description := +"Heuristic 2";
+      Undo.Handle.Set (U);
+
       declare
          use Cr.Assignment;
          New_Assignment : constant Cr.Assignment.Object :=
                             Plan_Assigner.Greedy1.Assign
                               ((Plan_Assigner.Object with null record),
-                               Get_Agents_Without_Tasks (Undo.Ass),
+                               Get_Agents_Without_Tasks (U.Ass),
                                This.Context.Ref.Plan,
                                This.Context.Ref.Costs,
                                This.Context.Ref.Criterion);
@@ -446,26 +497,23 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------
 
    procedure Do_Agent_Reorder (This : in out Object;
-                               Desc :    out Ustring;
-                               Undo : in out Undo_Info)
+                               Undo :    out Undo_Info)
    is
+      U     : Undo_Internal (From_Scratch);
       Agent : constant Agent_Id :=
                 Agent_Id
                   (+Agent_Context
                      (This.Select_Random_Context (All_Agents).all).Agent_Name);
    begin
-      Desc     := +"AGENT REORDER N²";
---      Log ("Reordering agent", Always);
---      This.To_Assignment.Print_Assignment;
-
       declare
          New_Ass : Assignment.Object := This.To_Assignment;
          Ag      : Cr.Agent.Object'Class := New_Ass.Get_Agent (String (Agent));
          Tasks   : Task_Lists.List := Ag.Get_Tasks;
-         U       : Undo_Info;
       begin
-         U.Ass    := New_Ass;
-         Undo     := U;
+         U.Description := +"AGENT REORDER N²";
+         U.Ass         := New_Ass;
+         Undo.Handle.Set (U);
+
          Ag.Clear_Tasks;
          while not Tasks.Is_Empty loop
             declare
@@ -479,7 +527,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                            Cd, Ct, Ok);
                if not Ok then
                   Log ("Failed to reorder agent tasks", Warning, Log_Section);
-                  This.Do_Identity (Desc, Undo);
+                  This.Do_Identity (Undo);
                   return;
                else
                   Ag := New_Ag.Get;
@@ -499,13 +547,13 @@ package body Agpl.Cr.Mutable_Assignment is
    -----------------
 
    procedure Do_Identity (This : in out Object;
-                       Desc :    out Ustring;
-                       Undo :    out Undo_Info)
+                          Undo :    out Undo_Info)
    is
       pragma Unreferenced (This);
+      U : Undo_Internal := (Identity, +"IDENTITY");
    begin
-      Desc := +"Identity";
-      Undo := (others => <>);
+      Log ("Identity mutation performed", Debug, Detail_Section);
+      Undo.Handle.Set (U);
    end Do_Identity;
 
    --------------------
@@ -554,13 +602,13 @@ package body Agpl.Cr.Mutable_Assignment is
 
          Log ("Inserting " & Src_Ptr.Job'Img &
               " after" & Src_Ptr.Prev'Img &
-              " and before" & Src_Ptr.Next'Img,
-              Debug, Detail_Section);
+              " and before" & Src_Ptr.Next'Img &
+              " owned by " & String (New_Owner),
+                Debug, Detail_Section);
 
          declare
             Cost : Costs;
          begin
-            pragma Remove_Expensive_Check;
             if Expensive_Checks then
                Reevaluate_Agent_Cost (This, New_Owner, Cost);
                if Acm.Element (This.Agent_Costs.Find (New_Owner)) /= Cost then
@@ -601,16 +649,16 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------------
 
    procedure Do_Auction_Task (This : in out Object;
-                              Desc :    out Ustring;
-                              Undo : in out Undo_Info)
+                              Undo :    out Undo_Info)
    is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "LOG AUCTION";
+      U.Description := + "LOG AUCTION";
 
       declare
          use Ada.Numerics.Elementary_Functions;
@@ -625,7 +673,8 @@ package body Agpl.Cr.Mutable_Assignment is
          Best_Cost   : Costs := Infinite;
          Best_Name   : Ustring;
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          Log ("Checking" & Checks'Img & " of" & This.Num_Assigned_Tasks'Img &
@@ -667,7 +716,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                  Src_Copy,
                                  This.Get_Task_Context (Src_Copy.Next),
                                  Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Desc, Undo);
+            This.Do_Identity (Undo);
          end if;
       end;
    end Do_Auction_Task;
@@ -677,16 +726,16 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------------------
 
    procedure Do_Exhaustive_Auction_Task (This : in out Object;
-                                         Desc :    out Ustring;
-                                         Undo : in out Undo_Info)
+                                         Undo :    out Undo_Info)
    is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "FULL AUCTION";
+      U.Description := + "FULL AUCTION";
 
       declare
          use Ada.Numerics.Elementary_Functions;
@@ -728,7 +777,8 @@ package body Agpl.Cr.Mutable_Assignment is
          end Do_It;
 
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          This.Contexts.Iterate (Do_It'Access);
@@ -743,7 +793,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                  Src_Copy,
                                  This.Get_Task_Context (Src_Copy.Next),
                                  Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Desc, Undo);
+            This.Do_Identity (Undo);
          end if;
       end;
    end Do_Exhaustive_Auction_Task;
@@ -753,16 +803,16 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------------
 
    procedure Do_Guided_Auction_Task (This : in out Object;
-                                     Desc :    out Ustring;
-                                     Undo : in out Undo_Info)
+                                     Undo :    out Undo_Info)
    is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "GUIDED+LOG AUCTION";
+      U.Description := + "GUIDED+LOG AUCTION";
 
       declare
          use Ada.Numerics.Elementary_Functions;
@@ -781,7 +831,8 @@ package body Agpl.Cr.Mutable_Assignment is
          Best_Cost   : Costs := Infinite;
          Best_Name   : Ustring;
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          Log ("Checking" & Checks'Img & " of" & This.Num_Assigned_Tasks'Img &
@@ -802,12 +853,12 @@ package body Agpl.Cr.Mutable_Assignment is
                  (Curr_Prev,
                   Src_Copy.Job,
                   Curr_Next,
-                  Agent_Id (Get_Attribute (Curr_Target, Owner)));
+                  Best_Agent);
                if Curr_Cost < Best_Cost then
                   Best_Cost := Curr_Cost;
                   Best_Prev := Curr_Prev;
                   Best_Next := Curr_Next;
-                  Best_Name := +String (Get_Attribute (Curr_Target, Owner));
+                  Best_Name := +String (Best_Agent);
                end if;
             end;
          end loop;
@@ -821,7 +872,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                  Src_Copy,
                                  This.Get_Task_Context (Src_Copy.Next),
                                  Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Desc, Undo);
+            This.Do_Identity (Undo);
          end if;
       end;
    end Do_Guided_Auction_Task;
@@ -831,21 +882,22 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------------
 
    procedure Do_Move_Task (This : in out Object;
-                           Desc :    out Ustring;
-                           Undo : in out Undo_Info)
+                           Undo :    out Undo_Info)
    is
       Src      : Task_Context_Ptr :=
                    This.Select_Random_Task (All_Assigned_Tasks);
       Src_Copy : Task_Context := Task_Context (Src.all);
+      U        : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "MOVE";
+      U.Description := + "MOVE";
 
-      This.Add_Undo_Move (Src, Undo);
+      This.Add_Undo_Move (Src, U);
+      Undo.Handle.Set (U);
       This.Do_Remove_Task (Src);
 
       declare
@@ -875,16 +927,16 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------------------------
 
    procedure Do_Move_Task_Changing_Owner (This : in out Object;
-                                          Desc :    out Ustring;
-                                          Undo : in out Undo_Info)
+                                          Undo :    out Undo_Info)
    is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "MOVE+OWNER";
+      U.Description := + "MOVE+OWNER";
 
       declare
          Src      : Task_Context_Ptr :=
@@ -898,7 +950,8 @@ package body Agpl.Cr.Mutable_Assignment is
                                (All_Agents).all).Agent_Name);
 
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          declare
@@ -922,16 +975,16 @@ package body Agpl.Cr.Mutable_Assignment is
    ----------------------------------------
 
    procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
-                                                 Desc :    out Ustring;
-                                                 Undo : in out Undo_Info)
+                                                 Undo :    out Undo_Info)
    is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "MOVE+GUIDED+OWNER";
+      U.Description := + "MOVE+GUIDED+OWNER";
 
       declare
          Worst_Agent : constant Agent_Id :=
@@ -945,7 +998,8 @@ package body Agpl.Cr.Mutable_Assignment is
                             (This.Select_Random_Context
                                (All_Agents).all).Agent_Name);
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          declare
@@ -969,15 +1023,16 @@ package body Agpl.Cr.Mutable_Assignment is
    -------------------
 
    procedure Do_Swap_Order (This : in out Object;
-                            Desc :    out Ustring;
-                            Undo : in out Undo_Info) is
+                            Undo :    out Undo_Info)
+   is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 1 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "SWAP ORDER";
+      U.Description := + "SWAP ORDER";
 
       declare
          Src      : Task_Context_Ptr :=
@@ -987,14 +1042,15 @@ package body Agpl.Cr.Mutable_Assignment is
                       This.Get_Task_Context (Src.Next);
       begin
          if Next /= null then
-            This.Add_Undo_Move (Src, Undo);
+            This.Add_Undo_Move (Src, U);
+            Undo.Handle.Set (U);
             This.Do_Remove_Task (Src);
             This.Do_Insert_Task (Next,
                                  Src_Copy,
                                  This.Get_Task_Context (Next.Next),
                                  Agent_Id (Get_Attribute (Next, Owner)));
          else
-            Do_Identity (This, Desc, Undo);
+            This.Do_Identity (Undo);
          end if;
       end;
    end Do_Swap_Order;
@@ -1004,15 +1060,16 @@ package body Agpl.Cr.Mutable_Assignment is
    -------------------
 
    procedure Do_Swap_Tasks (This : in out Object;
-                            Desc :    out Ustring;
-                            Undo : in out Undo_Info) is
+                            Undo :    out Undo_Info)
+   is
+      U : Undo_Internal (Move_Task);
    begin
       if This.Num_Assigned_Tasks <= 2 then
-         Do_Identity (This, Desc, Undo);
+         This.Do_Identity (Undo);
          return;
       end if;
 
-      Desc := + "SWAP ANY";
+      U.Description := + "SWAP ANY";
 
       declare
          Src      : Task_Context_Ptr :=
@@ -1023,7 +1080,8 @@ package body Agpl.Cr.Mutable_Assignment is
          Owner_1  : constant Agent_Id          :=
                       Agent_Id (Get_Attribute (Src, Owner));
       begin
-         This.Add_Undo_Move (Src, Undo);
+         This.Add_Undo_Move (Src, U);
+         Undo.Handle.Set (U);
          This.Do_Remove_Task (Src);
 
          declare
@@ -1056,7 +1114,8 @@ package body Agpl.Cr.Mutable_Assignment is
                                New_Next,
                                New_Owner);
 
-               This.Add_Undo_Move (Target, Undo);
+               This.Add_Undo_Move (Target, U);
+               Undo.Handle.Set (U);
                This.Do_Remove_Task (Target);
 
                if Prev_1 /= No_Task then
@@ -1085,6 +1144,186 @@ package body Agpl.Cr.Mutable_Assignment is
       end;
    end Do_Swap_Tasks;
 
+   ----------------------
+   -- Descend_Removing --
+   ----------------------
+
+   procedure Descend_Removing (This : in out Object;
+                               Node : in     Htn.Plan.Subplan;
+                               Undo : in out Undo_Internal) is
+      use Htn.Plan_Node;
+   begin
+      Log ("Descending into " & Get_Kind (Node)'Img & " " & Get_Id (Node),
+           Debug, Detail_Section);
+      case Get_Kind (Node) is
+         when Task_Node =>
+            if Get_Expanded (Node) then
+               --  Compound, do nothing and go down:
+               This.Descend_Removing (Get_Expansion (Node), Undo);
+            else
+               --  Remove the task + context
+               Log ("Removing its primitive task " &
+                    Get_Task (Node).all.To_String,
+                    Debug, Detail_Section);
+               declare
+                  Tc  : Task_Context_Ptr :=
+                          This.Get_Task_Context (Get_Task (Node).all.Get_Id);
+               begin
+                  Undo.Or_Stack.Append ((Was_Before => Tc.Next,
+                                         Moved_One  => Tc.Job,
+                                         Was_After  => Tc.Prev,
+                                         Owner_Was  => +Get_Attribute (Tc, Owner),
+                                         Minsum_Was => This.Minsum));
+                  This.Do_Remove_Task (Tc);
+               end;
+            end if;
+         when And_Node =>
+            declare
+               Children : constant Node_Vectors.Vector :=
+                            Get_Children (Node);
+            begin
+               for I in Children.First_Index .. Children.Last_Index loop
+                  This.Descend_Removing (Children.Element (I), Undo);
+               end loop;
+            end;
+         when Or_Node =>
+            --  We must remove its context and go down its active branch
+            declare
+               Branch_Ptr : constant Solution_Context_Ptr :=
+                              This.Ptr (Or_Key (Get_Id (Node)));
+            begin
+               This.Descend_Removing (Or_Context (Branch_Ptr.all).Branch, Undo);
+               This.Remove_Context (Or_Key (Get_Id (Node)));
+            end;
+      end case;
+   end Descend_Removing;
+
+   -----------------------
+   -- Do_Switch_Or_Node --
+   -----------------------
+
+   procedure Do_Switch_Or_Node (This : in out Object;
+                                Undo :    out Undo_Info)
+   is
+      U : Undo_Internal (Switch_Or_Node);
+
+      Placeholder_Usable : Boolean := False;
+      Placeholder        : Undo_Move_Task_Info;
+
+      procedure Descend_Adding (Node : in     Htn.Plan.Subplan) is
+         use Htn.Plan_Node;
+      begin
+         case Get_Kind (Node) is
+            when Task_Node =>
+               if Get_Expanded (Node) then
+                  --  Compound, do nothing:
+                  Descend_Adding (Get_Expansion (Node));
+               else
+                  --  Create a new task and insert at random
+                  declare
+                     Tc     : Task_Context;
+                  begin
+                     Tc.Job := Get_Task (Node).all.Get_Id;
+                     if Placeholder_Usable then
+                        Placeholder_Usable := False;
+                        This.Do_Insert_Task
+                             (This.Get_Task_Context (Placeholder.Was_After),
+                              Tc,
+                              This.Get_Task_Context (Placeholder.Was_Before),
+                              + Placeholder.Owner_Was);
+                     else
+                        declare
+                           Target : constant Task_Context_Ptr :=
+                                      This.Select_Random_Task (All_Assigned_Tasks);
+                        begin
+                           This.Do_Insert_Task
+                             (This.Get_Task_Context (Target.Prev),
+                              Tc,
+                              Target,
+                              Get_Attribute (Target, Owner));
+                        end;
+                     end if;
+                  end;
+               end if;
+            when And_Node =>
+               declare
+                  Children : constant Node_Vectors.Vector :=
+                               Get_Children (Node);
+               begin
+                  for I in Children.First_Index .. Children.Last_Index loop
+                     Descend_Adding (Children.Element (I));
+                  end loop;
+               end;
+            when Or_Node =>
+               declare
+                  Oc : Or_Context :=
+                         (Solution_Context with
+                          Node   => Node,
+                          Branch => Node_Vectors.Element
+                            (Get_Children (Node),
+                             (Random.Get_Integer
+                                (Node_Vectors.First_Index (Get_Children (Node)),
+                                 Node_Vectors.Last_Index (Get_Children (Node))))));
+               begin
+                  This.Add_To_Bag (Oc, All_Active_Or_Nodes);
+                  This.Contexts.Insert (Oc.Key, Oc);
+               end;
+         end case;
+      end Descend_Adding;
+
+      use Htn.Plan_Node;
+      Target : constant Solution_Context_Ptr :=
+                 This.Select_Random_Context (All_Active_Or_Nodes);
+      Ctx    : Or_Context renames Or_Context (Target.all);
+
+      Children : Node_Vectors.Vector := Get_Children (Ctx.Node);
+   begin
+      if Children.Length <= 1 then
+         This.Do_Identity (Undo);
+         return;
+      end if;
+
+      U.Description := + "SWITCH OR-NODE";
+
+      Log ("GOING TO SWITCH", Never);
+
+      loop
+         declare
+            New_Child : constant Htn.Plan.Subplan :=
+                          Children.Element
+                            (Random.Get_Integer
+                               (Children.First_Index, Children.Last_Index));
+            pragma Unbounded_Time;
+         begin
+            if New_Child /= Ctx.Branch then
+               U.Actived_Or_Branch := New_Child;
+               This.Descend_Removing (Ctx.Branch, U);
+
+               --  in 50% ocassions, we reuse the place were the switched task was:
+               if Random.Get_Integer (0, 1) = 1 then
+                  Placeholder_Usable := True;
+                  Placeholder := U.Or_Stack.Vector (U.Or_Stack.First);
+               end if;
+
+               Descend_Adding   (New_Child);
+               Ctx.Branch := New_Child;
+               exit;
+            end if;
+         end;
+      end loop;
+
+      Undo.Handle.Set (U);
+
+      if Expensive_Checks and then not This.Is_Sane then
+         raise Program_Error;
+      end if;
+   exception
+      when others =>
+         This.Context.Ref.Plan.Print_Tree_Summary;
+         This.Debug_Dump_Contexts;
+         raise;
+   end Do_Switch_Or_Node;
+
    --------------------
    -- Do_Remove_Task --
    --------------------
@@ -1095,9 +1334,10 @@ package body Agpl.Cr.Mutable_Assignment is
       Agent : constant Agent_Id := Agent_Id (Get_Attribute (Job, Owner));
    begin
       Log ("Removing " & Job.Job'Img &
-              " after" & Job.Prev'Img &
-              " and before" & Job.Next'Img,
-              Debug, Detail_Section);
+           " after" & Job.Prev'Img &
+           " and before" & Job.Next'Img &
+           " owned by " & Get_Attribute (Job, Owner),
+           Debug, Detail_Section);
 
       --  Costs to be updated
       declare
@@ -1116,17 +1356,14 @@ package body Agpl.Cr.Mutable_Assignment is
          This.Adjust_Chain_Removing (Job);
       end;
 
-      --  Remove from bags
-      Remove_From_All_Bags (This, Job);
-
-      This.Contexts.Delete (Task_Key (Job.Job));
+      --  Remove from earth surface
+      This.Remove_Context (Task_Key (Job.Job));
 
       Job := null;
 
       declare
          Cost  : Costs;
       begin
-         pragma Remove_Expensive_Check;
          if Expensive_Checks then
             Reevaluate_Agent_Cost (This, Agent, Cost);
             if Acm.Element (This.Agent_Costs.Find (Agent)) /= Cost then
@@ -1150,6 +1387,16 @@ package body Agpl.Cr.Mutable_Assignment is
       return This.Evaluate (This.Context.Ref.Criterion);
    end Evaluate;
 
+   function Evaluate (This      : in Object) return Optimization.Cost is
+      C : constant Cr.Costs := This.Evaluate;
+   begin
+      if C = Cr.Infinite then
+         return Optimization.Infinite;
+      else
+         return Optimization.Cost (C);
+      end if;
+   end Evaluate;
+
    --------------
    -- Evaluate --
    --------------
@@ -1170,7 +1417,11 @@ package body Agpl.Cr.Mutable_Assignment is
    function Evaluate_Minimax (This : in Object) return Costs is
    begin
       if This.Valid then
-         return This.MinMax.Last_Element.Cost;
+         if This.Minmax.Is_Empty then
+            return 0.0;
+         else
+            return This.Minmax.Last_Element.Cost;
+         end if;
       else
          return Infinite;
       end if;
@@ -1251,6 +1502,18 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Is_Sane (This : in Object) return Boolean is
 
+      procedure Check_Or_Parents (Node : in Htn.Plan.Subplan) is
+         use Htn.Plan_Node;
+      begin
+         if Get_Kind (Node) = Or_Node and then
+           not This.Contexts.Contains (Or_Key (Get_Id (Node)))
+         then
+            This.Context.Ref.Plan.Print_Tree_Summary;
+            This.Debug_Dump_Contexts;
+            raise Program_Error with "Missing OR ancestor for some task!";
+         end if;
+      end Check_Or_Parents;
+
       procedure Check_Contexts (I : Solution_Context_Maps.Cursor) is
          X : constant Solution_Context'Class :=
                Solution_Context_Maps.Element (I);
@@ -1266,10 +1529,32 @@ package body Agpl.Cr.Mutable_Assignment is
                if Get_Finished (Node) or else Get_Expanded (Node) then
                   raise Constraint_Error
                     with "Compound or finished task is assigned";
+               else
+                 Check_Or_Parents (Node);
                end if;
             end;
          elsif X in Agent_Context then
             null;
+         elsif X in Or_Context then
+            --  Check the chosen branch is there
+            declare
+               use Htn.Plan_Node;
+               Oc : Or_Context renames Or_Context (X);
+            begin
+               if Get_Kind (Oc.Branch) = Task_Node and then
+                 not Get_Expanded (Oc.Branch)
+               then
+                  if not This.Contexts.Contains
+                    (Task_Key (Get_Task (Oc.Branch).all.Get_Id))
+                  then
+                     Log ("Missing task context for task " &
+                          Get_Task (Oc.Branch).all.Get_Id'Img &
+                          "; branch taken of " & Get_Id (Oc.Node),
+                          Always, Log_Section);
+                     raise Program_Error with "Missing task for OR branch";
+                  end if;
+               end if;
+            end;
          else
             raise Constraint_Error
               with "Unexpected context kind: " & External_Tag (X'Tag);
@@ -1301,7 +1586,7 @@ package body Agpl.Cr.Mutable_Assignment is
 
    function Last_Mutation (This : in Object) return String is
    begin
-      return +This.Last_Mutation_Description;
+      return +This.Last_Mutation;
    end Last_Mutation;
 
    -----------------------------
@@ -1338,33 +1623,54 @@ package body Agpl.Cr.Mutable_Assignment is
       --  This.Debug_Dump_Contexts;
       --  Log ("** Minsum is " & To_String (This.Minsum), Always);
 
+      if not This.Valid then
+         Log ("Attempt to mutate an invalid solution!", Error, Log_Section);
+         raise Constraint_Error with "Attempt to mutate an invalid solution!";
+      end if;
+
+      if This.Context.Ref.Agents.Is_Empty or else
+        This.Context.Ref.Plan.Is_Empty
+      then
+         Log ("Empty plan, mutating to identity", Debug, Detail_Section);
+         This.Was_Valid := This.Valid;
+         This.Undoer    := Undo_Identity'Access;
+         This.Do_Identity (This.Undo);
+         This.Last_Mutation := This.Undo.Handle.Ref.Description;
+         return;
+      end if;
+
+      ------------------------------------
+
       for I in M.First .. M.Last loop
          if Luck <= M.Vector (I).Prob then
-            Log ("Performing mutation" & I'Img,
+            This.Was_Valid := This.Valid;
+
+            Log ("Performing mutation" & I'Img & "; Valid: " & This.Valid'Img,
                  Debug, Section => Detail_Section);
-            Reset (This.Last_Mutation_Undo);
-            This.Last_Mutation_Index  := I;
-            This.Last_Mutation_Exists := True;
-            This.Last_Mutation_Undo.Was_Valid := This.Valid;
 
-            --  This.Debug_Dump_Contexts;
+            This.Undoer := M.Vector (I).Undoer;
+            M.Vector (I).Doer (This, This.Undo);
+            This.Last_Mutation := This.Undo.Handle.Ref.Description;
 
-            M.Vector (I).Doer (This,
-                               This.Last_Mutation_Description,
-                               This.Last_Mutation_Undo);
-
-            Log ("Mutated: " & (+This.Last_Mutation_Description),
+            Log ("Mutated: " & (+This.Undo.Handle.Get.Description) &
+                 "; Valid: " & This.Valid'Img,
                  Debug, Section => Detail_Section);
-            --  This.Debug_Dump_Contexts;
-            --  Log ("** Minsum is " & To_String (This.Minsum), Always);
+
             if Expensive_Checks then
                declare
                   Old_Cost : constant Costs :=
                                This.Evaluate (This.Context.Ref.Criterion);
+                  Valid    : constant Boolean := This.Valid;
                begin
-                  pragma Remove_This_Expensive_Check;
                   This.Reevaluate_Costs;
-                  pragma Assert (Old_Cost = This.Evaluate (This.Context.Ref.Criterion));
+                  if Old_Cost /= This.Evaluate (This.Context.Ref.Criterion) then
+                     Log ("Manual cost (" & Valid'Img & "):" & Old_Cost'Img &
+                          " should equal reeval" &
+                          This.Evaluate (This.Context.Ref.Criterion)'Img &
+                          " (Valid: " & This.Valid'Img & ")",
+                          Always, Log_Section);
+                     raise Program_Error with "Mismatch after mutation";
+                  end if;
                end;
             end if;
             return;
@@ -1394,6 +1700,8 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       if New_Cost < Old_Cost then
          return Acceptability'Last;
+      elsif New_Cost = 0.0 then
+         return Acceptability'First;
       else
          return
            (Acceptability (Old_Cost / New_Cost) *
@@ -1596,13 +1904,13 @@ package body Agpl.Cr.Mutable_Assignment is
          This.Agent_Costs.Insert (Id, Cost);
       end Ev;
    begin
+      --  Don't touch the Valid flag. It could be valid or not at this point.
+
       Reevaluate_Minsum (This, This.Minsum);
 
       This.MinMax.Clear;
       This.Agent_Costs.Clear;
       Agent_Maps.Iterate (This.Context.Ref.Agents, Ev'Access);
-
-      This.Valid := This.MinSum < Infinite;
    end Reevaluate_Costs;
 
    ------------------------
@@ -1648,7 +1956,6 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------------
    --  O (n) or worse (depending on the heuristic used).
    procedure Remove_Agent (This : in out Object; Name : in Agent_Id) is
-      Dummy_Desc : Ustring;
       Dummy_Undo : Undo_Info;
       C          : Static_Context_Access renames This.Context.Ref;
    begin
@@ -1659,9 +1966,22 @@ package body Agpl.Cr.Mutable_Assignment is
       else
          Reassign_Tasks
            (This, Name, Agent_Maps.First_Element (C.Agents).Get_Name);
-         Do_Heuristic_1 (This, Dummy_Desc, Dummy_Undo);
+         This.Do_Heuristic_1 (Dummy_Undo);
       end if;
    end Remove_Agent;
+
+   --------------------
+   -- Remove_Context --
+   --------------------
+
+   procedure Remove_Context (This : in out Object;
+                             Key  : in     Solution_Context_Key)
+   is
+      Ptr : constant Solution_Context_Ptr := This.Ptr (Key);
+   begin
+      This.Remove_From_All_Bags (Ptr);
+      This.Contexts.Delete (Key);
+   end Remove_Context;
 
    --------------------------
    -- Remove_From_All_Bags --
@@ -1731,7 +2051,7 @@ package body Agpl.Cr.Mutable_Assignment is
    -----------
 
    procedure Reset (This : in out Undo_Info) is
-      Empty_Undo : Undo_Info;
+      Empty_Undo : constant Undo_Info := (others => <>);
    begin
       This := Empty_Undo;
    end Reset;
@@ -1886,6 +2206,10 @@ package body Agpl.Cr.Mutable_Assignment is
                This.Contexts.Insert
                  (Solution_Context_Key (Task_Key (C.Job)), C);
 
+               --  Create OR contexts
+               This.Add_Or_Contexts
+                 (This.Context.Ref.Plan.Get_Node (C.Job));
+
                Next (J);
             end;
          end loop;
@@ -1931,7 +2255,9 @@ package body Agpl.Cr.Mutable_Assignment is
             New_New_Ass : Cr.Assignment.Object;
             Success     : Boolean;
          begin
-            --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
+--              Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
+--              Log (This.Context.Ref.Agents.Length'Img, Always);
+--              Log (Htn.Tasks.Maps.First_Element (Pending_Tasks).To_String, Always);
             Tasks.Insertions.Greedy
               (New_Ass,
                Htn.Tasks.Maps.First_Element (Pending_Tasks),
@@ -1945,7 +2271,8 @@ package body Agpl.Cr.Mutable_Assignment is
                     To_String (Integer (Pending_Tasks.First_Element.Get_Id)) &
                     "-" & Pending_Tasks.First_Element.To_String, Error,
                     Log_Section);
-               raise Constraint_Error;
+               This.Valid := False;
+               return;
             else
                Log ("Set_Assignment: assigned task " &
                     To_String (Integer (Pending_Tasks.First_Element.Get_Id)) &
@@ -1992,6 +2319,19 @@ package body Agpl.Cr.Mutable_Assignment is
       C : constant Static_Context_Access := This.Context.Ref;
    begin
       C.Costs := Costs;
+
+      --  Equip our agents with 0.00 cost for No_Task --> No_Task.
+      --  This is needed elsewhere.
+      declare
+         procedure Do_It (I : Agent_Maps.Cursor) is
+         begin
+            Cr.Cost_Matrix.Set_Cost (C.Costs, Agent_Maps.Element (I).Get_Name,
+                                     No_Task, No_Task, 0.0);
+         end Do_It;
+      begin
+         C.Agents.Iterate (Do_It'Access);
+      end;
+
       Reevaluate_Costs (This);
    end Set_Costs;
 
@@ -2026,12 +2366,17 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------
 
    procedure Set_Tasks (This : in out Object;
-                        Plan : in     Htn.Plan.Object)
+                        Plan : in     Htn.Plan.Object;
+                        Assign : in     Boolean := True)
    is
       C : Static_Context_Access renames This.Context.Ref;
    begin
       Clear_Dynamic_Part (This);
       C.Plan := Htn.Plan.Inflate (Plan);
+      if Assign then
+         This.Set_Assignment (This.To_Assignment,
+                              This.Context.Ref.Criterion);
+      end if;
    end Set_Tasks;
 
    --------------
@@ -2107,12 +2452,10 @@ package body Agpl.Cr.Mutable_Assignment is
 
    procedure Undo (This : in out Object) is
    begin
-      if This.Last_Mutation_Exists then
-         This.Context.Ref.Mutations.Vector
-           (This.Last_Mutation_Index).Undoer (This, This.Last_Mutation_Undo);
-         This.Valid := This.Last_Mutation_Undo.Was_Valid;
-         Reset (This.Last_Mutation_Undo);
-         This.Last_Mutation_Exists := False;
+      if This.Undo.Handle.Is_Valid then
+         This.Undoer (This, This.Undo);
+         This.Valid := This.Was_Valid;
+         This.Undo.Handle.Clear;
       else
          raise Constraint_Error with "No mutation performed to be undone";
       end if;
@@ -2127,7 +2470,15 @@ package body Agpl.Cr.Mutable_Assignment is
    is
    begin
       Log ("Undoing from scratch", Debug, Section => Detail_Section);
-      Set_Assignment (This, Undo.Ass, This.Context.Ref.Criterion);
+      case Undo.Handle.Get.Kind is
+         when From_Scratch =>
+            This.Set_Assignment (Undo.Handle.Get.Ass,
+                                 This.Context.Ref.Criterion);
+         when Identity =>
+            null;
+         when others =>
+            raise Program_Error;
+      end case;
    end Undo_From_Scratch;
 
    -------------------
@@ -2145,36 +2496,103 @@ package body Agpl.Cr.Mutable_Assignment is
    --------------------
 
    procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info) is
-      U : Undo_Info := Undo;
+      U : Undo_Internal renames Undo.Handle.Ref.all;
    begin
-      while not U.Move_Stack.Is_Empty loop
-         declare
-            Move : Undo_Move_Task_Info renames
-              U.Move_Stack.Vector (U.Move_Stack.Last);
-            Src  : Task_Context_Ptr := This.Get_Task_Context (Move.Moved_One);
-         begin
-            This.Do_Move_Task
-              (After_This  => This.Get_Task_Context (Move.Was_After),
-               Src         => Src,
-               Before_This => This.Get_Task_Context (Move.Was_Before),
-               New_Owner   => Agent_Id (+Move.Owner_Was));
+      case U.Kind is
+         when Identity =>
+            null;
+         when Move_Task =>
+            for I in reverse U.Move_Stack.First .. U.Move_Stack.Last loop
+               declare
+                  Move : Undo_Move_Task_Info renames U.Move_Stack.Vector (I);
+                  Src  : Task_Context_Ptr :=
+                           This.Get_Task_Context (Move.Moved_One);
+               begin
+                  This.Do_Move_Task
+                    (After_This  => This.Get_Task_Context (Move.Was_After),
+                     Src         => Src,
+                     Before_This => This.Get_Task_Context (Move.Was_Before),
+                     New_Owner   => Agent_Id (+Move.Owner_Was));
 
-            if Move.Minsum_Was /= This.Minsum then
-               Log ("Cost was " & To_String (Move.Minsum_Was, 10) &
-                    " but is " & To_String (This.Minsum, 10) &
-                    " (" & To_String (This.Minsum - Move.Minsum_Was, 10) & ")",
-                    Error, Log_Section);
-               --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
-               This.Reevaluate_Costs;
-               --  raise Program_Error with "Undo breached cost integrity!";
-            end if;
-         end;
-         U.Move_Stack.Delete (U.Move_Stack.Last);
-      end loop;
+                  if Move.Minsum_Was /= This.Minsum then
+                     Log ("Cost was " & To_String (Move.Minsum_Was, 10) &
+                          " but is " & To_String (This.Minsum, 10) &
+                          " (" & To_String (This.Minsum - Move.Minsum_Was, 10) & ")",
+                          Error, Log_Section);
+                     --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
+                     This.Reevaluate_Costs;
+                     --  raise Program_Error with "Undo breached cost integrity!";
+                  end if;
+               end;
+            end loop;
+         when others =>
+            raise Program_Error;
+      end case;
    end Undo_Move_Task;
+
+   -----------------
+   -- Undo_Switch --
+   -----------------
+
+   procedure Undo_Switch (This : in out Object; Undo : in Undo_Info) is
+--        procedure Descend_Adding (Node : Htn.Subplan) is
+--        begin
+--           --  Re-add necessary or-nodes
+--           --  Re-insert necessary tasks.
+--        end Descend_Adding;
+      Dummy_Undo : Undo_Internal (Switch_Or_Node);
+      U          : Undo_Internal renames Undo.Handle.Ref.all;
+   begin
+      Log ("UNDOING SWITCH", Debug, Detail_Section);
+      case U.Kind is
+         when Identity =>
+            null;
+         when Switch_Or_Node =>
+            This.Descend_Removing (U.Actived_Or_Branch, Dummy_Undo);
+
+            --  Add all tasks:
+            for I in reverse U.Or_Stack.First .. U.Or_Stack.Last loop
+               declare
+                  Tc : Task_Context;
+               begin
+                  Tc.Job := U.Or_Stack.Vector (I).Moved_One;
+                  This.Do_Insert_Task
+                    (After_This  =>
+                       This.Get_Task_Context
+                         (U.Or_Stack.Vector (I).Was_After),
+                     Src         => Tc,
+                     Before_This =>
+                       This.Get_Task_Context
+                         (U.Or_Stack.Vector (I).Was_Before),
+                     New_Owner   => Agent_Id (+U.Or_Stack.Vector (I).Owner_Was));
+
+                  This.Add_Or_Contexts (This.Context.Ref.Plan.Get_Node (Tc.Job));
+
+                  if This.Minsum /= U.Or_Stack.Vector (I).Minsum_Was then
+                     raise Program_Error
+                       with "Undo (Switch) breached integrity; MinSum is" &
+                     This.Minsum'Img & " but should be" &
+                     U.Or_Stack.Vector (I).Minsum_Was'Img;
+                  end if;
+
+                  if Expensive_Checks and then not This.Is_Sane then
+                     raise Program_Error;
+                  end if;
+               end;
+            end loop;
+         when others =>
+            raise Program_Error;
+      end case;
+
+      Log ("UNDONE SWITCH", Debug, Detail_Section);
+   end Undo_Switch;
 
    function Proper_Cost (This : in Costs) return Costs;
    pragma Inline (Proper_Cost);
+
+   -----------------
+   -- Proper_Cost --
+   -----------------
 
    function Proper_Cost (This : in Costs) return Costs is
    begin
@@ -2297,14 +2715,17 @@ package body Agpl.Cr.Mutable_Assignment is
       end if;
 
       if Plus_1 = Infinite then
+         Log ("Plus_1 invalidating ass", Debug, Detail_Section);
          Plus_1 := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
       if Plus_2 = Infinite then
+         Log ("Plus_2 invalidating ass", Debug, Detail_Section);
          Plus_2 := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
       if Minus = Infinite then
+         Log ("Minus invalidating ass", Debug, Detail_Section);
          Minus := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
@@ -2375,14 +2796,17 @@ package body Agpl.Cr.Mutable_Assignment is
 
 
       if Minus_1 = Infinite then
+         Log ("Minus_1 invalidating ass", Debug, Detail_Section);
          Minus_1 := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
       if Minus_2 = Infinite then
+         Log ("Minus_2 invalidating ass", Debug, Detail_Section);
          Minus_2 := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
       if Plus = Infinite then
+         Log ("Plus invalidating ass", Debug, Detail_Section);
          Plus := Cost_For_Invalid_Task;
          This.Valid := False;
       end if;
@@ -2426,6 +2850,32 @@ package body Agpl.Cr.Mutable_Assignment is
    procedure Debug_Dump (This : in Agent_Context) is
    begin
       Log ("Agent: " & (+This.Agent_Name), Always, Log_Section);
+   end Debug_Dump;
+
+   function Or_Key (This : in String) return Solution_Context_Key is
+   begin
+      return Solution_Context_Key (U ("OR:" & This));
+   end Or_Key;
+
+   ---------
+   -- Key --
+   ---------
+
+   function Key (This : in Or_Context) return Solution_Context_Key is
+      use Htn.Plan_Node;
+   begin
+      return Or_Key (Get_Id (This.Node));
+   end Key;
+
+   ----------------
+   -- Debug_Dump --
+   ----------------
+
+   procedure Debug_Dump (This : in Or_Context) is
+      use Htn.Plan_Node;
+   begin
+      Log ("OR node: " & Get_Id (This.Node) &
+           "; Branch taken: " & Get_Id (This.Branch), Always, Log_Section);
    end Debug_Dump;
 
 end Agpl.Cr.Mutable_Assignment;

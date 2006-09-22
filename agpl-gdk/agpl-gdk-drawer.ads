@@ -54,6 +54,8 @@ package Agpl.Gdk.Drawer is
    procedure Keep_Aspect_Ratio (This : in out Object; Keep : Boolean := True);
    --  Defaults to Yes.
 
+   function Get_Drawable (This : in Object) return Gdk_Drawable;
+
    procedure Set_Drawable (This : in out Object; D : Gdk_Drawable);
    --  Where to draw into. Must be set before any actual drawing is attempted.
 

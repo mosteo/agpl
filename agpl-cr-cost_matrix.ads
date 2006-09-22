@@ -117,6 +117,8 @@ package Agpl.Cr.Cost_Matrix is
    procedure Print (This : in Object);
    --  Debug dump
 
+   procedure Print_Diffs (L, R : in Object);
+
 private
 
    package ATT_Maps is new Ada.Containers.Indefinite_Hashed_Maps
