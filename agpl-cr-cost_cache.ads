@@ -54,4 +54,18 @@ package Agpl.Cr.Cost_Cache is
       Tasks : in Htn.Tasks.Containers.Lists.List) return Costs;
    --  Evaluate a plan with a given agent
 
+   Empty_Object : constant Object'Class;
+
+private
+
+   type Empty_Class is new Object with null record;
+
+   function Get_Cost
+     (This  : in Empty_Class;
+      Agent : in String;
+      Ini   : in Htn.Tasks.Task_Id;
+      Fin   : in Htn.Tasks.Task_Id) return Costs;
+
+   Empty_Object : constant Object'Class := Empty_Class'(null record);
+
 end Agpl.Cr.Cost_Cache;

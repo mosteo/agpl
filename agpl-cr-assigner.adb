@@ -1,3 +1,4 @@
+with Agpl.Cr.Cost_Matrix;
 with Agpl.Htn.Plan_Node;
 
 --  with Ada.Text_Io; use Ada.Text_Io;

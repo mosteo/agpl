@@ -81,7 +81,7 @@ package body Agpl.Cr.Mutable_Assignment is
    procedure Add_Agent (This : in out Object; A : in Cr.Agent.Object'Class) is
    begin
       This.Context.Ref.all.Agents.Include (A.Get_Name, A);
-      This.Set_Assignment (This.To_Assignment, This.Context.Ref.Criterion);
+--      This.Set_Assignment (This.To_Assignment, This.Context.Ref.Criterion);
    end Add_Agent;
 
    ------------------
@@ -106,7 +106,7 @@ package body Agpl.Cr.Mutable_Assignment is
          M            : Mutation_Vectors.Object renames
            This.Context.Ref.Mutations;
       begin
-         for I in M.Vector'Range loop
+         for I in M.First .. M.Last loop
             Total_Weight := Total_Weight + M.Vector (I).Weight;
          end loop;
          for I in M.First .. M.Last loop
@@ -447,7 +447,7 @@ package body Agpl.Cr.Mutable_Assignment is
                               ((Cr.Assigner.Object with Keep_Order => True),
                                Get_Agents_Without_Tasks (A),
                                Get_All_Tasks (A),
-                               This.Context.Ref.Costs);
+                               This.Context.Ref.Costs.Ref.all);
       begin
 --         New_Assignment.Print_Assignment;
 
@@ -969,7 +969,11 @@ package body Agpl.Cr.Mutable_Assignment is
          end if;
       end loop;
 
-      Log ("Mutate: No mutation performed!", Error);
+      Log ("Mutate: No mutation performed!" & Luck'Img, Error, Log_Section);
+      for I in M.First .. M.Last loop
+         Log ("Prob. for mut." & I'Img & ":" & M.Vector (I).Prob'Img,
+              Error, Log_Section);
+      end loop;
       raise Program_Error with "No mutation performed";
    end Mutate;
 
@@ -1129,7 +1133,7 @@ package body Agpl.Cr.Mutable_Assignment is
                                     Agent : in     Agent_Id;
                                     Cost  :    out Costs)
    is
-      C     : Cr.Cost_Matrix.Object renames This.Context.Ref.Costs;
+      C     : Cr.Cost_Cache.Object'Class renames This.Context.Ref.Costs.Ref.all;
       Total : Costs := 0.0;
 
       use Solution_Context_Maps;
@@ -1145,12 +1149,12 @@ package body Agpl.Cr.Mutable_Assignment is
             if X in Task_Context then
                if Agent_Id (Get_Attribute (X, Owner)) = Agent then
                   declare
-                     use Cost_Matrix;
+                     use Cost_Cache;
                      use Htn.Tasks;
                      T : Task_Context renames Task_Context (X);
                   begin
                      --  The case when Prev = No_Task is contemplated in the
-                     --  Cost_Matrix object
+                     --  Cost_Cache object
                      Curr := Get_Cost (C, String (Agent), T.Prev, T.Job);
                      if Curr = Infinite then
                         Curr := Cost_For_Invalid_Task;
@@ -1477,7 +1481,7 @@ package body Agpl.Cr.Mutable_Assignment is
                   function Next_Id (K : Task_Lists.Cursor) return Htn.Tasks.Task_Id
                   is
                      Plan   : Htn.Plan.Object renames This.Context.Ref.Plan;
-                     Nx     : Task_Lists.Cursor := Next (K);
+                     Nx     : constant Task_Lists.Cursor := Next (K);
                   begin
                      if not Has_Element (Nx) then
                         return No_Task;
@@ -1563,13 +1567,12 @@ package body Agpl.Cr.Mutable_Assignment is
             Success     : Boolean;
          begin
             pragma Assert (New_New_Ass.Is_Valid);
---              Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
 --              Log (This.Context.Ref.Agents.Length'Img, Always);
 --              Log (Htn.Tasks.Maps.First_Element (Pending_Tasks).To_String, Always);
             Tasks.Insertions.Greedy
               (New_Ass,
                Htn.Tasks.Maps.First_Element (Pending_Tasks),
-               This.Context.Ref.Costs,
+               This.Context.Ref.Costs.Ref.all,
                Criterion,
                New_New_Ass,
                Success);
@@ -1577,10 +1580,11 @@ package body Agpl.Cr.Mutable_Assignment is
             if not Success then
                Log ("Set_Assignment: cannot assign task " &
                     To_String (Integer (Pending_Tasks.First_Element.Get_Id)) &
-                    "-" & Pending_Tasks.First_Element.To_String &
+                    ":" & Pending_Tasks.First_Element.To_String &
                     "," & Pending_Tasks.Length'Img & " remaining",
                     Error, Log_Section);
                This.Valid := False;
+               raise Constraint_Error;
                return;
             else
                Log ("Set_Assignment: assigned task " &
@@ -1623,25 +1627,18 @@ package body Agpl.Cr.Mutable_Assignment is
    ---------------
 
    procedure Set_Costs (This  : in out Object;
-                        Costs : in     Cr.Cost_Matrix.Object)
+                        Costs : in     Cr.Cost_Cache.Object'Class)
    is
       C : constant Static_Context_Access := This.Context.Ref;
+      Was_Valid : Boolean;
    begin
-      C.Costs := Costs;
+      C.Costs.Set (Costs);
 
-      --  Equip our agents with 0.00 cost for No_Task --> No_Task.
-      --  This is needed elsewhere.
-      declare
-         procedure Do_It (I : Agent_Maps.Cursor) is
-         begin
-            Cr.Cost_Matrix.Set_Cost (C.Costs, Agent_Maps.Element (I).Get_Name,
-                                     No_Task, No_Task, 0.0);
-         end Do_It;
-      begin
-         C.Agents.Iterate (Do_It'Access);
-      end;
-
+      Was_Valid := This.Valid;
       Reevaluate_Costs (This);
+      if Was_Valid and not This.Valid then
+         Log ("Cost change made assignment invalid!", Warning, Log_Section);
+      end if;
    end Set_Costs;
 
    procedure Set_Criterion (This      : in out Object;
@@ -1680,9 +1677,16 @@ package body Agpl.Cr.Mutable_Assignment is
    is
       C        : Static_Context_Access renames This.Context.Ref;
       Prev_Ass : Assignment.Object;
+      Was_Valid : Boolean;
    begin
       if Assign then
+         Was_Valid := This.Valid;
          Prev_Ass := This.To_Assignment;
+         if Was_Valid and not Prev_Ass.Is_Valid then
+            raise Constraint_Error with "Mismatch in validity";
+         elsif not Was_Valid then
+            raise Constraint_Error with "Will not be able to assign from invalid assignment";
+         end if;
       end if;
       Clear_Dynamic_Part (This);
       C.Plan := Htn.Plan.Inflate (Plan);
@@ -1826,7 +1830,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Plus_2   : Costs := 0.0;
       Minus    : Costs := 0.0;
       Cost     : constant Costs := Acm.Element (This.Agent_Costs.Find (New_Owner));
-      Cm       : Cost_Matrix.Object renames This.Context.Ref.Costs;
+      Cm       : Cost_Cache.Object'Class renames This.Context.Ref.Costs.Ref.all;
       Pr, Ne   : Htn.Tasks.Task_Id := No_Task;
    begin
 
@@ -1837,21 +1841,21 @@ package body Agpl.Cr.Mutable_Assignment is
          Ne := Next.Job;
       end if;
 
-      Plus_1 := Cost_Matrix.Get_Cost (Cm,
-                                      New_Owner,
-                                      Pr,
-                                      Curr);
+      Plus_1 := Cost_Cache.Get_Cost (Cm,
+                                     New_Owner,
+                                     Pr,
+                                     Curr);
 
       if Next /= null then
-         Plus_2 := Cost_Matrix.Get_Cost (Cm,
-                                         New_Owner,
-                                         Curr,
-                                         Ne);
+         Plus_2 := Cost_Cache.Get_Cost (Cm,
+                                        New_Owner,
+                                        Curr,
+                                        Ne);
 
-         Minus   := Cost_Matrix.Get_Cost (Cm,
-                                          New_Owner,
-                                          Pr,
-                                          Ne);
+         Minus   := Cost_Cache.Get_Cost (Cm,
+                                         New_Owner,
+                                         Pr,
+                                         Ne);
       end if;
 
       Log ("Inserting: [Plus1/Plus2/Minus] = " &
@@ -1898,7 +1902,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Plus_2   : Costs := 0.0;
       Minus    : Costs := 0.0;
       Cost     : Costs := Acm.Element (This.Agent_Costs.Find (Agent));
-      Cm       : Cost_Matrix.Object renames This.Context.Ref.Costs;
+      Cm       : Cost_Cache.Object'Class renames This.Context.Ref.Costs.Ref.all;
 
       Pr, Ne   : Htn.Tasks.Task_Id := No_Task;
    begin
@@ -1912,18 +1916,18 @@ package body Agpl.Cr.Mutable_Assignment is
          Ne := Next.Job;
       end if;
 
-      Plus_1 := Cost_Matrix.Get_Cost (Cm,
+      Plus_1 := Cost_Cache.Get_Cost (Cm,
                                       New_Owner,
                                       Pr,
                                       Curr.Job);
 
       if Next /= null then
-         Plus_2 := Cost_Matrix.Get_Cost (Cm,
+         Plus_2 := Cost_Cache.Get_Cost (Cm,
                                          New_Owner,
                                          Curr.Job,
                                          Ne);
 
-         Minus   := Cost_Matrix.Get_Cost (Cm,
+         Minus   := Cost_Cache.Get_Cost (Cm,
                                           New_Owner,
                                           Pr,
                                           Ne);
@@ -1980,7 +1984,7 @@ package body Agpl.Cr.Mutable_Assignment is
       Minus_2  : Costs := 0.0;
       Plus     : Costs := 0.0;
       Cost     : Costs := Acm.Element (This.Agent_Costs.Find (Agent));
-      Cm       : Cost_Matrix.Object renames This.Context.Ref.Costs;
+      Cm       : Cost_Cache.Object'Class renames This.Context.Ref.Costs.Ref.all;
 
       Pr, Ne   : Htn.Tasks.Task_Id := No_Task;
    begin
@@ -1994,17 +1998,17 @@ package body Agpl.Cr.Mutable_Assignment is
          Ne := Next.Job;
       end if;
 
-      Minus_1 := Cost_Matrix.Get_Cost (Cm,
+      Minus_1 := Cost_Cache.Get_Cost (Cm,
                                        String (Agent),
                                        Pr,
                                        Curr.Job);
 
-      Minus_2 := Cost_Matrix.Get_Cost (Cm,
+      Minus_2 := Cost_Cache.Get_Cost (Cm,
                                        String (Agent),
                                        Curr.Job,
                                        Ne);
 
-      Plus    := Cost_Matrix.Get_Cost (Cm,
+      Plus    := Cost_Cache.Get_Cost (Cm,
                                        String (Agent),
                                        Pr,
                                        Ne);

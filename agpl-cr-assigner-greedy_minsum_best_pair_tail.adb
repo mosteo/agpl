@@ -45,7 +45,7 @@ package body Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Task_Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return Assignment.Object
    is
       pragma Unreferenced (This, Costs);

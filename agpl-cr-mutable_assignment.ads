@@ -32,7 +32,8 @@
 with Agpl.Bag; pragma Elaborate_All (Agpl.Bag);
 with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
+private with Agpl.Cr.Cost_Cache.Handle;
 with Agpl.Dynamic_Vector;
 with Agpl.Generic_Handle;
 with Agpl.Htn.Plan;
@@ -118,7 +119,7 @@ package Agpl.Cr.Mutable_Assignment is
    --  Cut out this agent; its tasks will go to others
 
    procedure Set_Costs (This  : in out Object;
-                        Costs : in     Cr.Cost_Matrix.Object);
+                        Costs : in     Cr.Cost_Cache.Object'Class);
    --  Any task not present here will be assumed is not doable.
    --  *MUST* include costs from the No_Task
    --  *MUST* include cost from No_Task to No_Task (i.e. past incurred costs
@@ -216,7 +217,7 @@ private
    type Static_Context is record
       Agents    : Agent_Maps.Map;
 
-      Costs     : Cr.Cost_Matrix.Object;
+      Costs     : Cost_Cache.Handle.Object;
       Plan      : Htn.Plan.Object;
 
       Criterion : Assignment_Criteria := Criterion_Time_Critical;

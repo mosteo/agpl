@@ -29,7 +29,7 @@
 
 with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 with Agpl.Htn.Plan;
 
 package Agpl.Cr.Plan_Assigner is
@@ -42,7 +42,7 @@ package Agpl.Cr.Plan_Assigner is
      (This      : in Object;
       Agents    : in Agent.Containers.Vectors.Vector;
       Plan      : in Agpl.Htn.Plan.Object;
-      Costs     : in Cost_Matrix.Object;
+      Costs     : in Cost_Cache.Object'Class;
       Criterion : in Assignment_Criteria)
       return      Assignment.Object is abstract;
    --  Costs should include the starting task.

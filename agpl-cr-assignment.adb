@@ -339,7 +339,7 @@ package body Agpl.Cr.Assignment is
    end Get_Max_Min_Cost;
 
    function Get_Max_Min_Cost (This : in Object;
-                              C    : in Cost_Matrix.Object) return Costs
+                              C    : in Cost_Cache.Object'Class) return Costs
    is
       Worst : Costs := 0.0;
       use Agent.Maps;
@@ -352,7 +352,7 @@ package body Agpl.Cr.Assignment is
       while I /= No_Element loop
          Worst := Costs'Max
            (Worst,
-            Cost_Matrix.Get_Plan_Cost (C, Element (I)));
+            Cost_Cache.Get_Plan_Cost (C, Element (I)));
          Next (I);
       end loop;
 
@@ -381,7 +381,7 @@ package body Agpl.Cr.Assignment is
    end Get_Cummulative_Cost;
 
    function Get_Cummulative_Cost (This : in Object;
-                                  C    : in Cost_Matrix.Object) return Costs
+                                  C    : in Cost_Cache.Object'Class) return Costs
    is
       Cost : Costs := 0.0;
       use Agent.Maps;
@@ -392,7 +392,7 @@ package body Agpl.Cr.Assignment is
       end if;
 
       while I /= No_Element loop
-         Cost := Cost + Cost_Matrix.Get_Plan_Cost (C, Element (I));
+         Cost := Cost + Cost_Cache.Get_Plan_Cost (C, Element (I));
          Next (I);
       end loop;
 
@@ -417,7 +417,7 @@ package body Agpl.Cr.Assignment is
    end Get_Cost;
 
    function Get_Cost (This      : in Object;
-                      C         : in Cost_Matrix.Object;
+                      C         : in Cost_Cache.Object'Class;
                       Criterion : in Assignment_Criteria) return Costs
    is
    begin

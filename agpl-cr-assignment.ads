@@ -28,7 +28,7 @@
 
 with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Agent.Maps;
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
@@ -84,18 +84,18 @@ package Agpl.Cr.Assignment is
 
    function Get_Max_Min_Cost (This : in Object) return Costs;
    function Get_Max_Min_Cost (This : in Object;
-                              C    : in Cost_Matrix.Object) return Costs;
+                              C    : in Cost_Cache.Object'Class) return Costs;
    --  Says the worst of all the agent total costs.
 
    function Get_Cummulative_Cost (This : in Object) return Costs;
    function Get_Cummulative_Cost (This : in Object;
-                                  C    : in Cost_Matrix.Object) return Costs;
+                                  C    : in Cost_Cache.Object'Class) return Costs;
    --  Says the sum of all agent costs.
 
    function Get_Cost (This      : in Object;
                       Criterion : in Assignment_Criteria) return Costs;
    function Get_Cost (This      : in Object;
-                      C         : in Cost_Matrix.Object;
+                      C         : in Cost_Cache.Object'Class;
                       Criterion : in Assignment_Criteria) return Costs;
    --  Uses one of the two previous according to the Criterion
 

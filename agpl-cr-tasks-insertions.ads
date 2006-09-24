@@ -28,7 +28,7 @@ with Agpl.Cr;
 with Agpl.Cr.Agent;
 with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assignment;
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
 use  Agpl;
@@ -71,7 +71,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy (A          : in     Agent.Object'Class;
                      T          : in     Htn.Tasks.Object'Class;
-                     C          : in     Cost_Matrix.Object;
+                     C          : in     Cost_Cache.Object'Class;
                      Not_Before : in     Natural;
                      New_Agent  :    out Agent.Handle.Object;
                      Cost_Delta :    out Cr.Costs;
@@ -98,7 +98,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy (Ass       : in     Assignment.Object;
                      T         : in     Htn.Tasks.Object'Class;
-                     Costs     : in     Cost_Matrix.Object;
+                     Costs     : in     Cost_Cache.Object'Class;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
                      Success   :    out Boolean;
@@ -109,7 +109,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy (Ass       : in     Assignment.Object;
                      Tasks     : in     Htn.Tasks.Containers.Lists.List;
-                     Costs     : in     Cost_Matrix.Object;
+                     Costs     : in     Cost_Cache.Object'Class;
                      Criterion : in     Assignment_Criteria;
                      New_Ass   :    out Assignment.Object;
                      Inserted  :    out Htn.Tasks.Task_Id;
@@ -121,7 +121,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy_Tail (Agent      : in Cr.Agent.Object'Class;
                           Tasks      : in Htn.Tasks.Containers.Lists.List;
-                          Costs      : in     Cost_Matrix.Object;
+                          Costs      : in     Cost_Cache.Object'Class;
                           New_Agent  :    out Cr.Agent.Handle.Object;
                           Inserted   :    out Htn.Tasks.Task_Id;
                           Cost_Total :    out Cr.Costs;
@@ -130,7 +130,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy_Tail (Ass        : in Assignment.Object;
                           T          : in Htn.Tasks.Object'Class;
-                          Costs      : in Cost_Matrix.Object;
+                          Costs      : in Cost_Cache.Object'Class;
                           Criterion  : in     Assignment_Criteria;
                           New_Ass    :    out Assignment.Object;
                           Cost_Total :    out Cr.Costs;
@@ -140,7 +140,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Greedy_Tail (Ass       : in     Assignment.Object;
                           Tasks     : in     Htn.Tasks.Containers.Lists.List;
-                          Costs     : in     Cost_Matrix.Object;
+                          Costs     : in     Cost_Cache.Object'Class;
                           Criterion : in     Assignment_Criteria;
                           New_Ass   :    out Assignment.Object;
                           Inserted  :    out Htn.Tasks.Task_Id;
@@ -152,7 +152,7 @@ package Agpl.Cr.Tasks.Insertions is
 
    procedure Idle_Tail (Ass        : in     Assignment.Object;
                         Tasks      : in     Htn.Tasks.Containers.Lists.List;
-                        Costs      : in     Cost_Matrix.Object;
+                        Costs      : in     Cost_Cache.Object'Class;
                         New_Ass    :    out Assignment.Object;
                         Inserted   :    out Htn.Tasks.Task_Id;
                         Cost_Total :    out Cr.Costs;

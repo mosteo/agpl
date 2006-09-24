@@ -53,7 +53,7 @@ package body Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return Assignment.Object
    is
       A : Assignment.Object;

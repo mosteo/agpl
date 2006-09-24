@@ -24,7 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 
 --  Greedy heuristic that will at each step use the best pair agent-task
 --  with task adding less cost.
@@ -42,7 +42,7 @@ package Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return      Assignment.Object;
 
 end Agpl.Cr.Assigner.Greedy_Minsum_Best_Pair_Tail;

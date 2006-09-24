@@ -49,7 +49,7 @@ package body Agpl.Cr.Assigner.Greedy_Fifo_Tail is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return Assignment.Object
    is
       pragma Unreferenced (This);

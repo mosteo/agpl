@@ -139,6 +139,14 @@ package Agpl.Htn.Plan is
    function Is_Modified (This : in Object) return Boolean;
    --  Says if the plan has been modified.
 
+   procedure Fill_Finished (This : in out Object);
+   --  Will mark as finished any tasks depending on OR nodes already finished.
+
+   procedure Mark_Task_Done
+     (This : in out Object;
+      Id   : in     Tasks.Task_Id);
+   --  Mark as done this task an any ORed depending on it
+
    procedure Mark_Task_Done
      (This    : in out Object;
       Id      : in     Tasks.Task_Id;
@@ -161,6 +169,8 @@ package Agpl.Htn.Plan is
 
    procedure Print_Tree_Summary (This : in Object);
    --  A more detailed debug dump with tree form and details about each node.
+
+   function Size_In_Bytes (This : in Object) return Natural;
 
 private
 

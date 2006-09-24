@@ -29,7 +29,7 @@
 
 with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Assignment;
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 with Agpl.Htn.Plan;
 with Agpl.Htn.Tasks.Containers;
 
@@ -51,7 +51,7 @@ package Agpl.Cr.Assigner is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Agpl.Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cost_Matrix.Object)
+      Costs  : in Cost_Cache.Object'Class)
       return      Assignment.Object is abstract;
 
    procedure Assign_Best_Plan

@@ -53,6 +53,8 @@ package body Agpl.Cr.Mutable_Assignment.Or_Mutations is
       Placeholder_Usable : Boolean := False;
       Placeholder        : Undo_Move_Task_Info;
 
+      Owner_Was          : Ustring;
+
       procedure Descend_Adding (Node : in     Htn.Plan.Subplan) is
          use Htn.Plan_Node;
       begin
@@ -76,14 +78,19 @@ package body Agpl.Cr.Mutable_Assignment.Or_Mutations is
                               + Placeholder.Owner_Was);
                      else
                         declare
-                           Target : constant Task_Context_Ptr :=
-                                      This.Select_Random_Task (All_Assigned_Tasks);
+                           Prev, Next, Target : Task_Context_Ptr;
                         begin
-                           This.Do_Insert_Task
-                             (This.Get_Task_Context (Target.Prev),
-                              Tc,
-                              Target,
-                              Get_Attribute (Target, Owner));
+                           This.Select_Random_Insertion (All_Assigned_Tasks,
+                                                         Prev, Target, Next);
+                           if Target /= null then
+                              This.Do_Insert_Task
+                                (Prev,
+                                 Tc,
+                                 Next,
+                                 Get_Attribute (Target, Owner));
+                           else
+                              This.Do_Insert_Task (null, Tc, null, +Owner_Was);
+                           end if;
                         end;
                      end if;
                   end;
@@ -150,6 +157,9 @@ package body Agpl.Cr.Mutable_Assignment.Or_Mutations is
                   U.Actived_Or_Branch := New_Child;
                   This.Descend_Removing (Ctx.Branch, U);
 
+                  --  Keep owner for extreme cases:
+                  Owner_Was := U.Or_Stack.Vector (U.Or_Stack.First).Owner_Was;
+
                   --  in 50% ocassions, we reuse the place were the switched task was:
                   if Random.Get_Integer (0, 1) = 1 then
                      Placeholder_Usable := True;
@@ -171,6 +181,7 @@ package body Agpl.Cr.Mutable_Assignment.Or_Mutations is
       end;
    exception
       when others =>
+         Log ("Status when OR mutation exception:", Error, Log_Section);
          This.Context.Ref.Plan.Print_Tree_Summary;
          This.Debug_Dump_Contexts;
          raise;

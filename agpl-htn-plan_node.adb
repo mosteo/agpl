@@ -496,9 +496,28 @@ package body Agpl.Htn.Plan_Node is
    -- Set_Finished --
    ------------------
 
-   procedure Set_Finished (This : Node_Access; Finished : Boolean := True) is
+   procedure Set_Finished (This      : Node_Access;
+                           Finished  : Boolean := True;
+                           Recursive : Boolean := False) is
    begin
       This.Finished := Finished;
+
+      if Recursive then
+         case This.Kind is
+         when Task_Node =>
+            if Get_Expanded (This) then
+               Set_Finished (Get_Expansion (This), Finished, Recursive);
+            end if;
+         when Or_Node | And_Node  =>
+            declare
+               Children : constant Node_Vectors.Vector := Get_Children (This);
+            begin
+               for I in Children.First_Index .. Children.Last_Index loop
+                  Set_Finished (Children.Element (I), Finished, Recursive);
+               end loop;
+            end;
+         end case;
+      end if;
    end Set_Finished;
 
    ---------------
@@ -565,6 +584,45 @@ package body Agpl.Htn.Plan_Node is
 
       return Curr; -- Will be null.
    end Get_Parent_Task;
+
+   -------------------
+   -- Fill_Finished --
+   -------------------
+
+   procedure Fill_Finished (This : in Node_Access) is
+   begin
+      case This.Kind is
+         when Or_Node =>
+            declare
+               Children : constant Node_Vectors.Vector := Get_Children (This);
+               Finished :          Boolean := False;
+            begin
+               for I in Children.First_Index .. Children.Last_Index loop
+                  Fill_Finished (Children.Element (I));
+                  Finished := Finished or Get_Finished (Children.Element (I));
+               end loop;
+               if Finished then
+                  Set_Finished (This, Finished, Recursive => True);
+               end if;
+            end;
+         when And_Node =>
+            declare
+               Children : constant Node_Vectors.Vector := Get_Children (This);
+               Finished :          Boolean := True;
+            begin
+               for I in Children.First_Index .. Children.Last_Index loop
+                  Fill_Finished (Children.Element (I));
+                  Finished := Finished and Get_Finished (Children.Element (I));
+               end loop;
+               Set_Finished (This, Finished, Recursive => False);
+            end;
+         when Task_Node =>
+            if Get_Expanded (This) then
+               Fill_Finished (Get_Expansion (This));
+               Set_Finished (This, Get_Finished (Get_Expansion (This)));
+            end if;
+      end case;
+   end Fill_Finished;
 
    ----------------
    -- Initialize --

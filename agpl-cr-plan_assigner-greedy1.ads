@@ -39,7 +39,7 @@ package Agpl.Cr.Plan_Assigner.Greedy1 is
      (This      : in Object;
       Agents    : in Agent.Containers.Vectors.Vector;
       Plan      : in Agpl.Htn.Plan.Object;
-      Costs     : in Cost_Matrix.Object;
+      Costs     : in Cost_Cache.Object'Class;
       Criterion : in Assignment_Criteria)
       return      Assignment.Object;
    --  Costs should include the starting task.

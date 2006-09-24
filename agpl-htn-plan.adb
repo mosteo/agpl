@@ -25,6 +25,7 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Constants;
+with Agpl.Streams.Circular_Unbounded;
 with Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
 
@@ -60,9 +61,12 @@ package body Agpl.Htn.Plan is
       Comp : in     Subplan;
       Kind : in     Node_Kind := Plan_Node.And_Node)
    is
+      use Plan_Node;
    begin
       if This.Tasks = null then
          This.Tasks := Comp;
+      elsif Get_Kind (This.Tasks) = And_Node and then Kind = And_Node then
+         Plan_Node.Append_Child (This.Tasks, Comp);
       else
          This.Tasks := Plan_Node.Create (Kind, This.Tasks, Comp);
       end if;
@@ -92,11 +96,15 @@ package body Agpl.Htn.Plan is
       The_Task : in Tasks.Object'Class;
       Kind     : in Node_Kind := Plan_Node.And_Node)
    is
-      use type Plan_Node.Node_Access;
+      use Plan_Node;
    begin
       if This.Tasks = null then
          This.Tasks := Plan_Node.Create (The_Task);
+      elsif Get_Kind (This.Tasks) = And_Node and then Kind = And_Node then
+         --  Add to tail
+         Plan_Node.Append_Child (This.Tasks, Plan_Node.Create (The_Task));
       else
+         --  New deep
          This.Tasks := Plan_Node.Create
            (Kind,
             This.Tasks,
@@ -524,6 +532,29 @@ package body Agpl.Htn.Plan is
       return This.Tasks = null;
    end Is_Empty;
 
+   -------------------
+   -- Fill_Finished --
+   -------------------
+
+   procedure Fill_Finished (This : in out Object) is
+   begin
+      Plan_Node.Fill_Finished (This.Tasks);
+   end Fill_Finished;
+
+   --------------------
+   -- Mark_Task_Done --
+   --------------------
+
+   procedure Mark_Task_Done
+     (This : in out Object;
+      Id   : in     Tasks.Task_Id)
+   is
+      use Plan_Node;
+   begin
+      Set_Finished (This.Get_Node (Id));
+      This.Fill_Finished;
+   end Mark_Task_Done;
+
    --------------------
    -- Mark_Task_Done --
    --------------------
@@ -786,10 +817,14 @@ package body Agpl.Htn.Plan is
          else
             case Get_Kind (X) is
                when And_Node =>
-                  Log (Whites & "AND [" & Get_Id (X) & "]", Always);
+                  Log (Whites & "AND [" & Get_Id (X) & "]" &
+                       " F:" & Boolean_To_Char (Get_Finished (X)),
+                       Always);
                   Print_Children (Get_Children (X));
                when Or_Node =>
-                  Log (Whites & "OR [" & Get_Id (X) & "]", Always);
+                  Log (Whites & "OR [" & Get_Id (X) & "]" &
+                       " F:" & Boolean_To_Char (Get_Finished (X)),
+                       Always);
                   Print_Children (Get_Children (X));
                when Task_Node =>
                   declare
@@ -817,6 +852,18 @@ package body Agpl.Htn.Plan is
       Log ("Plan tree:", Always);
       Print_Node (Get_Root (This), Indent => 0);
    end Print_Tree_Summary;
+
+   -------------------
+   -- Size_In_Bytes --
+   -------------------
+
+   function Size_In_Bytes (This : in Object) return Natural is
+      Stream : aliased Streams.Circular_Unbounded.Stream_Type;
+   begin
+      Stream.Create;
+      Object'Output (Stream'Access, This);
+      return Stream.Available_Read;
+   end Size_In_Bytes;
 
    ------------
    -- Adjust --

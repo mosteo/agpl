@@ -57,7 +57,7 @@ package body Agpl.Cr.Mutable_Assignment.Heuristics is
                               ((Plan_Assigner.Object with null record),
                                Get_Agents_Without_Tasks (U.Ass),
                                This.Context.Ref.Plan,
-                               This.Context.Ref.Costs,
+                               This.Context.Ref.Costs.Ref.all,
                                This.Context.Ref.Criterion);
       begin
 --         New_Assignment.Print_Assignment;

@@ -170,8 +170,14 @@ package Agpl.Htn.Plan_Node is
    --  Get the expansion child for a task node.
 
    function Get_Finished (This : Node_Access) return Boolean;
-   --  Says if the task of a task node has been finished.
-   procedure Set_Finished (This : Node_Access; Finished : Boolean := True);
+   --  Says *this* node is marked as finished
+
+   procedure Set_Finished (This      : Node_Access;
+                           Finished  : Boolean := True;
+                           Recursive : Boolean := False);
+   --  Mark this node (and descendents optionally).
+   --  Still, Fill_Finished is necessary to propagate changes due to nodes
+   --  above this one.
 
    function Get_Id (This : not null Node_Access) return String;
    --  Some unique id. Copied across plans.
@@ -205,6 +211,9 @@ package Agpl.Htn.Plan_Node is
    function Get_Parent_Task (This : in Node_Access) return Node_Access;
    --  Get first ancestor that is a task node or null if none.
 
+   procedure Fill_Finished (This : in Node_Access);
+   --  Mark as finished any tasks requiring it due to OR nodes.
+
    function Is_Sane (This   : in Node_Access;
                      Parent : in Node_Access := null) return Boolean;
    --  Debug: Check correctness in parent/child pointers.
@@ -216,12 +225,12 @@ private
    with record
       Parent   : Node_Access; -- Will be null for the root.
       Id       : Ustring;     -- Assigned on initialization.
+      Finished : Boolean := False; --  If the task has been already performed.
+      --  For OR/AND nodes, it means the descendent dependencies.
 
       case Kind is
          when Task_Node =>
             The_Task : Tasks.Object_Access;
-
-            Finished : Boolean := False; --  If the task has been already performed.
             Owner    : Ustring;          --  Name of the agent performing it.
 
             Child    : Node_Access;

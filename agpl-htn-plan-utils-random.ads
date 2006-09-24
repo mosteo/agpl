@@ -44,6 +44,6 @@ package Agpl.Htn.Plan.Utils.Random is
    function Get_Any_Expansion (This : in Plan.Object) return Plan.Object;
    --  Given a plan with OR nodes, return a random plan expansion.
    --  This is truly random and memory efficient, so don't worry about the
-   --  number of OR nodes
+   --  number of OR nodes.
 
 end Agpl.Htn.Plan.Utils.Random;

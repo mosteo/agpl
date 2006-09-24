@@ -1,4 +1,5 @@
 with Agpl.Cr.Agent.Dummy;
+with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Cost_Cache is
 
@@ -23,6 +24,7 @@ package body Agpl.Cr.Cost_Cache is
          Partial := Get_Cost (This,
                               Cr.Agent.Get_Name (Agent),
                               Prev, Htn.Tasks.Get_Id (Element (I)));
+
          if Partial = Cr.Infinite then
             Total := Infinite;
          else
@@ -51,5 +53,20 @@ package body Agpl.Cr.Cost_Cache is
       Ag.Set_Tasks (Tasks);
       return Get_Plan_Cost (This, Ag);
    end Get_Plan_Cost;
+
+   --------------
+   -- Get_Cost --
+   --------------
+
+   function Get_Cost
+     (This  : in Empty_Class;
+      Agent : in String;
+      Ini   : in Htn.Tasks.Task_Id;
+      Fin   : in Htn.Tasks.Task_Id) return Costs
+   is
+      pragma Unreferenced (This, Agent, Ini, Fin);
+   begin
+      return Cr.Infinite;
+   end Get_Cost;
 
 end Agpl.Cr.Cost_Cache;
