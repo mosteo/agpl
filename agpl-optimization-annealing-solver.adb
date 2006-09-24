@@ -202,24 +202,24 @@ package body Agpl.Optimization.Annealing.Solver is
               To_String (Float (M.Accepted) * 100.0 / Float (Total_Good)) &
               "%/" &
               To_String (Float (M.Taken) * 100.0 / Float (Total_Moves)) & "%",
-              Always, Log_Section);
+              Informative, Log_Section);
       end Do_Inform;
    begin
       Stats.Iterate (Do_Count'Access);
 
-      Log ("", Always, Log_Section);
+      Log ("", Informative, Log_Section);
 
       Stats.Iterate (Do_Inform'Access);
 
-      Log ("", Always, Log_Section);
+      Log ("", Informative, Log_Section);
 
       Log ("TOTAL MOVES (accept/total): " &
            To_String (Total_Good) & "/" & To_String (Total_Moves) & " (" &
            To_String (Float (Total_Good) * 100.0 / Float (Total_Moves)) &
            "%)",
-           Always, Log_Section);
+           Informative, Log_Section);
 
-      Log ("", Always, Log_Section);
+      Log ("", Informative, Log_Section);
    end Print_Stats;
 
    -----------------

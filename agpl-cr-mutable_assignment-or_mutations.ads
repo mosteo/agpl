@@ -24,32 +24,17 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+--  The difference with Expres.Mutable_assignment is that that one used several
+--  hacks for the problem we had at hand at that time.
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+--  This one strives to be a really general, problem-independent solution.
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
+package Agpl.Cr.Mutable_Assignment.Or_Mutations is
 
-   pragma Preelaborate;
+   pragma Elaborate_Body;
 
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
+   procedure Do_Switch_Or_Node (This : in out Object;
+                                Undo :    out Undo_Info);
+   procedure Undo_Switch (This : in out Object; Undo : in Undo_Info);
 
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
-
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
-
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
-
-end Agpl.Containers.Bulk;
+end Agpl.Cr.Mutable_Assignment.Or_Mutations;

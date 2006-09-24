@@ -24,32 +24,33 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+with Agpl.Cr.Mutable_Assignment.Moves;
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+package Agpl.Cr.Mutable_Assignment.Auctions is
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
+   pragma Elaborate_Body;
 
-   pragma Preelaborate;
+   --  use UNDO_MOVE_TASK for all moves in this package
 
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
+   --  O (log)
+   procedure Do_Auction_Task (This : in out Object;
+                              Undo :    out Undo_Info);
+   --  As undo, use the Undo_Move_Task
+   --  Cost is kept logaritmic checking only a log fraction of all insertion points.
 
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
+   procedure Do_Guided_Auction_Task (This : in out Object;
+                                     Undo :    out Undo_Info);
+   --  Guided in originating agent
+   --  As undo, use the Undo_Move_Task
 
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
+   --  O (n)
+   procedure Do_Exhaustive_Auction_Task (This : in out Object;
+                                         Undo :    out Undo_Info);
+   --  As undo, use the Undo_Move_Task
+   --  Will try all possible insertions
 
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
+   procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info)
+     renames Moves.Undo_Move_Task;
+   --  Will un-move all movements, in the Undo_Info stack, not just one.
 
-end Agpl.Containers.Bulk;
+end Agpl.Cr.Mutable_Assignment.Auctions;

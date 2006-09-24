@@ -29,6 +29,7 @@ with Ada.Strings.Hash;
 
 with Agpl.Cr.Agent;
 with Agpl.Cr.Agent.Containers;
+with Agpl.Cr.Cost_Cache;
 with Agpl.Htn.Tasks;
 with Agpl.Htn.Tasks.Containers;
 
@@ -36,7 +37,7 @@ package Agpl.Cr.Cost_Matrix is
 
    pragma Preelaborate;
 
-   type Object is private;
+   type Object is new Cost_Cache.Object with private;
    --  Here we store a mapping of Agent x Start Task x End Task --> Costs
    --  This structure will be later used by assigners to compute an assignation.
 
@@ -133,7 +134,7 @@ private
 
    use Att_Maps;
 
-   type Object is record
+   type Object is new Cost_Cache.Object with record
       Matrix : Map;
    end record;
 
@@ -143,6 +144,6 @@ private
    pragma Inline (Key);
    --  Construct a suitable key for indexing.
 
-   Empty_Object : constant Object := (others => <>);
+   Empty_Object : constant Object := (Cost_Cache.Object with others => <>);
 
 end Agpl.Cr.Cost_Matrix;

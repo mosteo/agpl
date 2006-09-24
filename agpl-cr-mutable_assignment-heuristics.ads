@@ -24,32 +24,29 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+package Agpl.Cr.Mutable_Assignment.Heuristics is
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+   pragma Elaborate_Body;
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
+   procedure Undo_From_Scratch (This : in out Object; Undo : in Undo_Info)
+     renames Mutable_Assignment.Undo_From_Scratch;
+   --  Undo for all heuristics
 
-   pragma Preelaborate;
+   procedure Do_Heuristic_1 (This : in out Object;
+                             Undo :    out Undo_Info)
+     renames Mutable_Assignment.Do_Heuristic_1;
+   --  Will consider all agents and tasks to provide some "good" assignment.
+   --  The current tasks are re-assigned in a "best pair" greedy fashion.
+   --  So no OR node switchings happen.
 
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
+   procedure Do_Heuristic_2 (This : in out Object;
+                             Undo :    out Undo_Info);
+   --  This heuristic will consider the best of *all* tasks in every possible
+   --  expansion; freeze the plan with the chosen task; repeat until no more T.
 
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
+   --  O (n^2)
+   procedure Do_Agent_Reorder (This : in out Object;
+                               Undo :    out Undo_Info);
+   --  Greedy reordering of an agent tasks
 
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
-
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
-
-end Agpl.Containers.Bulk;
+end Agpl.Cr.Mutable_Assignment.Heuristics;

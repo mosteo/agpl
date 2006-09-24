@@ -24,32 +24,9 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+--  A generic interface for cost caching strategies.
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+with Agpl.Generic_Handle;
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
-
-   pragma Preelaborate;
-
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
-
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
-
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
-
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
-
-end Agpl.Containers.Bulk;
+package Agpl.Cr.Cost_Cache.Handle is new
+  Agpl.Generic_Handle (Object'Class);

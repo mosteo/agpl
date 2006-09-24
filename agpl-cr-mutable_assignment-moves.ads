@@ -24,32 +24,36 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+package Agpl.Cr.Mutable_Assignment.Moves is
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+   pragma Elaborate_Body;
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
+   procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info);
+   --  Will un-move all movements, in the Undo_Info stack, not just one.
 
-   pragma Preelaborate;
+   --  O (log)
+   procedure Do_Move_Task (This : in out Object;
+                           Undo :    out Undo_Info);
 
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
+   --  O (log)
+   procedure Do_Move_Task_Changing_Owner (This : in out Object;
+                                          Undo :    out Undo_Info);
+   --  Moves a task at random, but choses the owner before hand. In this way,
+   --  no agent can end without tasks (as happens when just using Move_Task
+   --  As undo, use the Undo_Move_Task
 
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
+   procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
+                                                 Undo :    out Undo_Info);
+   --  Like previous, but task is chosen from the worst cost agent
 
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
+   procedure Do_Swap_Order (This : in out Object;
+                            Undo :    out Undo_Info);
+   --  Switches two consecutive tasks
+   --  As undo, use the Undo_Move_Task
 
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
+   procedure Do_Swap_Tasks (This : in out Object;
+                            Undo :    out Undo_Info);
+   --  Switches two arbitrary tasks
+   --  As undo, use the Undo_Move_Task
 
-end Agpl.Containers.Bulk;
+end Agpl.Cr.Mutable_Assignment.Moves;

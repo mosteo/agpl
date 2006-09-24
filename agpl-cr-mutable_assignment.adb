@@ -31,10 +31,7 @@
 
 with Agpl.Conversions;
 use  Agpl.Conversions;
-with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assigner.Greedy_Minmax_Exhaustive;
-with Agpl.Cr.Plan_Assigner;
-with Agpl.Cr.Plan_Assigner.Greedy1;
 with Agpl.Cr.Tasks.Insertions;
 with Agpl.Htn.Plan.Utils;
 with Agpl.Htn.Plan.Utils.Random;
@@ -44,12 +41,11 @@ with Agpl.Random;
 with Agpl.Trace;   use Agpl.Trace;
 
 with Ada.Containers;
-with Ada.Numerics.Elementary_Functions;
 with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Agpl.Cr.Mutable_Assignment is
 
-   Expensive_Checks : constant Boolean := False;
+   Expensive_Checks : constant Boolean := True;
 
    File : constant String := "[Mutable_Assignment] ";
 
@@ -59,8 +55,6 @@ package body Agpl.Cr.Mutable_Assignment is
    use type Optimization.Annealing.Probability;
 
    package Acm renames Agent_Cost_Maps;
-
-   No_Task : Htn.Tasks.Task_Id renames Htn.Tasks.No_Task;
 
    function S is new Conversions.To_Str (Optimization.Annealing.Probability);
    function To_String is new Conversions.Fixed_To_Str (Cr.Costs);
@@ -79,11 +73,6 @@ package body Agpl.Cr.Mutable_Assignment is
    begin
       return Task_Context_Ptr (Cp);
    end "+";
-
-   function S (Key : in Solution_Context_Key) return String is
-   begin
-      return +Ustring (Key);
-   end S;
 
    ---------------
    -- Add_Agent --
@@ -471,94 +460,6 @@ package body Agpl.Cr.Mutable_Assignment is
       end;
    end Do_Heuristic_1;
 
-   --------------------
-   -- Do_Heuristic_2 --
-   --------------------
-
-   procedure Do_Heuristic_2 (This : in out Object;
-                             Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (From_Scratch);
-   begin
-      U.Ass         := This.To_Assignment;
-      U.Description := +"Heuristic 2";
-      Undo.Handle.Set (U);
-
-      declare
-         use Cr.Assignment;
-         New_Assignment : constant Cr.Assignment.Object :=
-                            Plan_Assigner.Greedy1.Assign
-                              ((Plan_Assigner.Object with null record),
-                               Get_Agents_Without_Tasks (U.Ass),
-                               This.Context.Ref.Plan,
-                               This.Context.Ref.Costs,
-                               This.Context.Ref.Criterion);
-      begin
---         New_Assignment.Print_Assignment;
-
-         if New_Assignment.Is_Valid then
-            Set_Assignment (This, New_Assignment, This.Context.Ref.Criterion);
-         else
-            Log (File & "Plan_Assigner.Greedy1 failed!", Warning);
-         end if;
-         --  Note: here Minimax will not be used since there are no new tasks.
-      end;
-   exception
-      when E : Constraint_Error =>
-         Log (File & "Plan_Assigner.Greedy1 failed!", Warning);
-         Log (Report (E), Warning);
-   end Do_Heuristic_2;
-
-   ----------------------
-   -- Do_Agent_Reorder --
-   ----------------------
-
-   procedure Do_Agent_Reorder (This : in out Object;
-                               Undo :    out Undo_Info)
-   is
-      U     : Undo_Internal (From_Scratch);
-      Agent : constant Agent_Id :=
-                Agent_Id
-                  (+Agent_Context
-                     (This.Select_Random_Context (All_Agents).all).Agent_Name);
-   begin
-      declare
-         New_Ass : Assignment.Object := This.To_Assignment;
-         Ag      : Cr.Agent.Object'Class := New_Ass.Get_Agent (String (Agent));
-         Tasks   : Task_Lists.List := Ag.Get_Tasks;
-      begin
-         U.Description := +"AGENT REORDER N²";
-         U.Ass         := New_Ass;
-         Undo.Handle.Set (U);
-
-         Ag.Clear_Tasks;
-         while not Tasks.Is_Empty loop
-            declare
-               New_Ag : Cr.Agent.Handle.Object;
-               Cd, Ct : Cr.Costs;
-               Ok     : Boolean;
-            begin
-               Cr.Tasks.Insertions.Greedy (Ag,
-                                           Tasks.First_Element,
-                                           New_Ag,
-                                           Cd, Ct, Ok);
-               if not Ok then
-                  Log ("Failed to reorder agent tasks", Warning, Log_Section);
-                  This.Do_Identity (Undo);
-                  return;
-               else
-                  Ag := New_Ag.Get;
-                  Tasks.Delete_First;
-               end if;
-            end;
-         end loop;
-         New_Ass.Set_Agent (Ag);
-         New_Ass.Set_Valid;
---         New_Ass.Print_Summary;
-         This.Set_Assignment (New_Ass, This.Context.Ref.Criterion);
-      end;
-   end Do_Agent_Reorder;
-
    -----------------
    -- Do_Identity --
    -----------------
@@ -661,509 +562,6 @@ package body Agpl.Cr.Mutable_Assignment is
       Src := This.Ptr (Src_Copy.Key);
    end Do_Move_Task;
 
-   ---------------------
-   -- Do_Auction_Task --
-   ---------------------
-
-   procedure Do_Auction_Task (This : in out Object;
-                              Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "LOG AUCTION";
-
-      declare
-         use Ada.Numerics.Elementary_Functions;
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context := Task_Context (Src.all);
-         Checks   : constant Positive :=
-                      Natural (Log (Float (This.Num_Assigned_Tasks))) + 1;
-
-         Best_Prev,
-         Best_Next   : Task_Context_Ptr;
-         Best_Cost   : Costs := Infinite;
-         Best_Name   : Ustring;
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         Log ("Checking" & Checks'Img & " of" & This.Num_Assigned_Tasks'Img &
-              " possible insertions", Debug, Detail_Section);
-
-         for I in 1 .. Checks loop
-            declare
-               Curr_Target,
-               Curr_Prev,
-               Curr_Next : Task_Context_Ptr;
-               Curr_Cost : Costs;
-            begin
-               This.Select_Random_Insertion (All_Assigned_Tasks,
-                                             Curr_Prev,
-                                             Curr_Target,
-                                             Curr_Next);
-               Curr_Cost := This.Evaluate_Cost_Inserting
-                 (Curr_Prev,
-                  Src_Copy.Job,
-                  Curr_Next,
-                  Agent_Id (Get_Attribute (Curr_Target, Owner)));
-
-               if Curr_Cost < Best_Cost then
-                  Best_Cost := Curr_Cost;
-                  Best_Prev := Curr_Prev;
-                  Best_Next := Curr_Next;
-                  Best_Name := +String (Get_Attribute (Curr_Target, Owner));
-               end if;
-            end;
-         end loop;
-
-         if Best_Cost < Cr.Infinite then
-            This.Do_Insert_Task (Best_Prev,
-                                 Src_Copy,
-                                 Best_Next,
-                                 Agent_Id (+Best_Name));
-         else
-            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
-                                 Src_Copy,
-                                 This.Get_Task_Context (Src_Copy.Next),
-                                 Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Undo);
-         end if;
-      end;
-   end Do_Auction_Task;
-
-   --------------------------------
-   -- Do_Exhaustive_Auction_Task --
-   --------------------------------
-
-   procedure Do_Exhaustive_Auction_Task (This : in out Object;
-                                         Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "FULL AUCTION";
-
-      declare
-         use Ada.Numerics.Elementary_Functions;
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context := Task_Context (Src.all);
-
-         Best_Prev,
-         Best_Next   : Task_Context_Ptr;
-         Best_Cost   : Costs := Infinite;
-         Best_Name   : Ustring;
-
-         procedure Do_It (I : in Solution_Context_Maps.Cursor) is
-            use Solution_Context_Maps;
-         begin
-            if Element (I) in Task_Context then
-               declare
-                  C    : constant Task_Context := Task_Context (Element (I));
-                  Prev : constant Task_Context_Ptr :=
-                           This.Get_Task_Context (C.Prev);
-                  Next : constant Task_Context_Ptr :=
-                           This.Get_Task_Context (C.Job);
-                  Cost : Costs;
-               begin
-                  Cost := This.Evaluate_Cost_Inserting
-                    (Prev,
-                     Src_Copy.Job,
-                     Next,
-                     Agent_Id (Get_Attribute (C, Owner)));
-
-                  if Cost < Best_Cost then
-                     Best_Cost := Cost;
-                     Best_Prev := Prev;
-                     Best_Next := Next;
-                     Best_Name := +String (Get_Attribute (C, Owner));
-                  end if;
-               end;
-            end if;
-         end Do_It;
-
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         This.Contexts.Iterate (Do_It'Access);
-
-         if Best_Cost < Cr.Infinite then
-            This.Do_Insert_Task (Best_Prev,
-                                 Src_Copy,
-                                 Best_Next,
-                                 Agent_Id (+Best_Name));
-         else
-            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
-                                 Src_Copy,
-                                 This.Get_Task_Context (Src_Copy.Next),
-                                 Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Undo);
-         end if;
-      end;
-   end Do_Exhaustive_Auction_Task;
-
-   ----------------------------
-   -- Do_Guided_Auction_Task --
-   ----------------------------
-
-   procedure Do_Guided_Auction_Task (This : in out Object;
-                                     Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "GUIDED+LOG AUCTION";
-
-      declare
-         use Ada.Numerics.Elementary_Functions;
-         Worst_Agent : constant Agent_Id :=
-                         Agent_Id (+This.Minmax.Last_Element.Agent);
-         Best_Agent  : constant Agent_Id :=
-                         Agent_Id (+This.Minmax.First_Element.Agent);
-         Src         : Task_Context_Ptr :=
-                         This.Select_Random_Task (Agent_Tasks_Bag (Worst_Agent));
-         Src_Copy    : Task_Context := Task_Context (Src.all);
-         Checks      : constant Positive :=
-                         Natural (Log (Float (This.Num_Assigned_Tasks))) + 1;
-
-         Best_Prev,
-         Best_Next   : Task_Context_Ptr;
-         Best_Cost   : Costs := Infinite;
-         Best_Name   : Ustring;
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         Log ("Checking" & Checks'Img & " of" & This.Num_Assigned_Tasks'Img &
-              " possible insertions", Debug, Detail_Section);
-
-         for I in 1 .. Checks loop
-            declare
-               Curr_Target,
-               Curr_Prev,
-               Curr_Next : Task_Context_Ptr;
-               Curr_Cost : Costs;
-            begin
-               This.Select_Random_Insertion (Agent_Tasks_Bag (Best_Agent),
-                                             Curr_Prev,
-                                             Curr_Target,
-                                             Curr_Next);
-               Curr_Cost := This.Evaluate_Cost_Inserting
-                 (Curr_Prev,
-                  Src_Copy.Job,
-                  Curr_Next,
-                  Best_Agent);
-               if Curr_Cost < Best_Cost then
-                  Best_Cost := Curr_Cost;
-                  Best_Prev := Curr_Prev;
-                  Best_Next := Curr_Next;
-                  Best_Name := +String (Best_Agent);
-               end if;
-            end;
-         end loop;
-         if Best_Cost < Cr.Infinite then
-            This.Do_Insert_Task (Best_Prev,
-                                 Src_Copy,
-                                 Best_Next,
-                                 Agent_Id (+Best_Name));
-         else
-            This.Do_Insert_Task (This.Get_Task_Context (Src_Copy.Prev),
-                                 Src_Copy,
-                                 This.Get_Task_Context (Src_Copy.Next),
-                                 Get_Attribute (Src_Copy, Owner));
-            This.Do_Identity (Undo);
-         end if;
-      end;
-   end Do_Guided_Auction_Task;
-
-   ------------------
-   -- Do_Move_Task --
-   ------------------
-
-   procedure Do_Move_Task (This : in out Object;
-                           Undo :    out Undo_Info)
-   is
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      declare
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context := Task_Context (Src.all);
-         U        : Undo_Internal (Move_Task);
-      begin
-         U.Description := + "MOVE";
-
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         declare
-            Target    : Task_Context_Ptr;
-
-            New_Prev,
-            New_Next  : Task_Context_Ptr;
-         begin
-            This.Select_Random_Insertion (All_Assigned_Tasks,
-                                          New_Prev,
-                                          Target,
-                                          New_Next);
-            declare
-               New_Owner : constant Agent_Id := Get_Attribute (Target, Owner);
-            begin
-               Do_Insert_Task (This,
-                               New_Prev,
-                               Src_Copy,
-                               New_Next,
-                               New_Owner);
-            end;
-         end;
-      end;
-   end Do_Move_Task;
-
-   ---------------------------------
-   -- Do_Move_Task_Changing_Owner --
-   ---------------------------------
-
-   procedure Do_Move_Task_Changing_Owner (This : in out Object;
-                                          Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "MOVE+OWNER";
-
-      declare
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context := Task_Context (Src.all);
-
-         New_Owner : constant Agent_Id :=
-                       Agent_Id
-                         (+ Agent_Context
-                            (This.Select_Random_Context
-                               (All_Agents).all).Agent_Name);
-
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         declare
-            Prev, Curr, Next : Task_Context_Ptr;
-         begin
-            This.Select_Random_Insertion
-              (Agent_Tasks_Bag (New_Owner),
-               Prev,
-               Curr,
-               Next);
-            This.Do_Insert_Task (Prev,
-                                 Src_Copy,
-                                 Next,
-                                 New_Owner);
-         end;
-      end;
-   end Do_Move_Task_Changing_Owner;
-
-   ----------------------------------------
-   -- Do_Guided_Move_Task_Changing_Owner --
-   ----------------------------------------
-
-   procedure Do_Guided_Move_Task_Changing_Owner (This : in out Object;
-                                                 Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "MOVE+GUIDED+OWNER";
-
-      declare
-         Worst_Agent : constant Agent_Id :=
-                         Agent_Id (+This.Minmax.Last_Element.Agent);
-         Src         : Task_Context_Ptr :=
-                         This.Select_Random_Task (Agent_Tasks_Bag (Worst_Agent));
-         Src_Copy : Task_Context := Task_Context (Src.all);
-         New_Owner : constant Agent_Id :=
-                       Agent_Id
-                         (+ Agent_Context
-                            (This.Select_Random_Context
-                               (All_Agents).all).Agent_Name);
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         declare
-            Prev, Curr, Next : Task_Context_Ptr;
-         begin
-            This.Select_Random_Insertion
-              (Agent_Tasks_Bag (New_Owner),
-               Prev,
-               Curr,
-               Next);
-            This.Do_Insert_Task (Prev,
-                                 Src_Copy,
-                                 Next,
-                                 New_Owner);
-         end;
-      end;
-   end Do_Guided_Move_Task_Changing_Owner;
-
-   -------------------
-   -- Do_Swap_Order --
-   -------------------
-
-   procedure Do_Swap_Order (This : in out Object;
-                            Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "SWAP ORDER";
-
-      declare
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context := Task_Context (Src.all);
-         Next     : constant Task_Context_Ptr :=
-                      This.Get_Task_Context (Src.Next);
-      begin
-         if Next /= null then
-            This.Add_Undo_Move (Src, U);
-            Undo.Handle.Set (U);
-            This.Do_Remove_Task (Src);
-            This.Do_Insert_Task (Next,
-                                 Src_Copy,
-                                 This.Get_Task_Context (Next.Next),
-                                 Agent_Id (Get_Attribute (Next, Owner)));
-         else
-            This.Do_Identity (Undo);
-         end if;
-      end;
-   end Do_Swap_Order;
-
-   -------------------
-   -- Do_Swap_Tasks --
-   -------------------
-
-   procedure Do_Swap_Tasks (This : in out Object;
-                            Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Move_Task);
-   begin
-      if This.Num_Assigned_Tasks <= 2 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      U.Description := + "SWAP ANY";
-
-      declare
-         Src      : Task_Context_Ptr :=
-                      This.Select_Random_Task (All_Assigned_Tasks);
-         Src_Copy : Task_Context     := Task_Context (Src.all);
-         Prev_1   : constant Htn.Tasks.Task_id := Src.Prev;
-         Next_1   : constant Htn.Tasks.Task_id := Src.Next;
-         Owner_1  : constant Agent_Id          :=
-                      Agent_Id (Get_Attribute (Src, Owner));
-      begin
-         This.Add_Undo_Move (Src, U);
-         Undo.Handle.Set (U);
-         This.Do_Remove_Task (Src);
-
-         declare
-            Target      : Task_Context_Ptr;
-
-            New_Prev,
-            New_Next    : Task_Context_Ptr;
-            Watchdog    : Natural := 0;
-         begin
-            loop
-               This.Select_Random_Insertion (All_Assigned_Tasks,
-                                             New_Prev,
-                                             Target,
-                                             New_Next);
-               exit when Target.Job /= Prev_1 and then
-                         Target.Job /= Next_1;
-               Watchdog := Watchdog + 1;
-               if Watchdog > 100 then
-                  raise Program_Error with "Moving target failed";
-               end if;
-            end loop;
-
-            declare
-               Target_Copy : Task_Context      := Task_Context (Target.all);
-               New_Owner   : constant Agent_Id := Get_Attribute (Target, Owner);
-            begin
-               Do_Insert_Task (This,
-                               New_Prev,
-                               Src_Copy,
-                               New_Next,
-                               New_Owner);
-
-               This.Add_Undo_Move (Target, U);
-               Undo.Handle.Set (U);
-               This.Do_Remove_Task (Target);
-
-               if Prev_1 /= No_Task then
-                  declare
-                     Prev : constant Task_Context_Ptr :=
-                              This.Get_Task_Context (Prev_1);
-                     Next : constant Task_Context_Ptr :=
-                              This.Get_Task_Context (Prev.Next);
-                  begin
-                     This.Do_Insert_Task
-                       (Prev, Target_Copy, Next, Owner_1);
-                  end;
-               elsif Next_1 /= No_Task then
-                  This.Do_Insert_Task
-                    (This.Get_Task_Context
-                       (This.Get_Task_Context (Next_1).Prev),
-                     Target_Copy,
-                     This.Get_Task_Context (Next_1),
-                     Owner_1);
-               else
-                  This.Do_Insert_Task
-                    (null, Target_Copy, null, Owner_1);
-               end if;
-            end;
-         end;
-      end;
-   end Do_Swap_Tasks;
-
    ----------------------
    -- Descend_Removing --
    ----------------------
@@ -1217,141 +615,6 @@ package body Agpl.Cr.Mutable_Assignment is
             end;
       end case;
    end Descend_Removing;
-
-   -----------------------
-   -- Do_Switch_Or_Node --
-   -----------------------
-
-   procedure Do_Switch_Or_Node (This : in out Object;
-                                Undo :    out Undo_Info)
-   is
-      U : Undo_Internal (Switch_Or_Node);
-
-      Placeholder_Usable : Boolean := False;
-      Placeholder        : Undo_Move_Task_Info;
-
-      procedure Descend_Adding (Node : in     Htn.Plan.Subplan) is
-         use Htn.Plan_Node;
-      begin
-         case Get_Kind (Node) is
-            when Task_Node =>
-               if Get_Expanded (Node) then
-                  --  Compound, do nothing:
-                  Descend_Adding (Get_Expansion (Node));
-               else
-                  --  Create a new task and insert at random
-                  declare
-                     Tc     : Task_Context;
-                  begin
-                     Tc.Job := Get_Task (Node).all.Get_Id;
-                     if Placeholder_Usable then
-                        Placeholder_Usable := False;
-                        This.Do_Insert_Task
-                             (This.Get_Task_Context (Placeholder.Was_After),
-                              Tc,
-                              This.Get_Task_Context (Placeholder.Was_Before),
-                              + Placeholder.Owner_Was);
-                     else
-                        declare
-                           Target : constant Task_Context_Ptr :=
-                                      This.Select_Random_Task (All_Assigned_Tasks);
-                        begin
-                           This.Do_Insert_Task
-                             (This.Get_Task_Context (Target.Prev),
-                              Tc,
-                              Target,
-                              Get_Attribute (Target, Owner));
-                        end;
-                     end if;
-                  end;
-               end if;
-            when And_Node =>
-               declare
-                  Children : constant Node_Vectors.Vector :=
-                               Get_Children (Node);
-               begin
-                  for I in Children.First_Index .. Children.Last_Index loop
-                     Descend_Adding (Children.Element (I));
-                  end loop;
-               end;
-            when Or_Node =>
-               declare
-                  Oc : Or_Context :=
-                         (Solution_Context with
-                          Node   => Node,
-                          Branch => Node_Vectors.Element
-                            (Get_Children (Node),
-                             (Random.Get_Integer
-                                (Node_Vectors.First_Index (Get_Children (Node)),
-                                 Node_Vectors.Last_Index (Get_Children (Node))))));
-               begin
-                  This.Add_To_Bag (Oc, All_Active_Or_Nodes);
-                  This.Contexts.Insert (Oc.Key, Oc);
-               end;
-         end case;
-      end Descend_Adding;
-
-      use Htn.Plan_Node;
-   begin
-      if This.Bag_Length (All_Active_Or_Nodes) < 1 then
-         This.Do_Identity (Undo);
-         return;
-      end if;
-
-      declare
-         Target : constant Solution_Context_Ptr :=
-                    This.Select_Random_Context (All_Active_Or_Nodes);
-         Ctx    : Or_Context renames Or_Context (Target.all);
-
-         Children : Node_Vectors.Vector := Get_Children (Ctx.Node);
-      begin
-
-         if Children.Length <= 1 then
-            This.Do_Identity (Undo);
-            return;
-         end if;
-
-         U.Description := + "SWITCH OR-NODE";
-
-         Log ("GOING TO SWITCH", Never);
-
-         loop
-            declare
-               New_Child : constant Htn.Plan.Subplan :=
-                             Children.Element
-                               (Random.Get_Integer
-                                  (Children.First_Index, Children.Last_Index));
-               pragma Unbounded_Time;
-            begin
-               if New_Child /= Ctx.Branch then
-                  U.Actived_Or_Branch := New_Child;
-                  This.Descend_Removing (Ctx.Branch, U);
-
-                  --  in 50% ocassions, we reuse the place were the switched task was:
-                  if Random.Get_Integer (0, 1) = 1 then
-                     Placeholder_Usable := True;
-                     Placeholder := U.Or_Stack.Vector (U.Or_Stack.First);
-                  end if;
-
-                  Descend_Adding   (New_Child);
-                  Ctx.Branch := New_Child;
-                  exit;
-               end if;
-            end;
-         end loop;
-
-         Undo.Handle.Set (U);
-
-         if Expensive_Checks and then not This.Is_Sane then
-            raise Program_Error;
-         end if;
-      end;
-   exception
-      when others =>
-         This.Context.Ref.Plan.Print_Tree_Summary;
-         This.Debug_Dump_Contexts;
-         raise;
-   end Do_Switch_Or_Node;
 
    --------------------
    -- Do_Remove_Task --
@@ -1758,19 +1021,8 @@ package body Agpl.Cr.Mutable_Assignment is
    ------------------------
 
    function Num_Assigned_Tasks (This : in Object) return Natural is
-      Len : Natural;
-      procedure Query (Key : Bag_Key;
-                       Bag : Solution_Context_Bags.Object)
-      is
-         pragma Unreferenced (Key);
-      begin
-         Len := Bag.Length;
-      end Query;
    begin
-      Solution_Context_Bag_Maps.Query_Element
-        (This.Bags.Find (All_Assigned_Tasks),
-         Query'Access);
-      return Len;
+      return This.Bag_Length (All_Assigned_Tasks);
    end Num_Assigned_Tasks;
 
    ---------
@@ -2202,6 +1454,7 @@ package body Agpl.Cr.Mutable_Assignment is
          A : constant Cr.Agent.Object'Class  := Element (I);
          T : constant Htn.Tasks.Containers.Lists.List   := A.Get_Tasks;
          J :          Htn.Tasks.Containers.Lists.Cursor := T.First;
+         Prev : Htn.Tasks.Task_Id := No_Task;
       begin
          --  Create its task assignment and bag
          declare
@@ -2213,34 +1466,55 @@ package body Agpl.Cr.Mutable_Assignment is
             This.Contexts.Insert (Agent_Key (A.Get_Name), Ag_Ctx);
          end;
 
-         --  Create task contexts
+         --  Create task contexts for tasks in our plan
          while Has_Element (J) loop
-            declare
-               C : aliased Task_Context;
-            begin
-               C.Job := Element (J).Get_Id;
-               if Has_Element (Previous (J)) then
-                  C.Prev := Element (Previous (J)).Get_Id;
-               end if;
-               if Has_Element (Next (J)) then
-                  C.Next := Element (Next (J)).Get_Id;
-               end if;
-               Set_Attribute (C'Access, Owner, Cr.Agent.Get_Name (A));
+            if This.Context.Ref.Plan.Contains (Element (J).Get_Id) and then
+              not Htn.Plan_Node.Get_Finished (This.Context.Ref.Plan.Get_Node
+                                              (Element (J).Get_Id))
+            then
+               declare
+                  C : aliased Task_Context;
+                  function Next_Id (K : Task_Lists.Cursor) return Htn.Tasks.Task_Id
+                  is
+                     Plan   : Htn.Plan.Object renames This.Context.Ref.Plan;
+                     Nx     : Task_Lists.Cursor := Next (K);
+                  begin
+                     if not Has_Element (Nx) then
+                        return No_Task;
+                     elsif Plan.Contains (Element (Nx).Get_Id) and then
+                        not Htn.Plan_Node.Get_Finished
+                          (Plan.Get_Node (Element (Nx).Get_Id))
+                     then
+                        return Element (Nx).Get_Id;
+                     else
+                        return Next_Id (Nx);
+                        pragma Optimization_Opportunity ("Unroll recursivity");
+                     end if;
+                  end Next_Id;
+               begin
+                  C.Job  := Element (J).Get_Id;
+                  C.Prev := Prev;
+                  Prev   := C.Job;
+                  C.Next := Next_Id (J);
+                  Set_Attribute (C'Access, Owner, Cr.Agent.Get_Name (A));
 
-               --  Add to all tasks
-               This.Add_To_Bag (C, All_Assigned_Tasks);
-               --  Add to its agent
-               This.Add_To_Bag (C, Agent_Tasks_Bag (A.Get_Name));
+                  --  Add to all tasks
+                  This.Add_To_Bag (C, All_Assigned_Tasks);
+                  --  Add to its agent
+                  This.Add_To_Bag (C, Agent_Tasks_Bag (A.Get_Name));
 
-               This.Contexts.Insert
-                 (Solution_Context_Key (Task_Key (C.Job)), C);
+                  This.Contexts.Insert
+                    (Solution_Context_Key (Task_Key (C.Job)), C);
 
-               --  Create OR contexts
-               This.Add_Or_Contexts
-                 (This.Context.Ref.Plan.Get_Node (C.Job));
-
-               Next (J);
-            end;
+                  --  Create OR contexts
+                  This.Add_Or_Contexts
+                    (This.Context.Ref.Plan.Get_Node (C.Job));
+               end;
+            else
+               Log ("Set assignment: discarding unplanned task",
+                    Debug, Log_Section);
+            end if;
+            Next (J);
          end loop;
       end Process_Agent;
 
@@ -2248,11 +1522,11 @@ package body Agpl.Cr.Mutable_Assignment is
          use Cr.Agent.Containers.Lists;
          use Htn.Tasks.Containers.Lists;
          A : constant Cr.Agent.Object'Class  := Element (I);
-         T : constant Htn.Tasks.Containers.Lists.List   := A.Get_Tasks;
-         J :          Htn.Tasks.Containers.Lists.Cursor := First (T);
+         T : constant Task_Lists.List   := A.Get_Tasks;
+         J :          Task_Lists.Cursor := T.First;
       begin
          while Has_Element (J) loop
-            Pending_Tasks.Delete (Element (J).Get_Id);
+            Pending_Tasks.Exclude (Element (J).Get_Id);
             Next (J);
          end loop;
       end Remove_Agent_Tasks;
@@ -2404,12 +1678,16 @@ package body Agpl.Cr.Mutable_Assignment is
                         Plan : in     Htn.Plan.Object;
                         Assign : in     Boolean := True)
    is
-      C : Static_Context_Access renames This.Context.Ref;
+      C        : Static_Context_Access renames This.Context.Ref;
+      Prev_Ass : Assignment.Object;
    begin
+      if Assign then
+         Prev_Ass := This.To_Assignment;
+      end if;
       Clear_Dynamic_Part (This);
       C.Plan := Htn.Plan.Inflate (Plan);
       if Assign then
-         This.Set_Assignment (This.To_Assignment,
+         This.Set_Assignment (Prev_Ass,
                               This.Context.Ref.Criterion);
       end if;
    end Set_Tasks;
@@ -2529,121 +1807,6 @@ package body Agpl.Cr.Mutable_Assignment is
       null;
    end Undo_Identity;
 
-   --------------------
-   -- Undo_Move_Task --
-   --------------------
-
-   procedure Undo_Move_Task (This : in out Object; Undo : in  Undo_Info) is
-      U : Undo_Internal renames Undo.Handle.Ref.all;
-   begin
-      case U.Kind is
-         when Identity =>
-            null;
-         when Move_Task =>
-            for I in reverse U.Move_Stack.First .. U.Move_Stack.Last loop
-               declare
-                  Move : Undo_Move_Task_Info renames U.Move_Stack.Vector (I);
-                  Src  : Task_Context_Ptr :=
-                           This.Get_Task_Context (Move.Moved_One);
-               begin
-                  This.Do_Move_Task
-                    (After_This  => This.Get_Task_Context (Move.Was_After),
-                     Src         => Src,
-                     Before_This => This.Get_Task_Context (Move.Was_Before),
-                     New_Owner   => Agent_Id (+Move.Owner_Was));
-
-                  if Move.Minsum_Was /= This.Minsum then
-                     Log ("Cost was " & To_String (Move.Minsum_Was, 10) &
-                          " but is " & To_String (This.Minsum, 10) &
-                          " (" & To_String (This.Minsum - Move.Minsum_Was, 10) & ")",
-                          Error, Log_Section);
-                     --  Cr.Cost_Matrix.Print (This.Context.Ref.Costs);
-                     This.Reevaluate_Costs;
-                     --  raise Program_Error with "Undo breached cost integrity!";
-                  end if;
-               end;
-            end loop;
-         when others =>
-            raise Program_Error;
-      end case;
-   end Undo_Move_Task;
-
-   -----------------
-   -- Undo_Switch --
-   -----------------
-
-   procedure Undo_Switch (This : in out Object; Undo : in Undo_Info) is
---        procedure Descend_Adding (Node : Htn.Subplan) is
---        begin
---           --  Re-add necessary or-nodes
---           --  Re-insert necessary tasks.
---        end Descend_Adding;
-      Dummy_Undo : Undo_Internal (Switch_Or_Node);
-      U          : Undo_Internal renames Undo.Handle.Ref.all;
-   begin
-      Log ("UNDOING SWITCH", Debug, Detail_Section);
-      case U.Kind is
-         when Identity =>
-            null;
-         when Switch_Or_Node =>
-            This.Descend_Removing (U.Actived_Or_Branch, Dummy_Undo);
-
-            --  Add all tasks:
-            for I in reverse U.Or_Stack.First .. U.Or_Stack.Last loop
-               declare
-                  Tc : Task_Context;
-               begin
-                  Tc.Job := U.Or_Stack.Vector (I).Moved_One;
-                  This.Do_Insert_Task
-                    (After_This  =>
-                       This.Get_Task_Context
-                         (U.Or_Stack.Vector (I).Was_After),
-                     Src         => Tc,
-                     Before_This =>
-                       This.Get_Task_Context
-                         (U.Or_Stack.Vector (I).Was_Before),
-                     New_Owner   => Agent_Id (+U.Or_Stack.Vector (I).Owner_Was));
-
-                  This.Add_Or_Contexts (This.Context.Ref.Plan.Get_Node (Tc.Job));
-
-                  if This.Minsum /= U.Or_Stack.Vector (I).Minsum_Was then
-                     raise Program_Error
-                       with "Undo (Switch) breached integrity; MinSum is" &
-                     This.Minsum'Img & " but should be" &
-                     U.Or_Stack.Vector (I).Minsum_Was'Img;
-                  end if;
-
-                  if Expensive_Checks and then not This.Is_Sane then
-                     raise Program_Error;
-                  end if;
-               end;
-            end loop;
-         when others =>
-            raise Program_Error;
-      end case;
-
-      Log ("UNDONE SWITCH", Debug, Detail_Section);
-   end Undo_Switch;
-
-   function Proper_Cost (This : in Costs) return Costs;
-   pragma Inline (Proper_Cost);
-
-   -----------------
-   -- Proper_Cost --
-   -----------------
-
-   function Proper_Cost (This : in Costs) return Costs is
-   begin
-      if This = Infinite then
-         return Cost_For_Invalid_Task;
-      else
-         return This;
-      end if;
-   end Proper_Cost;
-   --  If a cost is infinite, turn it into zero.
-   --  Necessary for incremental evaluations of solutions since going to
-   --  Costs'Last will cause loss of the known cost.
-
    -----------------------------
    -- Evaluate_Cost_Inserting --
    -----------------------------
@@ -2696,9 +1859,23 @@ package body Agpl.Cr.Mutable_Assignment is
            To_String (Plus_2, 10) & " " &
            To_String (Minus, 10), Debug, Detail_Section);
 
-      return Cr.Evaluate (This.Context.Ref.Criterion,
-                          Minmax => Cost + Plus_1 + Plus_2 - Minus,
-                          Minsum =>        Plus_1 + Plus_2 - Minus);
+      if Plus_1 = Cr.Infinite or else Plus_2 = Cr.Infinite then
+         return Cr.Infinite;
+      elsif Minus = Cr.Infinite then
+         raise Program_Error with "Minus shouldn't never equal Inf.";
+      else
+         return Cr.Evaluate (This.Context.Ref.Criterion,
+                             Minmax => Cost + Plus_1 + Plus_2 - Minus,
+                             Minsum =>        Plus_1 + Plus_2 - Minus);
+      end if;
+   exception
+      when E : others =>
+         Log ("Evaluate_Cost_Inserting [Plus1/Plus2/Minus]: " &
+              Cr.Image (Plus_1) & " " &
+              Cr.Image (Plus_2) & " " &
+              Cr.Image (Minus), Error, Log_Section);
+         Log ("Exception: " & Report (E), Error, Log_Section);
+         raise;
    end Evaluate_Cost_Inserting;
 
    ----------------------------

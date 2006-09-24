@@ -102,7 +102,7 @@ package body Agpl.Cr.Cost_Matrix is
                                Cr.Agent.Get_Name (Al.Element (A)),
                                Htn.Tasks.No_Task,
                                Htn.Tasks.Get_Id (Tl.Element (Fin)),
-                               Get_Cost (This,
+                               Get_Cost (Object'Class (This),
                                          Cr.Agent.Get_Name (Al.Element (A)),
                                          Htn.Tasks.Get_Id (Tl.Element (Ini)),
                                          Htn.Tasks.Get_Id (Tl.Element (Fin))));
@@ -238,7 +238,7 @@ package body Agpl.Cr.Cost_Matrix is
       I       : Htn.Tasks.Containers.Lists.Cursor := T.First;
    begin
       while Has_Element (I) loop
-         Partial := Get_Cost (This,
+         Partial := Get_Cost (Object'Class (This),
                               Cr.Agent.Get_Name (Agent),
                               Prev, Htn.Tasks.Get_Id (Element (I)));
          if Partial = Cr.Infinite then

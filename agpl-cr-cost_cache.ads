@@ -24,32 +24,34 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  Massive instantiation of containers
+--  A generic interface for cost caching strategies.
 
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Indefinite_Vectors;
+with Agpl.Cr.Agent;
+with Agpl.Htn.Tasks;
+with Agpl.Htn.Tasks.Containers;
 
-generic
-   type Element_Type (<>) is private;
-   with function "=" (Left, Right : Element_Type) return Boolean is <>;
-   type Index_Type is range <>;
-   type Key_Type (<>) is private;
-   with function "<" (Left, Right : Key_Type) return Boolean is <>;
-package Agpl.Containers.Bulk is
+package Agpl.Cr.Cost_Cache is
 
    pragma Preelaborate;
 
-   package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (Element_Type);
+   --  type Object is interface;
+   type Object is abstract tagged null record;
 
-   package Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type, Element_Type);
+   function Get_Cost
+     (This  : in Object;
+      Agent : in String;
+      Ini   : in Htn.Tasks.Task_Id;
+      Fin   : in Htn.Tasks.Task_Id) return Costs is abstract;
 
-   package Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type, Element_Type);
+   function Get_Plan_Cost
+     (This  : in Object'Class;
+      Agent : in Cr.Agent.Object'Class) return Costs;
+   --  Say the full cost of an agent plan.
 
-   package String_Element_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (String, Element_Type);
+   function Get_Plan_Cost
+     (This  : in Object'Class;
+      Agent : in String;
+      Tasks : in Htn.Tasks.Containers.Lists.List) return Costs;
+   --  Evaluate a plan with a given agent
 
-end Agpl.Containers.Bulk;
+end Agpl.Cr.Cost_Cache;

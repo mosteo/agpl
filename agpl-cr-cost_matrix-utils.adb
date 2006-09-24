@@ -67,7 +67,8 @@ package body Agpl.Cr.Cost_Matrix.Utils is
                Htn.Tasks.No_Task,
                V.First_Element.Get_Id,
                Get_Cost
-                 (Src, Agent.Get_Name,
+                 (Object'Class (Src),
+                  Agent.Get_Name,
                   Htn.Tasks.No_Task,
                   V.First_Element.Get_Id));
          end if;
@@ -78,7 +79,8 @@ package body Agpl.Cr.Cost_Matrix.Utils is
                V.Element (I).Get_Id,
                V.Element (I + 1).Get_Id,
                Get_Cost
-                 (Src, Agent.Get_Name,
+                 (Object'Class (Src),
+                  Agent.Get_Name,
                   V.Element (I).Get_Id,
                   V.Element (I + 1).Get_Id));
          end loop;
