@@ -111,6 +111,7 @@ package Agpl.Htn.Plan is
      (This : in Object;
       Id   : in Tasks.Task_Id) return Subplan;
    --  Get the branch starting at the given task.
+   --  May be null if the task isn't in the tree
 
    function Get_Root (This : in Object) return Subplan;
    --  Get the root node.

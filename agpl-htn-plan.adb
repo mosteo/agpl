@@ -401,7 +401,11 @@ package body Agpl.Htn.Plan is
    is
       use Plan_Node.Task_Id_To_Node;
    begin
-      return Element (Find (This.Index, Id));
+      if This.Index.Contains (Id) then
+         return This.Index.Element (Id);
+      else
+         return null;
+      end if;
    end Get_Node;
 
    --------------

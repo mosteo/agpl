@@ -45,7 +45,7 @@ with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Agpl.Cr.Mutable_Assignment is
 
-   Expensive_Checks : constant Boolean := True;
+   Expensive_Checks : constant Boolean := False;
 
    File : constant String := "[Mutable_Assignment] ";
 

@@ -74,8 +74,11 @@ package body Agpl.Htn.Plan.Utils is
       Parent         : Subplan;
       Reindex_Needed : Boolean := False;
    begin
-      pragma Assert (Get_Kind (Node) = Task_Node);
-      loop
+      if Node /= null then
+         pragma Assert (Get_Kind (Node) = Task_Node);
+         null;
+      end if;
+      while Node /= null loop
          if Get_Kind (Node) = Or_Node then
             Parent := Get_Parent (Node);
             --  Replace the OR node by the branch we were arriving from.
