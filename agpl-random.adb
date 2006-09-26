@@ -116,6 +116,15 @@ package body Agpl.Random is
                         Open_Uniformly_Distributed'Last);
    end Open_Uniform;
 
+   ---------------
+   -- Flip_Coin --
+   ---------------
+
+   function Flip_Coin return Boolean is
+   begin
+      return Get_Integer (0, 1) = 1;
+   end Flip_Coin;
+
 begin
    Internal.Reset;
 end Agpl.Random;

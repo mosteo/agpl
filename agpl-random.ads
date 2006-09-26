@@ -82,6 +82,9 @@ package Agpl.Random is
       type Discrete is (<>);
    function Discrete_Random (This : in Object) return Discrete;
 
+   function Flip_Coin return Boolean;
+   --  50% chance of true
+
 private
 
    type Object is tagged limited record
