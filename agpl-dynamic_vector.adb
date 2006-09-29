@@ -50,6 +50,22 @@ package body Agpl.Dynamic_vector is
    -- Object --
    ------------
 
+   function "=" (L, R : in Object) return Boolean is
+   begin
+      if L.First /= R.First then
+         return False;
+      elsif L.Last /= R.Last then
+         return False;
+      else
+         for I in L.First .. L.Last loop
+            if L.Vector (I) /= R.Vector (I) then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end if;
+   end "=";
+
    --  First "attribute"
    --  O (1)
    function First (this : in Object) return Integer is

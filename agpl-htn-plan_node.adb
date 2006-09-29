@@ -47,18 +47,18 @@ package body Agpl.Htn.Plan_Node is
       use type Htn.Tasks.Object'Class;
       use type Node_Vectors.Vector;
    begin
-      Log ("Checking equivalence", Never);
+      Log ("Checking equivalence", Trace.Debug, Detail_Section);
       if L = null and then R = null then
-         Log ("Both null", Never);
+         Log ("Both null", Trace.Debug, Detail_Section);
          return True;
       elsif L = null or else R = null then
-         Log ("Null/not null", Never);
+         Log ("Null/not null", Trace.Debug, Detail_Section);
          return False;
       elsif L.Kind /= R.Kind then
-         Log ("Kind clash", Never);
+         Log ("Kind clash", Trace.Debug, Detail_Section);
          return False;
       elsif L.Id /= R.Id then
-         Log ("Id clash", Never);
+         Log ("Id clash", Trace.Debug, Detail_Section);
          return False;
       end if;
 
@@ -68,28 +68,28 @@ package body Agpl.Htn.Plan_Node is
               L.Finished /= R.Finished or else
               L.Owner /= R.Owner
             then
-               Log ("Task clash", Never);
+               Log ("Task clash", Trace.Debug, Detail_Section);
                return False;
             else
-               Log ("Expansion clash", Never);
+               Log ("Expansion check", Trace.Debug, Detail_Section);
                return Equivalent (L.Child, R.Child);
             end if;
          when And_Node | Or_Node =>
             if L.Children.Length /= R.Children.Length then
-               Log ("Children length clash", Never);
+               Log ("Children length clash", Trace.Debug, Detail_Section);
                return False;
             elsif L.Children.First_Index /= R.Children.First_Index then
-               Log ("Index clash", Never);
+               Log ("Index clash", Trace.Debug, Detail_Section);
                return False;
             else
                for I in L.Children.First_Index .. L.Children.Last_Index loop
                   if not Equivalent (L.Children.Element (I),
                                      R.Children.Element (I)) then
-                     Log ("Child clash", Never);
+                     Log ("Child clash", Trace.Debug, Detail_Section);
                      return False;
                   end if;
                end loop;
-               Log ("Children are ok", Never);
+               Log ("Children are ok", Trace.Debug, Detail_Section);
                return True;
             end if;
       end case;

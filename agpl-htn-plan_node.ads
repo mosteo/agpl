@@ -48,6 +48,8 @@ package Agpl.Htn.Plan_Node is
 
    pragma Preelaborate;
 
+   Detail_Section : constant String := "agpl.htn.plan_node.detail";
+
    type Object (<>) is limited private;
    --  To prevent creation outside of our control.
 

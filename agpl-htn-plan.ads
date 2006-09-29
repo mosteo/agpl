@@ -39,8 +39,8 @@ package Agpl.Htn.Plan is
 
    pragma Preelaborate;
 
-   Log_Section    : constant String := "Htn.Plan";
-   Detail_Section : constant String := "Htn.Plan.detail";
+   Log_Section    : constant String := "agpl.htn.plan";
+   Detail_Section : constant String := "agpl.htn.plan.detail";
 
    type Object is tagged private;
 

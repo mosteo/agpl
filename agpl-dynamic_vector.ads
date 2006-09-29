@@ -67,6 +67,8 @@ package Agpl.Dynamic_vector is
    --  First is the index for the first element.
    type Object (First : Integer) is new Proto_object with private;
 
+   function "=" (L, R : in Object) return Boolean;
+
    --  First "attribute"
    --  O (1)
    function First (this : in Object) return Integer;

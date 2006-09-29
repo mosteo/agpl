@@ -47,6 +47,15 @@ package body Agpl.Htn.Plan is
       use type Subplan;
       use type Htn.Method.Vectors.Vector;
    begin
+--        if L.Dirty /= R.Dirty then
+--           Log ("Plans are of different dirtyness", Debug, Detail_Section);
+--        end if;
+--        if L.Methods /= R.Methods then
+--           Log ("Plans are of different methodology", Debug, Detail_Section);
+--        end if;
+--        if not Plan_Node.Equivalent (L.Tasks, R.Tasks) then
+--           Log ("Plan nodes are not equivalent", Debug, Detail_Section);
+--        end if;
       return L.Dirty = R.Dirty and then
              L.Methods = R.Methods and then
              Plan_Node.Equivalent (L.Tasks, R.Tasks);

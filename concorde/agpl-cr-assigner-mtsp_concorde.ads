@@ -24,7 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
-with Agpl.Cr.Cost_Matrix;
+with Agpl.Cr.Cost_Cache;
 
 package Agpl.Cr.Assigner.MTSP_Concorde is
 
@@ -34,7 +34,7 @@ package Agpl.Cr.Assigner.MTSP_Concorde is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return      Assignment.Object;
    --  Using the concorde solver.
    --  Works only with homogeneous robots, since costs are provided by the

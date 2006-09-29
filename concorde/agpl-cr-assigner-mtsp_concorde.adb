@@ -42,7 +42,7 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
      (This   : in Object;
       Agents : in Agent.Containers.Lists.List;
       Tasks  : in Htn.Tasks.Containers.Lists.List;
-      Costs  : in Cr.Cost_Matrix.Object)
+      Costs  : in Cr.Cost_Cache.Object'Class)
       return      Assignment.Object
    is
       pragma Unreferenced (This);
@@ -107,7 +107,7 @@ package body Agpl.Cr.Assigner.MTSP_Concorde is
          C     : Optimization.Concorde.Cost_Matrix :=
                    Cost_Matrices.Create (Cities (Jobs.Length),
                                          Cities (Jobs.Length));
-         use Cost_Matrix;
+         use Cost_Cache;
       begin
          for I in Start'Range loop
             Start (I) := Cities (I);
