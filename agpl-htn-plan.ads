@@ -145,7 +145,8 @@ package Agpl.Htn.Plan is
 
    procedure Mark_Task_Done
      (This : in out Object;
-      Id   : in     Tasks.Task_Id);
+      Id   : in     Tasks.Task_Id;
+      Done : in     Boolean := True);
    --  Mark as done this task an any ORed depending on it
 
    procedure Mark_Task_Done

@@ -560,12 +560,25 @@ package body Agpl.Htn.Plan is
 
    procedure Mark_Task_Done
      (This : in out Object;
-      Id   : in     Tasks.Task_Id)
+      Id   : in     Tasks.Task_Id;
+      Done : in     Boolean := True)
    is
       use Plan_Node;
    begin
-      Set_Finished (This.Get_Node (Id));
-      This.Fill_Finished;
+      Set_Finished (This.Get_Node (Id), Finished => Done);
+      if Done then
+         This.Fill_Finished;
+      else
+         declare
+            Curr : Subplan := This.Get_Node (Id);
+         begin
+            while Get_Parent (Curr) /= null and then Get_Finished (Get_Parent (Curr)) loop
+               Curr := Get_Parent (Curr);
+            end loop;
+            Set_Finished (Curr, Finished => Done, Recursive => True);
+            --  Note that Done is false in this case
+         end;
+      end if;
    end Mark_Task_Done;
 
    --------------------

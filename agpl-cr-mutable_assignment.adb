@@ -85,6 +85,15 @@ package body Agpl.Cr.Mutable_Assignment is
    end Add_Agent;
 
    ------------------
+   -- Clear_Agents --
+   ------------------
+
+   procedure Clear_Agents (This : in out Object) is
+   begin
+      This.Context.Ref.all.Agents.Clear;
+   end Clear_Agents;
+
+   ------------------
    -- Add_Mutation --
    ------------------
 
@@ -1529,6 +1538,11 @@ package body Agpl.Cr.Mutable_Assignment is
          T : constant Task_Lists.List   := A.Get_Tasks;
          J :          Task_Lists.Cursor := T.First;
       begin
+         --  Ensure we have the agent
+         if not This.Context.Ref.all.Agents.Contains (A.Get_Name) then
+            return;
+         end if;
+
          while Has_Element (J) loop
             Pending_Tasks.Exclude (Element (J).Get_Id);
             Next (J);
