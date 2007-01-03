@@ -177,40 +177,65 @@ package body Agpl.Event_queues.Calendar is
       return This.List.Length;
    end Length;
 
+   -------------
+   -- Suspend --
+   -------------
+
+   procedure Suspend (This : in Object) is
+   begin
+      This.Waiter.Reschedule (Suspend);
+   end Suspend;
+
+   procedure Resume  (This : in Object) is
+   begin
+      This.Waiter.Reschedule (Resume);
+   end Resume;
+
+   -------------------
+   -- Active_Object --
+   -------------------
+
    task body Active_object is
       Next         : Event_type;
       Deadline     : Time;
       Found        : Boolean;
       Worker_Ready : Boolean := True;
+      Suspended    : Boolean := False;
    begin
       loop
          begin
             --  Deadline triggered or rescheduling (new event)
-            Parent.List.Get_first_remove (Next, Found);
-            if not Found then
+            if Suspended then
                Deadline := End_Of_Time;
                Parent.Next_Deadline.Set (End_Of_Time);
                Parent.Master_Status := Idle;
             else
-               Parent.Next_Deadline.Set (Next.Deadline);
-               if Next.Deadline <= Clock then
-                  --  Run it if possible
-                  if Worker_Ready then
-                     Parent.Master_Status := Executing;
-                     Parent.Doer.Execute (Next);
-                     Worker_Ready := False;
-                     Deadline     := Clock; -- So we'll peek at the next event right now.
-                  else
-                     --  Busy. Delay until worker signals us:
-                     Parent.Master_Status := Waiting_Worker;
-                     Deadline := End_Of_Time;
-                     Parent.List.Insert (Next); -- Will go to head again.
-                  end if;
+               Parent.List.Get_First_Remove (Next, Found);
+               if not Found then
+                  Deadline := End_Of_Time;
+                  Parent.Next_Deadline.Set (End_Of_Time);
+                  Parent.Master_Status := Idle;
                else
-                  --  Reinsert it since it must not run still.
-                  Parent.Master_Status := Waiting_Deadline;
-                  Deadline := Next.Deadline;
-                  Parent.List.Insert (Next);
+                  Parent.Next_Deadline.Set (Next.Deadline);
+                  if Next.Deadline <= Clock then
+                     --  Run it if possible
+                     if Worker_Ready then
+                        Parent.Master_Status := Executing;
+                        Parent.Doer.Execute (Next);
+                        Worker_Ready := False;
+                        Deadline     := Clock; -- So we'll peek at the next event right now.
+                     else
+                        --  Busy. Delay until worker signals us:
+                        Parent.Master_Status := Waiting_Worker;
+                        Deadline := End_Of_Time;
+                        Parent.List.Insert (Next); -- Will go to head again.
+                     end if;
+                  else
+                     --  Reinsert it since it must not run still.
+                     Parent.Master_Status := Waiting_Deadline;
+                     Deadline := Next.Deadline;
+                     Parent.List.Insert (Next);
+                  end if;
                end if;
             end if;
 
@@ -219,10 +244,17 @@ package body Agpl.Event_queues.Calendar is
                --  Wait for news
                select
                   accept Reschedule (Action : in Action_Type) do
-                     if Action = Job_Finished then
-                        Worker_Ready := True;
-                        Parent.Master_Status := Ready;
-                     end if;
+                     case Action is
+                        when Job_Finished =>
+                           Worker_Ready := True;
+                           Parent.Master_Status := Ready;
+                        when Suspend =>
+                           Suspended := True;
+                        when Resume =>
+                           Suspended := False;
+                        when New_Event =>
+                           null;
+                     end case;
                   end Reschedule;
                or
                   accept Shutdown;
@@ -234,10 +266,17 @@ package body Agpl.Event_queues.Calendar is
                --  Wait for news
                select
                   accept Reschedule (Action : in Action_Type) do
-                     if Action = Job_Finished then
-                        Worker_Ready := True;
-                        Parent.Master_Status := Ready;
-                     end if;
+                     case Action is
+                        when Job_Finished =>
+                           Worker_Ready := True;
+                           Parent.Master_Status := Ready;
+                        when Suspend =>
+                           Suspended := True;
+                        when Resume =>
+                           Suspended := False;
+                        when New_Event =>
+                           null;
+                     end case;
                   end Reschedule;
                or
                   accept Shutdown;

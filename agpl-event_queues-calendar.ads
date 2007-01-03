@@ -89,6 +89,11 @@ package Agpl.Event_queues.Calendar is
    --  Premature termination (if events pending).
    --  If no events pending, termination should be automatic
 
+   procedure Suspend (This : in Object);
+   procedure Resume  (This : in Object);
+   --  Suspend/Resume execution of events
+   --  On resume, all expired events will be executed.
+
    End_Of_Time : constant Time := Time_Of (Year_Number'Last, 1, 1);
    --  Returned by Get_Next_Deadline when no other deadline exists.
 
@@ -115,7 +120,7 @@ private
    package Event_list is new
       Protected_sorted_index (Event_type, Less, Equal);
 
-   type Action_type is (New_event, Job_finished);
+   type Action_type is (New_event, Job_Finished, Suspend, Resume);
 
    task type Active_object (Parent : access Object) is
       entry Reschedule (Action : in Action_type);
