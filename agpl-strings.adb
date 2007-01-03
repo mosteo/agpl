@@ -50,6 +50,22 @@ package body Agpl.Strings is
       return Ada.Strings.Fixed.Index (S (S'First + Start - 1 .. S'Last), Pattern);
    end Pos;
 
+   -----------
+   -- Count --
+   -----------
+
+   function Count (S, Pattern : String) return Natural is
+      Aux   : constant String (1 .. S'Length) := S;
+      Found : Natural := Pos (Aux, Pattern);
+      Times : Natural := 0;
+   begin
+      while Found > 0 loop
+         Times := Times + 1;
+         Found := Pos (Aux, Pattern, Found + 1);
+      end loop;
+      return Times;
+   end Count;
+
    ------------------------------------------------------------------------
    -- To_lower                                                           --
    ------------------------------------------------------------------------

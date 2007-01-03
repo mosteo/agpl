@@ -44,6 +44,12 @@ package Agpl.Strings is
    --  Says if a string is substring of another:
    function Contains (Search_in, Search_for : in String) return Boolean;
 
+   -----------
+   -- Count --
+   -----------
+   function Count (S, Pattern : String) return Natural;
+   --  Times that Pattern appears within S.
+
    ------------------------------------------------------------------------
    -- Pos                                                                --
    ------------------------------------------------------------------------
