@@ -104,6 +104,9 @@ package body Agpl.Trace is
          X.Enable_Section (Section, Enabled);
       end Do_It;
    begin
+      if Tracers.Is_Empty  then
+         Tracers.Append (Stdout'Access);
+      end if;
       for I in Tracers.First_Index .. Tracers.Last_Index loop
          Tracers.Update_Element (I, Do_It'Access);
       end loop;
@@ -160,6 +163,9 @@ package body Agpl.Trace is
          X.Set_Decorator (Decor);
       end Do_It;
    begin
+      if Tracers.Is_Empty  then
+         Tracers.Append (Stdout'Access);
+      end if;
       for I in Tracers.First_Index .. Tracers.Last_Index loop
          Tracers.Update_Element (I, Do_It'Access);
       end loop;
@@ -175,6 +181,9 @@ package body Agpl.Trace is
          X.Set_Level (Level);
       end Do_It;
    begin
+      if Tracers.Is_Empty  then
+         Tracers.Append (Stdout'Access);
+      end if;
       for I in Tracers.First_Index .. Tracers.Last_Index loop
          Tracers.Update_Element (I, Do_It'Access);
       end loop;
