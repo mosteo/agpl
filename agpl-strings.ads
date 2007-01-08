@@ -50,6 +50,12 @@ package Agpl.Strings is
    function Count (S, Pattern : String) return Natural;
    --  Times that Pattern appears within S.
 
+   -------------
+   -- Replace --
+   -------------
+   function Replace (S, Pattern, New_Pattern : String) return String;
+   --  Replace all occurrences
+
    ------------------------------------------------------------------------
    -- Pos                                                                --
    ------------------------------------------------------------------------

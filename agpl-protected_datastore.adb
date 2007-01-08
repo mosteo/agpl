@@ -2,6 +2,24 @@
 
 package body Agpl.Protected_Datastore is
 
+   ----------------------
+   -- Notify_Listeners --
+   ----------------------
+
+   procedure Notify_Listeners (This : in out Object;
+                               Key   : in     Object_Key;
+                               Value : in     Object_Data'Class)
+   is
+      use Listener_Vectors;
+      V : constant Vector := This.Safe.Get_Callbacks (Key);
+   begin
+      for I in First_Index (V) .. Last_Index (V) loop
+         On_Key_Stored (Element (V, I).all,
+                        Key,
+                        Value);
+      end loop;
+   end Notify_Listeners;
+
    --------------
    -- Contains --
    --------------
@@ -36,17 +54,7 @@ package body Agpl.Protected_Datastore is
    begin
       This.Safe.Put (Key, Value);
 
-      declare
-         use Listener_Vectors;
-         V : constant Vector := This.Safe.Get_Callbacks (Key);
-
-      begin
-         for I in First_Index (V) .. Last_Index (V) loop
-            On_Key_Stored (Element (V, I).all,
-                           Key,
-                           Value);
-         end loop;
-      end;
+      Notify_Listeners (This, Key, Value);
    end Put;
 
    ------------
@@ -59,6 +67,20 @@ package body Agpl.Protected_Datastore is
    begin
       This.Safe.Listen (Key, Listener);
    end Listen;
+
+   ------------
+   -- Update --
+   ------------
+
+   procedure Update (This : in out Object;
+                     Key  : in     Object_Key;
+                     Fun  : in out Functor'Class)
+   is
+      Val : Object_Data_Handle.Object;
+   begin
+      This.Safe.Update (Key, Fun, Val);
+      Notify_Listeners (This, Key, Val.Get);
+   end Update;
 
    -----------------
    -- Safe_Object --
@@ -155,6 +177,33 @@ package body Agpl.Protected_Datastore is
             Update_Element (Callbacks, I, Add'Access);
          end;
       end Listen;
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update (Key  : in     Object_Key;
+                        Fun  : in out Functor'Class;
+                        Res  :    out Object_Data_Handle.Object)
+      is
+         use Key_Object_Maps;
+         I : constant Cursor := Values.Find (Key);
+      begin
+         if Has_Element (I) then
+            declare
+               procedure Update (Key : Object_Key; Data : in out Object_Data'Class) is
+                  pragma Unreferenced (Key);
+               begin
+                  Fun.Operate (Data);
+                  Res.Set (Data);
+               end Update;
+            begin
+               Values.Update_Element (I, Update'Access);
+            end;
+         else
+            raise Data_Not_Present;
+         end if;
+      end Update;
 
    end Safe_Object;
 

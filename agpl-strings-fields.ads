@@ -56,6 +56,16 @@ package Agpl.Strings.Fields is
       Separator : Character := '/')
       return      String;
 
+   function Head
+     (S         : String;
+      Separator : Character := '/')
+      return      String renames String_Head;
+
+   function H
+     (S         : String;
+      Separator : Character := '/')
+      return      String renames String_Head;
+
    ------------------------------------------------------------------------
    -- String_Tail                                                        --
    ------------------------------------------------------------------------
@@ -64,6 +74,16 @@ package Agpl.Strings.Fields is
      (S         : String;
       Separator : Character := '/')
       return      String;
+
+   function Tail
+     (S         : String;
+      Separator : Character := '/')
+      return      String renames String_Tail;
+
+   function T
+     (S         : String;
+      Separator : Character := '/')
+      return      String renames String_Tail;
 
    ------------------------------------------------------------------------
    -- String_Head_Reverse                                                --

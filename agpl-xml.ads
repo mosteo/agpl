@@ -35,17 +35,24 @@
 --  Xml related functions
 
 with DOM.Core;
-with DOM.Core.Nodes;
+with Dom.Core.Nodes;
+
+with Ada.Containers.Vectors;
 
 package Agpl.Xml is
 
    --  pragma Elaborate_Body;
 
-   subtype Node is DOM.Core.Node;
+   subtype Node is Dom.Core.Node;
+
+   package Node_Vectors is new
+     Ada.Containers.Vectors (Positive, Node, Dom.Core."=");
+
    subtype Document is Node; --  NOT the document but the ROOT element.
    type Node_access is access all Node;
    type Document_access is access all Document;
-   type Node_array is array (Integer range <>) of Node;
+   type Node_Array is array (Integer range <>) of Node;
+   subtype Node_Vector is Node_Vectors.Vector;
 
    Null_node : constant Node := null;
 
@@ -66,28 +73,18 @@ package Agpl.Xml is
    ------------------------------------------------------------------------
    -- Get                                                                --
    ------------------------------------------------------------------------
-   --  Retrieve the nth element in the hierarchy that matches the path.
-   --  Separator is '/' Path example: "skins/html/default" Paths must be
-   --  relatives to parent If unique is true, then an exception is raised if
-   --  more than a value
-   --    is found at the lower level.
-   --  An exception is raised if any intermediate level has multiple matches.
-   --  If ain't enough leaves, or doesn't exists some intermediate level,
-   --    Null_node is returned.
-   --  Null_node can be returned if some node along the path is non-existant.
-   function Get
-     (Path   : String;
-      Parent : Node;
-      Pos    : Positive := 1;
-      Unique : Boolean  := False)
-      return   Node;
+   --  Retrieve the named child. If it doesn exist, exception raised.
+   function Get (Parent : Node; Name : String) return Node;
 
    ------------------------------------------------------------------------
    -- Get_All                                                            --
    ------------------------------------------------------------------------
    --  Returns childrens with given name (first is 1): * means any name.
    function Get_all (Parent : Node; Name : String := "*") return Node_array;
-   function Get_all (Path : String; Parent : Node) return Node_array;
+   function Get_All (Path : String; Parent : Node) return Node_Array;
+
+   function Get_all (Parent : Node; Name : String := "*") return Node_Vector;
+   function Get_all (Path : String; Parent : Node) return Node_Vector;
 
    ------------------------------------------------------------------------
    -- Get_Attribute                                                      --
@@ -99,9 +96,6 @@ package Agpl.Xml is
       Attr    : String;
       Default : String := "")
       return    String;
-   --  Here the attribute can be a proper Xml attribute or a child Element:
-   --  <xml ada="X"/>
-   --  <xml><ada>X</ada></xml>
 
    generic
       type Number is range <>;
@@ -111,30 +105,8 @@ package Agpl.Xml is
       Default : Number)
       return          Number;
 
-   function Get_attribute
-     (Path    : String;
-      Attr    : String;
-      Parent  : Node;
-      Default : String   := "";
-      Pos     : Positive := 1;
-      Unique  : Boolean  := False)
-      return          String;
-   --  Here the attribute can be a proper Xml attribute or a child Element:
-   --  Get_Attribute ("Xml", "Ada") will return X in both these cases:
-   --  <xml ada="X"/>
-   --  <xml><ada>X</ada></xml>
-
-   ------------------------------------------------------------------------
-   -- Add                                                                --
-   ------------------------------------------------------------------------
-   --  Insertion functions:
-   --  They return the inserted node.
+   --  Add a child by giving its name
    function Add (Parent : Node; Name : String) return Node;
-   function Add
-     (Parent : Node;
-      Path   : String;
-      Name   : String)
-      return   Node;
 
    --  Add child node (must be for the same doc)
    procedure Add (Parent, Child : in Node);

@@ -36,6 +36,7 @@
 
 with Agpl.Strings;
 with Agpl.Strings.Fields; use Agpl.Strings.Fields;
+--  with Agpl.Trace; use Agpl.Trace;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 with DOM.Core.Documents;
@@ -133,113 +134,116 @@ package body Agpl.Xml is
    ---------
    -- Get --
    ---------
-   function Get
-     (Path   : String;
-      Parent : Node;
-      Pos    : Positive := 1;
-      Unique : Boolean  := False)
-      return   Node
+   function Get (Parent : Node; Name : String) return Node
    is
-      Head : constant String := String_Head (Path);
-      Tail : constant String := String_Tail (Path);
    begin
-      if Path = "" then
-         return Parent;
+      if Name = "" then
+         raise Constraint_Error with "Missing child name";
       end if;
+
       if Parent.Node_Type /= DOM.Core.Element_Node then
-         raise Storage_Error;
+         raise Constraint_Error with "Parent is not an element";
       end if;
+
       declare
-         Nodes : constant Node_array := Get_all (Parent, Head);
+         Nodes : constant Node_Vector := Get_all (Parent, Name);
       begin
-         if Tail = "" then -- Lower level reached
-            if Unique and then Nodes'Length > 1 then
-               raise Constraint_Error;
-            elsif Nodes'Length < Pos then
-               return Null_node;
-            else
-               return Nodes (Pos);
-            end if;
-         end if;
-
-         --  Whe should continue descending the tree if possible:
-         if Nodes'Length = 0 then
-            return Null_node;
-         elsif Nodes'Length > 1 then
+         if Natural (Nodes.Length) > 1 then
             raise Constraint_Error;
+         elsif Natural (Nodes.Length) = 0 then
+            raise Constraint_Error with "Child not present: " & Name;
+         else
+            return Nodes.First_Element;
          end if;
-
-         --  Recursive call:
-         return Get (Tail, Nodes (1), Pos, Unique);
       end;
    end Get;
 
    -------------
    -- Get_All --
    -------------
+
+   function Get_All (Parent : Node; Name : String := "*") return Node_Array is
+      V : constant Node_Vector := Get_All (Parent, Name);
+      R :          Node_Array (1 .. Natural (V.Length));
+   begin
+      for I in V.First_Index .. V.Last_Index loop
+         R (I) := V.Element (I);
+      end loop;
+      return R;
+   end Get_All;
+
+   -------------
+   -- Get_All --
+   -------------
+
+   function Get_All (Path : String; Parent : Node) return Node_Array is
+      V : constant Node_Vector := Get_All (Path, Parent);
+      R :          Node_Array (1 .. Natural (V.Length));
+   begin
+      for I in V.First_Index .. V.Last_Index loop
+         R (I) := V.Element (I);
+      end loop;
+      return R;
+   end Get_All;
+
+   -------------
+   -- Get_All --
+   -------------
    --  Returns childrens with given name (first is 1):
    --  * means any name.
-   function Get_all (Parent : Node; Name : String := "*") return Node_array is
-      Num      : Natural := 0;
-      Children : DOM.Core.Node_List;
+   function Get_all (Parent : Node; Name : String := "*") return Node_Vector is
    begin
       if Parent = Null_node then
-         return Node_array'((1 .. 0 => Null_node));
+         raise Constraint_Error with "Parent is null";
       end if;
-      --  Let's see how many children this node has:
-      Children := DCN.Child_Nodes (Parent);
-      for n in  0 .. DCN.Length (Children) - 1 loop
-         if DCN.Item (Children, n).Node_Type = DOM.Core.Element_Node
-           and then (Name = "*"
-                    or else L (DCN.Node_Name (DCN.Item (Children, n))) =
-                            L (Name))
-         then
-            Num := Num + 1;
-         end if;
-      end loop;
-      --  Now let's create the vector and return it:
+
+      --  let's create the vector and return it:
       declare
-         Result : Node_array (1 .. Num);
-         pos    : Positive := 1;
-         Item   : Node;
+         Children : constant Dom.Core.Node_List := Dcn.Child_Nodes (Parent);
+         Result   : Node_Vector;
+         Item     : Node;
       begin
-         for n in  0 .. DCN.Length (Children) - 1 loop
-            Item := DCN.Item (Children, n);
+         for I in  0 .. DCN.Length (Children) - 1 loop
+            Item := DCN.Item (Children, I);
             if Item.Node_Type = DOM.Core.Element_Node
               and then (Name = "*"
-                       or else L (DCN.Node_Name (Item)) = L (Name))
+                        or else L (DCN.Node_Name (Item)) = L (Name))
             then
-               Result (pos) := Item;
-               pos          := pos + 1;
+               Result.Append (Item);
             end if;
          end loop;
          return Result;
       end;
-   end Get_all;
+   end Get_All;
 
-   function Get_all (Path : String; Parent : Node) return Node_array is
-      New_parent : Node;
+   -------------
+   -- Get_all --
+   -------------
+
+   function Get_all (Path : String; Parent : Node) return Node_Vector is
    begin
       if Parent = Null_node then
-         return Node_array'((1 .. 0 => Null_node));
+         raise Constraint_Error with "Parent is null";
+      elsif Path = "" then
+         raise Constraint_Error with "Path is empty";
       end if;
-      if Path = "" then
-         return Node_array'((1 => Parent));
-      end if;
+
       declare
-         Head : constant String := String_Tail_Reverse (Path);
-         Tail : constant String := String_Head_Reverse (Path);
+         use type Asu.Unbounded_String;
+         Head : Ustring := +String_Head (Path);
+         Tail : Ustring := +String_Tail (Path);
+         Curr : Node    := Parent;
+         Parent : Integer; pragma Unreferenced (Parent); -- Hide it
       begin
-         if Head = "" then
-            return Get_all (Parent, Tail);
-         else
-            New_parent := Get (Head, Parent, Unique => True);
-            if New_parent = Null_node then
-               return Node_array'((1 .. 0 => Null_node));
+         loop
+            if Tail = Null_Ustring then
+               return Get_All (Curr, +Head);
             else
-               return Get_all (New_parent, Tail);
+               Curr := Get (Curr, +Head);
+               Head := +String_Head (+Tail);
+               Tail := +String_Tail (+Tail);
             end if;
-         end if;
+         end loop;
       end;
    end Get_all;
 
@@ -257,15 +261,7 @@ package body Agpl.Xml is
       declare
          Result : constant String := DCE.Get_Attribute (Item, Attr);
       begin
-         if Result /= "" then
-            return Result;
-         end if;
-         --  Let's try to get a child element with value as attr:
-         declare
-            Child : constant Node := Get (Attr, Item, Unique => True);
-         begin
-            return Get_value (Child, Default);
-         end;
+         return Result;
       end;
    exception
       when others =>
@@ -290,41 +286,6 @@ package body Agpl.Xml is
          return Default;
    end Get_numeric_attribute_from_node;
 
-   function Get_attribute
-     (Path          : String;
-      Attr          : String;
-      Parent        : Node;
-      Default : String   := "";
-      Pos           : Positive := 1;
-      Unique        : Boolean  := False)
-      return String is
-      Item : Node;
-   begin
-      if Parent = null then
-         if Default /= "" then
-            return Default;
-         else
-            raise Data_Error;
-         end if;
-      end if;
-      Item := Get (Path, Parent, Pos, Unique);
-      declare
-         Result : constant String := Get_attribute (Item, Attr, Default);
-      begin
-         return Result;
-      end;
-   exception
-      when Data_Error =>
-         raise;
-      when others =>
-         if Default /= "" then
-            return Default;
-         else
-            raise Data_Error;
-         end if;
-   end Get_attribute;
-
-
    ------------------------------------------------------------------------
    -- Add                                                                --
    ------------------------------------------------------------------------
@@ -335,18 +296,6 @@ package body Agpl.Xml is
       return DCN.Append_Child
                (Parent,
                 DCD.Create_Element (DCN.Owner_Document (Parent), Name));
-   end Add;
-
-   function Add
-     (Parent : Node;
-      Path   : String;
-      Name   : String)
-      return   Node
-   is
-      Inmediate_parent : Node;
-   begin
-      Inmediate_parent := Get (Path, Parent, Unique => True);
-      return Add (Inmediate_parent, Name);
    end Add;
 
    --  Add child node (must be for the same doc)

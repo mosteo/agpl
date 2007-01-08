@@ -36,6 +36,8 @@ with Ada.Characters.Handling;
 with Ada.Strings;
 with Ada.Strings.Fixed;
 
+--  with Agpl.Text_Io; use Agpl.Text_Io;
+
 package body Agpl.Strings is
 
    ------------------------------------------------------------------------
@@ -127,5 +129,40 @@ package body Agpl.Strings is
          return Search_in (Search_in'First .. Search_in'First + Prefix'Length - 1) = Prefix;
       end if;
    end Starts;
+
+   -------------
+   -- Replace --
+   -------------
+
+   function Replace (S, Pattern, New_Pattern : String) return String is
+      Result : String (S'First .. S'First + S'Length * New_Pattern'Length);
+      Pos    : Positive := Result'First;
+      Wold   : constant Natural := Pattern'Length - 1;
+      Wnew   : constant Natural := New_Pattern'Length - 1;
+      I      : Positive := S'First;
+   begin
+      loop
+         if S (I .. I + Wold) = Pattern then
+            Result (Pos .. Pos + Wnew) := New_Pattern;
+            I   := I   + Pattern'Length;
+            Pos := Pos + New_Pattern'Length;
+         else
+            Result (Pos) := S (I);
+            I   := I   + 1;
+            Pos := Pos + 1;
+         end if;
+         exit when I + Wold > S'Last;
+      end loop;
+
+      Result (Pos .. Pos + S'Last - I) := S (I .. S'Last);
+      Pos := Pos + S'Last - I + 1;
+
+--        Put_Line ("Old:" & S);
+--        Put_Line ("Pos:" & Pos'Img);
+--        Put_Line ("New:" & Result);
+
+      return Result (Result'First .. Pos - 1);
+
+   end Replace;
 
 end Agpl.Strings;
