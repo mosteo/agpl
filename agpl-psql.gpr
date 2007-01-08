@@ -1,0 +1,50 @@
+with "agpl";
+
+project Agpl.Psql is
+
+   Name    := "agpl.psql";
+   Version := "20070107";
+
+   for Object_Dir use "obj";
+   for Source_Dirs use ("psql");
+
+   for Languages use ("ada");
+
+   package Ide is
+      for Vcs_Kind use "Subversion";
+   end Ide;
+
+   for Library_Name use Name;
+   for Library_Kind use Agpl.Kind;
+   for Library_Version use Name & ".so." & Version;
+
+   case Agpl.Kind is
+      when "Static"  => for Library_Dir use "libstatic";
+      when "Dynamic" => for Library_Dir use "libdynamic";
+   end case;
+
+   package Pretty_Printer is
+      for Default_Switches ("ada") use Agpl.Pretty_Printer'Default_Switches ("ada");
+   end Pretty_Printer;
+
+   package Compiler is
+
+      for Default_Switches ("ada") use Agpl.Compiler'Default_Switches ("ada");
+
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use Agpl.Builder'Default_Switches ("ada");
+   end Builder;
+
+   package Binder is
+      for Default_Switches ("ada") use Agpl.Binder'Default_Switches ("ada");
+   end Binder;
+
+   package Linker is
+
+      for Default_Switches ("ada") use Agpl.Linker'Default_Switches ("ada");
+
+   end Linker;
+
+end Agpl.Psql;
