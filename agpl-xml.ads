@@ -36,6 +36,8 @@
 
 with DOM.Core;
 with Dom.Core.Nodes;
+with Unicode.Ces;
+with Unicode.Ces.Utf8;
 
 with Ada.Containers.Vectors;
 
@@ -62,13 +64,16 @@ package Agpl.Xml is
    -- From_String                                                        --
    ------------------------------------------------------------------------
    --  Parses and XML string (Latin1 accepted)
-   function From_string (Data : in String) return Document;
+   function From_String
+     (Data     : in String;
+      Encoding : in Unicode.Ces.Encoding_Scheme := Unicode.Ces.Utf8.Utf8_Encoding)
+      return        Document;
 
    ------------------------------------------------------------------------
    -- Parse                                                              --
    ------------------------------------------------------------------------
    --  Read a XML file and stores it in memory;
-   function Parse (File : String) return Document;
+   function Parse (File     : String) return     Document;
 
    ------------------------------------------------------------------------
    -- Get                                                                --
@@ -104,6 +109,10 @@ package Agpl.Xml is
       Attr    : String;
       Default : Number)
       return          Number;
+
+   procedure Set_Attribute (Item : Node;
+                            Attr : String;
+                            Val  : String);
 
    --  Add a child by giving its name
    function Add (Parent : Node; Name : String) return Node;

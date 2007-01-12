@@ -45,7 +45,6 @@ with DOM.Readers;
 with Input_Sources.File;
 with Input_Sources.Strings;
 with Sax.Readers;
-with Unicode.CES.Basic_8bit; use Unicode.CES;
 
 with Ada.Exceptions; use Ada.Exceptions;
 with Text_IO;
@@ -78,7 +77,10 @@ package body Agpl.Xml is
    -- From_string                                                        --
    ------------------------------------------------------------------------
    --  Parses and XML string (Latin1 accepted)
-   function From_String (Data : in String) return Document is
+   function From_String
+     (Data     : in String;
+      Encoding : in Unicode.Ces.Encoding_Scheme := Unicode.Ces.Utf8.Utf8_Encoding)
+      return Document is
       Tree          : DOM.Readers.Tree_Reader;
       String_handle : Input_Sources.Strings.String_Input;
       N             : Node;
@@ -91,7 +93,7 @@ package body Agpl.Xml is
 
       Input_Sources.Strings.Open
         (Data'Unrestricted_Access,
-         Basic_8bit.Basic_8bit_Encoding,
+         Encoding,
          String_handle);
       DOM.Readers.Parse (Tree, String_handle);
       Input_Sources.Strings.Close (String_handle);
@@ -104,7 +106,10 @@ package body Agpl.Xml is
    -- Parse                                                              --
    ------------------------------------------------------------------------
    --  Read a XML file and stores it in memory;
-   function Parse (File : String) return Document is
+   function Parse
+     (File     : String)
+      return     Document
+   is
       Tree        : DOM.Readers.Tree_Reader;
       File_handle : Input_Sources.File.File_Input;
       N           : Node;
@@ -116,9 +121,9 @@ package body Agpl.Xml is
          True);
 
       Input_Sources.File.Open (File, File_handle);
-      Input_Sources.File.Set_Encoding
-        (File_handle,
-         Basic_8bit.Basic_8bit_Encoding);
+--        Input_Sources.File.Set_Encoding
+--          (File_handle,
+--           Encoding);
       DOM.Readers.Parse (Tree, File_handle);
       Input_Sources.File.Close (File_handle);
       N := DCD.Get_Element (DOM.Readers.Get_Tree (Tree));
@@ -315,20 +320,34 @@ package body Agpl.Xml is
       return DCD.Create_Element (DCN.Owner_Document (Parent), Name);
    end Create_Child;
 
+   -------------------
+   -- Set_Attribute --
+   -------------------
+
+   procedure Set_Attribute (Item : Node;
+                            Attr : String;
+                            Val  : String)
+   is
+   begin
+      Dce.Set_Attribute (Item, Attr, Val);
+   end Set_Attribute;
+
    ------------------------------------------------------------------------
    -- Delete                                                             --
    ------------------------------------------------------------------------
    procedure Delete (Item : in out Node) is
       Dummy : Node;
    begin
-      --  If it's the root element, we free everything:
-      if DCD.Get_Element (DCN.Owner_Document (Item)) = Item then
-         Dummy := DCN.Owner_Document (Item);
-      else
-         Dummy := DCN.Remove_Child (DCN.Parent_Node (Item), Item);
+      if Item /= null then
+         --  If it's the root element, we free everything:
+         if Dcd.Get_Element (Dcn.Owner_Document (Item)) = Item then
+            Dummy := Dcn.Owner_Document (Item);
+         else
+            Dummy := Dcn.Remove_Child (Dcn.Parent_Node (Item), Item);
+         end if;
+         Dcn.Free (Dummy, Deep => True);
+         Item := null;
       end if;
-      DCN.Free (Dummy, Deep => True);
-      Item := null;
    end Delete;
 
    ------------------------------------------------------------------------

@@ -39,13 +39,17 @@
 ------------------------------------------------------------------------------
 --  $Id: dom-core-nodes-output.adb,v 1.3 2004/01/21 21:05:43 Jano Exp $
 
+with Agpl.Types.Ustrings;
 with Agpl.Xml;
 
 with Sax.Encodings; use Sax.Encodings;
 
+with Ada.Strings.Unbounded.Text_Io;
+with Ada.Text_Io;
+
 package body Dom.Core.Nodes.Output is
 
-   NL  : constant String  := (Character'Val (13), Character'Val (10));
+   NL  : constant String  := (1 => Character'Val (10));
    Tab : constant Natural := 3;
 
    procedure Print_Whites (U : in out ASU.Unbounded_String; Whites : in Natural) is
@@ -207,6 +211,43 @@ package body Dom.Core.Nodes.Output is
          when others =>
             Append (U, Node_Value (N));
       end case;
+
+      --  Lame hack:
+      declare
+         use Asu;
+      begin
+         if Slice (U, 1, 2) /= "<?" then
+            U := "<?xml version='1.0' encoding='utf-8'?>" & Nl & U;
+         end if;
+      end;
+   end Print;
+
+   procedure Print
+     (N              : Node;
+      File           : String;
+      Print_Comments : Boolean := False;
+      Print_XML_PI   : Boolean := False;
+      With_URI       : Boolean := False;
+      Indent         : Natural := 0)
+   is
+      use Agpl.Types.Ustrings;
+      Text : Ustring;
+   begin
+      Print (N, Text, Print_Comments, Print_Xml_Pi, With_Uri, Indent);
+
+      declare
+         use Ada.Strings.Unbounded.Text_Io;
+         use Ada.Text_Io;
+         F : File_Type;
+      begin
+         Create (F, Out_File, File);
+         Put_Line (F, Text);
+         Close (F);
+      exception
+         when others =>
+            Close (F);
+            raise;
+      end;
    end Print;
 
    procedure Print

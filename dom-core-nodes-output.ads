@@ -62,6 +62,15 @@ package Dom.Core.Nodes.Output is
    --  with_URI is True, names will be  ns_URI:local_name instead
 
    procedure Print
+     (N              : Node;
+      File           : String;
+      Print_Comments : Boolean := False;
+      Print_XML_PI   : Boolean := False;
+      With_URI       : Boolean := False;
+      Indent         : Natural := 0);
+   --  As previous but to file
+
+   procedure Print
      (List           : Dom.Core.Node_List;
       U              : in out ASU.Unbounded_string;
       Print_Comments : Boolean := False;
