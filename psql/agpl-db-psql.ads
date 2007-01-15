@@ -51,6 +51,10 @@ package Agpl.Db.Psql is
    procedure Query (R : out Result; Db : Database; Q : String);
    --  Performs the query and checks for failure
 
+   function Query (Db : Database; Sql : String) return String;
+   --  Get the first column of the first row of a query.
+   --  Useful for count and the like
+
    procedure Begin_Transaction (Db : Database);
 
    procedure Commit_Transaction (Db : Database);

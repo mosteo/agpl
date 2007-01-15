@@ -70,19 +70,23 @@ package Agpl.Strings.Fields is
    -- String_Tail                                                        --
    ------------------------------------------------------------------------
    --  Returns "" if no @Separator@ found.
+   --  Starts counts the amount of separators to skip over
    function String_Tail
      (S         : String;
-      Separator : Character := '/')
+      Separator : Character := '/';
+      Start     : Positive  := 1)
       return      String;
 
    function Tail
      (S         : String;
-      Separator : Character := '/')
+      Separator : Character := '/';
+      Start     : Positive  := 1)
       return      String renames String_Tail;
 
    function T
      (S         : String;
-      Separator : Character := '/')
+      Separator : Character := '/';
+      Start     : Positive  := 1)
       return      String renames String_Tail;
 
    ------------------------------------------------------------------------

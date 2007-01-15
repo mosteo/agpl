@@ -141,7 +141,7 @@ package body Agpl.Strings is
       Wnew   : constant Natural := New_Pattern'Length - 1;
       I      : Positive := S'First;
    begin
-      loop
+      while I + Wold <= S'Last loop
          if S (I .. I + Wold) = Pattern then
             Result (Pos .. Pos + Wnew) := New_Pattern;
             I   := I   + Pattern'Length;
@@ -151,7 +151,6 @@ package body Agpl.Strings is
             I   := I   + 1;
             Pos := Pos + 1;
          end if;
-         exit when I + Wold > S'Last;
       end loop;
 
       Result (Pos .. Pos + S'Last - I) := S (I .. S'Last);

@@ -1,36 +1,8 @@
-------------------------------------------------------------------------------
---                              Ada Web Server                              --
---                                                                          --
---                         Copyright (C) 2000-2004                          --
---                                ACT-Europe                                --
---                                                                          --
---  This library is free software; you can redistribute it and/or modify    --
---  it under the terms of the GNU General Public License as published by    --
---  the Free Software Foundation; either version 2 of the License, or (at   --
---  your option) any later version.                                         --
---                                                                          --
---  This library is distributed in the hope that it will be useful, but     --
---  WITHOUT ANY WARRANTY; without even the implied warranty of              --
---  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU       --
---  General Public License for more details.                                --
---                                                                          --
---  You should have received a copy of the GNU General Public License       --
---  along with this library; if not, write to the Free Software Foundation, --
---  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
---                                                                          --
---  As a special exception, if other files instantiate generics from this   --
---  unit, or you link this unit with other files to produce an executable,  --
---  this  unit  does not  by itself cause  the resulting executable to be   --
---  covered by the GNU General Public License. This exception does not      --
---  however invalidate any other reasons why the executable file  might be  --
---  covered by the  GNU Public License.                                     --
-------------------------------------------------------------------------------
-
---  $Id: aws-url.adb,v 1.37 2004/11/10 13:53:24 obry Exp $
-
 with Agpl.Conversions;
+with Agpl.Ustrings; use Agpl.Ustrings;
 
 with Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 
 package body Agpl.URL is
 
@@ -155,5 +127,55 @@ package body Agpl.URL is
 
       return Res (1 .. K);
    end Encode;
+
+   ---------------
+   -- Normalize --
+   ---------------
+
+   function Normalize (Url : in String) return String is
+      Url_Path : Ustring := +Url;
+
+      K        : Natural;
+      P        : Natural;
+
+      use Asu;
+   begin
+      --  Checks for current directory and removes all occurences
+
+      --  Look for starting ./
+
+      if Length (URL_Path) >= 2 and then Slice (URL_Path, 1, 2) = "./" then
+         Delete (URL_Path, 1, 1);
+      end if;
+
+      --  Look for all /./ references
+
+      loop
+         K := Index (URL_Path, "/./");
+
+         exit when K = 0;
+
+         Delete (URL_Path, K, K + 1);
+      end loop;
+
+      --  Checks for parent directory
+
+      loop
+         K := Index (URL_Path, "/../");
+
+         exit when K = 0;
+
+         --  Look for previous directory, which should be removed
+
+         P := Strings.Fixed.Index
+           (Slice (URL_Path, 1, K - 1), "/", Strings.Backward);
+
+         exit when P = 0;
+
+         Delete (URL_Path, P, K + 2);
+      end loop;
+
+      return +URL_Path;
+   end Normalize;
 
 end Agpl.URL;

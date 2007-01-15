@@ -60,6 +60,17 @@ package body Agpl.Db.Psql is
          Log ("Agpl.Db.Psql.Query [Exception for query]: " & Q, Error);
    end Query;
 
+   -----------
+   -- Query --
+   -----------
+
+   function Query (Db : Database; Sql : String) return String is
+      R : Result;
+   begin
+      Query (R, Db, Sql);
+      return Value (R, 0, 0);
+   end Query;
+
    -----------------------
    -- Begin_Transaction --
    -----------------------

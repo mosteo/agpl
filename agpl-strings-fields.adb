@@ -91,16 +91,21 @@ package body Agpl.Strings.Fields is
    --  Returns the head or "" if no tokenizer found.
    function String_tail
      (s         : String;
-      Separator : Character := '/')
+      Separator : Character := '/';
+      Start     : Positive  := 1)
       return      String
    is
+      Skip : Natural := 0;
    begin
       if S = "" then
          return S;
       end if;
       for n in  S'Range loop
-         if S (n) = Separator and n < S'Last then
-            return S (n + 1 .. S'Last);
+         if S (n) = Separator then
+            Skip := Skip + 1;
+            if Skip = Start and then n < S'Last then
+               return S (N + 1 .. S'Last);
+            end if;
          end if;
       end loop;
       return "";
