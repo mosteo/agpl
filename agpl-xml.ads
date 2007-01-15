@@ -80,6 +80,8 @@ package Agpl.Xml is
    ------------------------------------------------------------------------
    --  Retrieve the named child. If it doesn exist, exception raised.
    function Get (Parent : Node; Name : String) return Node;
+   function Get_Or_Null (Parent : Node; Name : String) return Node;
+   --  Will return null instead of raising exception
 
    ------------------------------------------------------------------------
    -- Get_All                                                            --

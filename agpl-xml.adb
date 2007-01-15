@@ -163,6 +163,18 @@ package body Agpl.Xml is
       end;
    end Get;
 
+   -----------------
+   -- Get_Or_Null --
+   -----------------
+
+   function Get_Or_Null (Parent : Node; Name : String) return Node is
+   begin
+      return Get (Parent, Name);
+   exception
+      when Constraint_Error =>
+         return null;
+   end Get_Or_Null;
+
    -------------
    -- Get_All --
    -------------
