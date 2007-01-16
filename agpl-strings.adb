@@ -164,4 +164,23 @@ package body Agpl.Strings is
 
    end Replace;
 
+   ----------
+   -- Left --
+   ----------
+
+   function Left (This : in String; Count : Natural) return String is
+   begin
+      return This (This'First .. Natural'Min (This'Last, This'First + Count - 1));
+   end Left;
+
+   ----------------
+   -- Capitalize --
+   ----------------
+
+   function Capitalize (This : in String) return String is
+   begin
+      return U (This (This'First .. This'First)) &
+             L (This (This'First + 1 .. This'Last));
+   end Capitalize;
+
 end Agpl.Strings;

@@ -100,6 +100,12 @@ package Agpl.Strings is
    function U        (This : in String) return String renames To_upper;
    pragma Inline (To_upper);
 
+   ----------------
+   -- Capitalize --
+   ----------------
+   function Capitalize (This : in String) return String;
+   --  Mixed case
+
    ------------------------------------------------------------------------
    -- To_string                                                          --
    ------------------------------------------------------------------------
@@ -110,6 +116,11 @@ package Agpl.Strings is
    -- Trim                                                               --
    ------------------------------------------------------------------------
    function Trim (This : in String) return String
-     renames Conversions.Trim;
+                  renames Conversions.Trim;
+
+   ----------
+   -- Left --
+   ----------
+   function Left (This : in String; Count : Natural) return String;
 
 end Agpl.Strings;
