@@ -62,8 +62,7 @@ package body Agpl.Xml is
       ('&' | ''' | '"' | '<' | '>' => True,
       others => False);
 
-   type String_Access is access String;
-   Replacings : constant array (Character) of String_Access :=
+   Replacings : constant array (Character) of access String :=
       ('&'   => new String'("&amp;"),
       '''    => new String'("&apos;"),
       '"'    => new String'("&quot;"),
