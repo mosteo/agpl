@@ -19,7 +19,7 @@ package body Agpl.Strings.Utf8 is
          begin
             Unicode.Ces.Utf8.Read (Str, Str_Idx, Char);
 
-            if Unicode.Is_Letter (Char) or else Unicode.Is_Digit (Char) then
+            if Unicode.Is_Letter (Char) then
                declare
                   Code : String (1 .. 20);
                   Last : Natural := Code'First;
@@ -29,9 +29,7 @@ package body Agpl.Strings.Utf8 is
                end;
             end if;
 
-            if Str_Idx > Str'Last or else
-               not (Unicode.Is_Letter (Char) or else Unicode.Is_Digit (Char))
-            then
+            if Str_Idx > Str'Last or else not Unicode.Is_Letter (Char) then
                if Word /= Null_Ustring then
                   Words.Append (+Word);
                   Word := Null_Ustring;
