@@ -63,6 +63,7 @@ package Agpl.Types.Ustrings is
    function "+" (S : String)        return UString renames ASU.To_unbounded_string;
 
    Null_Ustring : UString renames ASU.Null_Unbounded_String;
+   Nul          : UString renames ASU.Null_Unbounded_String;
 
    ------------------------------------------------------------------------
    -- Write_To_Stream                                                    --

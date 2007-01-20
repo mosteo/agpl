@@ -77,7 +77,6 @@ package body Agpl.URL is
 
          elsif Str (I) = '+' then
             Res (K) := ' ';
-
          else
             Res (K) := Str (I);
          end if;
