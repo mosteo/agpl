@@ -1,0 +1,59 @@
+--  Options to be shared by all agpl project files
+
+project Agpl_Include extends "../skel-ada/template_include.gpr" is
+
+   for Source_Dirs use (".", "mw", "xmlada");
+
+   Trace_Enabled : Template_Include.Enabled_Disabled := External ("Agpl_Trace", "Enabled");
+
+   case Trace_Enabled is
+      when "Enabled" =>
+         for Source_Dirs use Project'Source_Dirs & ("trace_true");
+      when "Disabled" =>
+         for Source_Dirs use Project'Source_Dirs & ("trace_false");
+   end case;
+
+   for Languages use ("Ada", "C");
+
+   --  Selective functionalities of Agpl
+
+   Include_Base     : Template_Include.Yes_No := External ("Agpl_Include_Base",     "Yes");
+   Include_Concorde : Template_Include.Yes_No := External ("Agpl_Include_Concorde", "No");
+   Include_Gtk      : Template_Include.Yes_No := External ("Agpl_Include_Gtk",      "No");
+   Include_Http     : Template_Include.Yes_No := External ("Agpl_Include_Http",     "No");
+   Include_Psql     : Template_Include.Yes_No := External ("Agpl_Include_Psql",     "No");
+   Include_Test     : Template_Include.Yes_No := External ("Agpl_Include_Test",     "No");
+
+   case Include_Base is
+      when "No"  => for Source_Dirs use ();
+      when "Yes" => null;
+   end case;
+
+   case Include_Concorde is
+      when "Yes" => for Source_Dirs use project'Source_Dirs & "agpl-concorde";
+      when "No"  => null;
+   end case;
+
+   case Include_Gtk is
+      when "Yes" => for Source_Dirs use project'Source_Dirs & "agpl-gdk";
+      when "No"  => null;
+   end case;
+
+   case Include_Http is
+      when "Yes" => for Source_Dirs use project'Source_Dirs & "agpl-http";
+      when "No"  => null;
+   end case;
+
+   case Include_Psql is
+      when "Yes" => for Source_Dirs use project'Source_Dirs & "agpl-psql";
+      when "No"  => null;
+   end case;
+
+   case Include_Test is
+      when "Yes" => for Source_Dirs use project'Source_Dirs & "tests";
+      when "No"  => null;
+   end case;
+
+   --  Inherit everything else from skeleton project
+
+end Agpl_Include;

@@ -79,7 +79,7 @@ package Agpl.Xml is
    -- Get                                                                --
    ------------------------------------------------------------------------
    --  Retrieve the named child. If it doesn exist, exception raised.
-   function Get (Parent : Node; Name : String) return Node;
+   function Get         (Parent : Node; Name : String) return Node;
    function Get_Or_Null (Parent : Node; Name : String) return Node;
    --  Will return null instead of raising exception
 
@@ -87,11 +87,11 @@ package Agpl.Xml is
    -- Get_All                                                            --
    ------------------------------------------------------------------------
    --  Returns childrens with given name (first is 1): * means any name.
-   function Get_all (Parent : Node; Name : String := "*") return Node_array;
-   function Get_All (Path : String; Parent : Node) return Node_Array;
+   function Get_all (Parent : Node;   Name   : String := "*") return Node_array;
+   function Get_All (Path   : String; Parent : Node) return Node_Array;
 
-   function Get_all (Parent : Node; Name : String := "*") return Node_Vector;
-   function Get_all (Path : String; Parent : Node) return Node_Vector;
+   function Get_all (Parent : Node;   Name   : String := "*") return Node_Vector;
+   function Get_all (Path   : String; Parent : Node) return Node_Vector;
 
    ------------------------------------------------------------------------
    -- Get_Attribute                                                      --

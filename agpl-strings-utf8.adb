@@ -1,3 +1,4 @@
+with Agpl.Trace; use Agpl.Trace;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 
 package body Agpl.Strings.Utf8 is
@@ -8,7 +9,7 @@ package body Agpl.Strings.Utf8 is
 
    function Extract_Words (Str : String) return Containers.String_Vectors.Vector
    is
-      Words : Containers.String_Vectors.Vector;
+      Words   : Containers.String_Vectors.Vector;
       Str_Idx : Natural := Str'First;
       Word    : Ustring;
       use Asu;
@@ -39,6 +40,10 @@ package body Agpl.Strings.Utf8 is
       end loop;
 
       return Words;
+   exception
+      when Constraint_Error =>
+         Log ("Agpl.Str.Utf8 [C_E to Inv_Enc]", Warning);
+         raise Unicode.Ces.Invalid_Encoding;
    end Extract_Words;
 
 end Agpl.Strings.Utf8;
