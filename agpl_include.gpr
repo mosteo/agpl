@@ -1,10 +1,10 @@
 --  Options to be shared by all agpl project files
 
-project Agpl_Include extends "../skel-ada/template_include.gpr" is
+project Agpl_Include extends "base" is
 
    for Source_Dirs use (".", "mw", "xmlada");
 
-   Trace_Enabled : Template_Include.Enabled_Disabled := External ("Agpl_Trace", "Enabled");
+   Trace_Enabled : Base.Enabled_Disabled := External ("Agpl_Trace", "Enabled");
 
    case Trace_Enabled is
       when "Enabled" =>
@@ -13,16 +13,16 @@ project Agpl_Include extends "../skel-ada/template_include.gpr" is
          for Source_Dirs use Project'Source_Dirs & ("trace_false");
    end case;
 
-   for Languages use ("Ada", "C");
+   for Languages  use ("Ada", "C");
 
    --  Selective functionalities of Agpl
 
-   Include_Base     : Template_Include.Yes_No := External ("Agpl_Include_Base",     "Yes");
-   Include_Concorde : Template_Include.Yes_No := External ("Agpl_Include_Concorde", "No");
-   Include_Gtk      : Template_Include.Yes_No := External ("Agpl_Include_Gtk",      "No");
-   Include_Http     : Template_Include.Yes_No := External ("Agpl_Include_Http",     "No");
-   Include_Psql     : Template_Include.Yes_No := External ("Agpl_Include_Psql",     "No");
-   Include_Test     : Template_Include.Yes_No := External ("Agpl_Include_Test",     "No");
+   Include_Base     : Base.Yes_No := External ("Agpl_Include_Base",     "Yes");
+   Include_Concorde : Base.Yes_No := External ("Agpl_Include_Concorde", "No");
+   Include_Gtk      : Base.Yes_No := External ("Agpl_Include_Gtk",      "No");
+   Include_Http     : Base.Yes_No := External ("Agpl_Include_Http",     "No");
+   Include_Psql     : Base.Yes_No := External ("Agpl_Include_Psql",     "No");
+   Include_Test     : Base.Yes_No := External ("Agpl_Include_Test",     "No");
 
    case Include_Base is
       when "No"  => for Source_Dirs use ();
