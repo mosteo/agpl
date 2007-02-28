@@ -24,7 +24,7 @@
 --  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.          --
 ------------------------------------------------------------------------------
 
---  The difference with Expres.Mutable_assignment is that that one used several
+--  The difference with Sancta.Mutable_assignment is that that one used several
 --  hacks for the problem we had at hand at that time.
 
 --  This one strives to be a really general, problem-independent solution.
