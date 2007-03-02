@@ -1,3 +1,5 @@
+with "gtkada_conditional";
+
 project Agpl is
 
    type Boolean          is ("True",    "False");
