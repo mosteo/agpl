@@ -41,9 +41,9 @@ package body Agpl.Chronos is
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   procedure Reset (This : in out Object) is
+   procedure Reset (This : in out Object; Elapsed : Duration := 0.0) is
    begin
-      This.Start := Ada.Calendar.Clock;
+      This.Start := Ada.Calendar.Clock - Elapsed;
    end Reset;
 
    ------------------------------------------------------------------------

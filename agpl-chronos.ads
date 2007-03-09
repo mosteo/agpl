@@ -45,7 +45,7 @@ package Agpl.Chronos is
    ------------------------------------------------------------------------
    -- Reset                                                              --
    ------------------------------------------------------------------------
-   procedure Reset (This : in out Object);
+   procedure Reset (This : in out Object; Elapsed : Duration := 0.0);
    pragma Inline (Reset);
 
    ------------------------------------------------------------------------
