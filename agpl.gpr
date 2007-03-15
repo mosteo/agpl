@@ -48,7 +48,7 @@ project Agpl is
    Trace_Enabled    : Enabled_Disabled := External ("Agpl_Trace", "Enabled");
 
    case Include_Base is
-      when "Yes" => for Source_Dirs use (".", "mw", "xmlada");
+      when "Yes" => for Source_Dirs use (".", "./3rdparty/asl", "./3rdparty/mw", "./3rdparty/xmlada");
       when "No"  => for Source_Dirs use ();
    end case;
 
