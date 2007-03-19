@@ -80,7 +80,7 @@ package body Agpl.Command_line is
          end if;
       end loop;
 
-      raise Option_Not_Supplied;
+      raise Option_Not_Supplied with "Missing option: " & Option;
    end Get_Option;
 
    ------------------------------------------------------------------------
