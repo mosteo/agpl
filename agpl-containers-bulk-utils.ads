@@ -34,7 +34,9 @@ package Agpl.Containers.Bulk.Utils is
    procedure Concatenate (Dest : in out Lists.List; Src : in Lists.List);
 
    function To_List (Src : in Vectors.Vector) return Lists.List;
+   function "+"     (Src : in Vectors.Vector) return Lists.List renames To_List;
 
    function To_Vector (Src : in Lists.List) return Vectors.Vector;
+   function "+"       (Src : in Lists.List) return Vectors.Vector renames To_Vector;
 
 end Agpl.Containers.Bulk.Utils;

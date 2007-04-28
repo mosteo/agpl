@@ -149,6 +149,22 @@ package body Agpl.Cr.Assignment is
       This.Agents.Include (Agent.Get_Name, Agent);
    end Set_Agent;
 
+   ----------------
+   -- Set_Agents --
+   ----------------
+
+   procedure Set_Agents (This   : in out Object;
+                         Agents :        Cr.Agent.Containers.Lists.List)
+   is
+      use Cr.Agent.Containers.Lists;
+      procedure Add (I : Cursor) is
+      begin
+         This.Set_Agent (Element (I));
+      end Add;
+   begin
+      Agents.Iterate (Add'Access);
+   end Set_Agents;
+
    -----------------
    -- Freeze_Plan --
    -----------------

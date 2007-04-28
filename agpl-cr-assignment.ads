@@ -65,6 +65,9 @@ package Agpl.Cr.Assignment is
    procedure Set_Agent (This : in out Object; Agent : in Cr.Agent.Object'Class);
    --  Add or replace an agent and its tasks
 
+   procedure Set_Agents (This   : in out Object;
+                         Agents :        Cr.Agent.Containers.Lists.List);
+
    function Get_Agents (This : in Object)
                         return Agent.Containers.Lists.List;
    --  Get all agents with its tasks.

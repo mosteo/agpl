@@ -14,7 +14,9 @@ package body Agpl.Cr.Tasks.Insertions is
    package Task_Lists renames Htn.Tasks.Containers.Lists;
 
    package Candidate_Vectors is
-        new Dynamic_Vector (Cr.Agent.Handle.Object);
+     new Dynamic_Vector (Cr.Agent.Handle.Object);
+
+   use type Htn.Tasks.Task_Id;
 
    ---------------
    -- Before_Id --
@@ -601,7 +603,13 @@ package body Agpl.Cr.Tasks.Insertions is
       New_Agent   : Cr.Agent.Handle.Object;
       Agent_Task  : Htn.Tasks.Task_Id;
    begin
+      if Natural (Tasks.Length) = 0 then
+         Inserted := Htn.Tasks.No_Task;
+         return;
+      end if;
+
       Agents.Iterate (Check'Access);
+
       if Agent_Vectors.Has_Element (Best_Agent) then
          Greedy_Tail (Agent_Vectors.Element (Best_Agent),
                       Tasks,
@@ -610,6 +618,10 @@ package body Agpl.Cr.Tasks.Insertions is
                       Agent_Task,
                       Agent_Total,
                       Agent_Delta);
+         if Agent_Task = Htn.Tasks.No_Task then
+            Inserted := Htn.Tasks.No_Task;
+            return;
+         end if;
          New_Ass    := Ass;
          New_Ass.Set_Agent (New_Agent.Get);
          Inserted   := Agent_Task;
