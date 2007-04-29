@@ -133,6 +133,7 @@ package Agpl.Cr.Tasks.Insertions is
                           Costs      : in Cost_Cache.Object'Class;
                           Criterion  : in     Assignment_Criteria;
                           New_Ass    :    out Assignment.Object;
+                          New_Agent  :    out Cr.Agent.Handle.Object;
                           Cost_Total :    out Cr.Costs;
                           Cost_Delta :    out Cr.Costs;
                           Success    :    out Boolean);
@@ -143,12 +144,14 @@ package Agpl.Cr.Tasks.Insertions is
                           Costs     : in     Cost_Cache.Object'Class;
                           Criterion : in     Assignment_Criteria;
                           New_Ass   :    out Assignment.Object;
+                          New_Agent :    out Cr.Agent.Handle.Object;
                           Inserted  :    out Htn.Tasks.Task_Id;
                           Cost_Total :    out Cr.Costs;
                           Cost_Delta :    out Cr.Costs);
    --  Insert the best task in the best agent.
    --  Just *one* task is inserted.
    --  The task is only tried at end of agent plans.
+   --  The agent gaining the task is given (with the task).
 
    procedure Idle_Tail (Ass        : in     Assignment.Object;
                         Tasks      : in     Htn.Tasks.Containers.Lists.List;
@@ -158,5 +161,12 @@ package Agpl.Cr.Tasks.Insertions is
                         Cost_Total :    out Cr.Costs;
                         Cost_Delta :    out Cr.Costs);
    --  Append in the less busy agent its best task from Tasks
+
+
+
+   --  LIST MANIPULATION
+
+   procedure Remove (T  : in out Htn.Tasks.Containers.Lists.List;
+                     Id :        Htn.Tasks.Task_Id);
 
 end Agpl.Cr.Tasks.Insertions;

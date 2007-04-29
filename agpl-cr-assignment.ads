@@ -59,6 +59,8 @@ package Agpl.Cr.Assignment is
                        return Agent.Object'Class;
    --  Gets an agent copy with all its tasks.
 
+   procedure Remove_Agent (This : in out Object; Name : String);
+
    function Get_Most_Costly_Agent (This : in Object) return Agent.Object'Class;
    --  Get a copy of the agent with longest task list
 

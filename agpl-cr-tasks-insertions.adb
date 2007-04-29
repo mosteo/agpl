@@ -466,6 +466,7 @@ package body Agpl.Cr.Tasks.Insertions is
                           Costs      : in Cost_Cache.Object'Class;
                           Criterion  : in     Assignment_Criteria;
                           New_Ass    :    out Assignment.Object;
+                          New_Agent  :    out Cr.Agent.Handle.Object;
                           Cost_Total :    out Cr.Costs;
                           Cost_Delta :    out Cr.Costs;
                           Success    :    out Boolean)
@@ -512,6 +513,7 @@ package body Agpl.Cr.Tasks.Insertions is
          begin
             Ag.Add_Task (T);
             New_Ass.Set_Agent (Ag);
+            New_Agent.Set (Ag);
          end;
          Success := True;
       else
@@ -528,9 +530,10 @@ package body Agpl.Cr.Tasks.Insertions is
                           Costs     : in     Cost_Cache.Object'Class;
                           Criterion : in     Assignment_Criteria;
                           New_Ass   :    out Assignment.Object;
+                          New_Agent :    out Cr.Agent.Handle.Object;
                           Inserted  :    out Htn.Tasks.Task_Id;
-                          Cost_Total :    out Cr.Costs;
-                          Cost_Delta :    out Cr.Costs)
+                          Cost_Total:    out Cr.Costs;
+                          Cost_Delta:    out Cr.Costs)
    is
       Pending : constant Htn.Tasks.Containers.Vectors.Vector :=
                   Htn.Tasks.Utils.To_Vector (Tasks);
@@ -541,6 +544,7 @@ package body Agpl.Cr.Tasks.Insertions is
       for I in Pending.First_Index .. Pending.Last_Index loop
          declare
             Temp_Ass        : Assignment.Object;
+            Temp_Agent      : Cr.Agent.Handle.Object;
             Partial_Success : Boolean;
             Temp_Cost,
             Temp_Total,
@@ -551,6 +555,7 @@ package body Agpl.Cr.Tasks.Insertions is
                          Costs,
                          Criterion,
                          Temp_Ass,
+                         Temp_Agent,
                          Temp_Total,
                          Temp_Delta,
                          Partial_Success);
@@ -560,6 +565,7 @@ package body Agpl.Cr.Tasks.Insertions is
                                       Minsum => Temp_Delta);
                if Temp_Cost < Best_Cost then
                   New_Ass    := Temp_Ass;
+                  New_Agent  := Temp_Agent;
                   Best_Cost  := Temp_Cost;
                   Inserted   := Pending.Element (I).Get_Id;
                   Cost_Total := Temp_Total;
@@ -631,5 +637,26 @@ package body Agpl.Cr.Tasks.Insertions is
          Inserted := Htn.Tasks.No_Task;
       end if;
    end Idle_Tail;
+
+   ------------
+   -- Remove --
+   ------------
+
+   procedure Remove (T  : in out Htn.Tasks.Containers.Lists.List;
+                     Id :        Htn.Tasks.Task_Id)
+   is
+      use Htn.Tasks.Containers.Lists;
+      I : Cursor := T.First;
+   begin
+      while Has_Element (I) loop
+         if Element (I).Get_Id = Id then
+            T.Delete (I);
+            return;
+         else
+            Next (I);
+         end if;
+      end loop;
+      raise Constraint_Error with "Task not found";
+   end Remove;
 
 end Agpl.Cr.Tasks.Insertions;

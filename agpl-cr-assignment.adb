@@ -140,6 +140,16 @@ package body Agpl.Cr.Assignment is
       return Element (Find (This.Agents, Name));
    end Get_Agent;
 
+   ------------------
+   -- Remove_Agent --
+   ------------------
+
+   procedure Remove_Agent (This : in out Object; Name : String) is
+      I : Agent.Maps.Cursor := This.Agents.Find (Name);
+   begin
+      This.Agents.Delete (I);
+   end Remove_Agent;
+
    ---------------
    -- Set_Agent --
    ---------------
