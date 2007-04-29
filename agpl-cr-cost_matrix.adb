@@ -9,6 +9,8 @@ package body Agpl.Cr.Cost_Matrix is
 
    use type Cr.Costs;
    use type Htn.Tasks.Task_Id;
+   package AC renames Agpl.Cr.Agent.Containers;
+   package TC renames Agpl.Htn.Tasks.Containers;
 
    ---------
    -- Key --
@@ -196,6 +198,32 @@ package body Agpl.Cr.Cost_Matrix is
    begin
       Create (This, Agents, Add_Starting_Tasks (Agents, Tasks));
    end Create_With_Start;
+
+   -----------------------
+   -- Create_Only_Start --
+   -----------------------
+
+   procedure Create_Only_Start
+     (This   : in out Object;
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List)
+   is
+      A : AC.Lists.Cursor := Agents.First;
+      T : TC.Lists.Cursor;
+   begin
+      while AC.Lists.Has_Element (A) loop
+         T := Tasks.First;
+         while TC.Lists.Has_Element (T) loop
+            Set_Cost (This,
+                      Cr.Agent.Get_Name (AC.Lists.Element (A)),
+                      Htn.Tasks.No_Task,
+                      Htn.Tasks.Get_Id (TC.Lists.Element (T)),
+                      AC.Lists.Element (A).Get_Cost (TC.Lists.Element (T)));
+            TC.Lists.Next (T);
+         end loop;
+         AC.Lists.Next (A);
+      end loop;
+   end Create_Only_Start;
 
    --------------
    -- Get_Cost --

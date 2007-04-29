@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <math.h>
+
 #define INFINITY ((int) pow(2, sizeof(int)*8-2)-1)
 
 typedef struct

@@ -83,6 +83,12 @@ package Agpl.Cr.Cost_Matrix is
    --  agent, which should be planned as the first task for each agent.
    --  These tasks are obtained via @Add_Starting_Tasks@
 
+   procedure Create_Only_Start
+     (This   : in out Object;
+      Agents : in Cr.Agent.Containers.Lists.List;
+      Tasks  : in Htn.Tasks.Containers.Lists.List);
+   --  Only costs for initial tasks from each robot
+
    procedure Merge (Dst : in out Object; Src : in Object);
    --  Overwrite Dst costs that are also present in Src, add new ones in Src.
 

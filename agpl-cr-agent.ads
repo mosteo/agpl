@@ -124,6 +124,8 @@ package Agpl.Cr.Agent is
 --     procedure Mark_Start (This : in out Object);
    --  Marks the execution is starting now, and caches the estimated cost.
 
+   procedure Remove_First_Task (This : in out Object);
+
    procedure Remove_Task (This : in out Object; Id : in Htn.Tasks.Task_Id);
    --  Remove this task from this agent TO DO list.
 

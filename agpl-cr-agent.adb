@@ -275,6 +275,15 @@ package body Agpl.Cr.Agent is
       This.Tasks := Tasks;
    end Set_Tasks;
 
+   -----------------------
+   -- Remove_First_Task --
+   -----------------------
+
+   procedure Remove_First_Task (This : in out Object) is
+   begin
+      This.Remove_Task (This.Get_First_Task.Get_Id);
+   end Remove_First_Task;
+
    -----------------
    -- Remove_Task --
    -----------------
