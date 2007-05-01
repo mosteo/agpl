@@ -114,6 +114,10 @@ package Agpl.Cr.Agent is
    --  Will call Modifier with a in-place modifiable task list, to avoid
    --  redundant copying.
 
+   procedure Set_Task (This : in out Object;
+                       T    :        Htn.Tasks.Object'Class);
+   --  Removes any other task currently assigned.
+
    procedure Set_Tasks (This  : in out Object;
                         Tasks : in     Htn.Tasks.Containers.Lists.List);
    --  Set all the ordered tasks that must conform the TO DO list;

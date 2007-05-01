@@ -265,6 +265,18 @@ package body Agpl.Cr.Agent is
       Modifier (This.Tasks);
    end Modify_Task_List;
 
+   --------------
+   -- Set_Task --
+   --------------
+
+   procedure Set_Task (This : in out Object;
+                       T    :        Htn.Tasks.Object'Class)
+   is
+   begin
+      This.Clear_Tasks;
+      This.Add_Task (T);
+   end Set_Task;
+
    ---------------
    -- Set_Tasks --
    ---------------

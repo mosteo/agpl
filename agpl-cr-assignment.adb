@@ -25,11 +25,13 @@
 ------------------------------------------------------------------------------
 
 with Agpl.Conversions;
-with Agpl.Trace; use Agpl.Trace;
-
 --  with Agpl.Cr.Agent.Handle;
 with Agpl.Htn.Plan.Utils;
+with Agpl.Htn.Tasks.Extra;
 with Agpl.Htn.Tasks.Utils;
+with Agpl.Trace; use Agpl.Trace;
+
+
 
 package body Agpl.Cr.Assignment is
 
@@ -138,6 +140,25 @@ package body Agpl.Cr.Assignment is
       use Agent.Maps;
    begin
       return Element (Find (This.Agents, Name));
+   end Get_Agent;
+
+   ---------------
+   -- Get_Agent --
+   ---------------
+
+   function Get_Agent (This : Object; Id : Htn.Tasks.Task_Id)
+                       return Agent.Object'Class
+   is
+      use Agent.Maps;
+      I : Cursor := This.Agents.First;
+   begin
+      while Has_Element (I) loop
+         if Htn.Tasks.Extra.Contains (Element (I).Get_Tasks, Id) then
+            return Element (I);
+         end if;
+         Next (I);
+      end loop;
+      raise Constraint_Error with "No agent contains given task";
    end Get_Agent;
 
    ------------------

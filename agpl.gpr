@@ -101,7 +101,7 @@ project Agpl is
             for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & 
               ("-O2", "-gnato", "-fstack-check", "-gnata");
          when "Release" =>
-            for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn", "-gnatN");
+            for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & ("-O2");
             for Default_Switches ("C")   use Compiler'Default_Switches ("C")   & ("-O3");
             for Default_Switches ("C++") use Compiler'Default_Switches ("C")   & ("-O3");
          when "No_Options" =>

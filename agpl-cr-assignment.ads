@@ -59,6 +59,10 @@ package Agpl.Cr.Assignment is
                        return Agent.Object'Class;
    --  Gets an agent copy with all its tasks.
 
+   function Get_Agent (This : Object; Id : Htn.Tasks.Task_Id)
+                       return Agent.Object'Class;
+   --  Get the owner of a given task
+
    procedure Remove_Agent (This : in out Object; Name : String);
 
    function Get_Most_Costly_Agent (This : in Object) return Agent.Object'Class;
