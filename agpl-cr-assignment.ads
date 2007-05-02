@@ -68,6 +68,12 @@ package Agpl.Cr.Assignment is
    function Get_Most_Costly_Agent (This : in Object) return Agent.Object'Class;
    --  Get a copy of the agent with longest task list
 
+   function Get_Idle_Agents (This : Object)
+                             return Cr.Agent.Containers.Lists.List;
+
+   function Get_Non_Idle_Agents (This : Object)
+                                 return Cr.Agent.Containers.Lists.List;
+
    procedure Set_Agent (This : in out Object; Agent : in Cr.Agent.Object'Class);
    --  Add or replace an agent and its tasks
 
@@ -86,6 +92,9 @@ package Agpl.Cr.Assignment is
 
    function Get_All_Tasks (This : in Object) return Htn.Tasks.Containers.Lists.List;
    --  Return all tasks in the assignment, regardless of owner agent.
+
+   function Get_All_First_Tasks (This : in Object) return Htn.Tasks.Containers.Lists.List;
+   --  Return all first tasks of all agents
 
    function Get_Tasks (This : in Object; Agent : in Cr.Agent.Object'Class)
                        return Htn.Tasks.Containers.Lists.List;

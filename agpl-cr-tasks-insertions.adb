@@ -12,6 +12,7 @@ package body Agpl.Cr.Tasks.Insertions is
    package Agent_Lists renames Agent.Containers.Lists;
    package Agent_Vectors renames Agent.Containers.Vectors;
    package Task_Lists renames Htn.Tasks.Containers.Lists;
+   package Tc renames Htn.Tasks.Containers;
 
    package Candidate_Vectors is
      new Dynamic_Vector (Cr.Agent.Handle.Object);
@@ -643,7 +644,8 @@ package body Agpl.Cr.Tasks.Insertions is
    ------------
 
    procedure Remove (T  : in out Htn.Tasks.Containers.Lists.List;
-                     Id :        Htn.Tasks.Task_Id)
+                     Id :        Htn.Tasks.Task_Id;
+                     Fail_If_Missing : Boolean := True)
    is
       use Htn.Tasks.Containers.Lists;
       I : Cursor := T.First;
@@ -656,7 +658,9 @@ package body Agpl.Cr.Tasks.Insertions is
             Next (I);
          end if;
       end loop;
-      raise Constraint_Error with "Task not found";
+      if Fail_If_Missing then
+         raise Constraint_Error with "Task not found";
+      end if;
    end Remove;
 
    --------------
@@ -678,5 +682,21 @@ package body Agpl.Cr.Tasks.Insertions is
       end loop;
       return False;
    end Contains;
+
+   ------------
+   -- Remove --
+   ------------
+
+   procedure Remove (T : in out Htn.Tasks.Containers.Lists.List;
+                     X :        Htn.Tasks.Containers.Lists.List;
+                     Fail_If_Missing : Boolean := True)
+   is
+      procedure Remove_One (I : Tc.Lists.Cursor) is
+      begin
+         Remove (T, Tc.Lists.Element (I).Get_Id, Fail_If_Missing);
+      end Remove_One;
+   begin
+      X.Iterate (Remove_One'Access);
+   end Remove;
 
 end Agpl.Cr.Tasks.Insertions;

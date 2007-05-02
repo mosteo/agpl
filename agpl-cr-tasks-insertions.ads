@@ -166,7 +166,16 @@ package Agpl.Cr.Tasks.Insertions is
 
    --  LIST MANIPULATION
 
+   function Contains (T  : Htn.Tasks.Containers.Lists.List;
+                      Id : Htn.Tasks.Task_Id)
+                      return Boolean;
+
    procedure Remove (T  : in out Htn.Tasks.Containers.Lists.List;
-                     Id :        Htn.Tasks.Task_Id);
+                     Id :        Htn.Tasks.Task_Id;
+                     Fail_If_Missing : Boolean := True);
+
+   procedure Remove (T : in out Htn.Tasks.Containers.Lists.List;
+                     X :        Htn.Tasks.Containers.Lists.List;
+                     Fail_If_Missing : Boolean := True);
 
 end Agpl.Cr.Tasks.Insertions;

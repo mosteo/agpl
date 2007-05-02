@@ -36,6 +36,7 @@ with Agpl.Trace; use Agpl.Trace;
 package body Agpl.Cr.Assignment is
 
    package Agent_Lists renames Cr.Agent.Containers.Lists;
+   package Ac renames Cr.Agent.Containers;
    package Task_Lists renames Htn.Tasks.Containers.Lists;
    function To_String is new Conversions.Fixed_To_Str (Costs);
 
@@ -342,6 +343,27 @@ package body Agpl.Cr.Assignment is
       return Result;
    end Get_All_Tasks;
 
+   -------------------------
+   -- Get_All_First_Tasks --
+   -------------------------
+
+   function Get_All_First_Tasks (This : in Object)
+                                 return Htn.Tasks.Containers.Lists.List
+   is
+      Result : Htn.Tasks.Containers.Lists.List;
+      use Cr.Agent.Maps;
+      I      : Cursor := This.Agents.First;
+   begin
+      while Has_Element (I) loop
+         if Element (I).Has_Tasks then
+            Result.Append (Element (I).Get_First_Task);
+         end if;
+         Next (I);
+      end loop;
+
+      return Result;
+   end Get_All_First_Tasks;
+
    ---------------
    -- Get_Tasks --
    ---------------
@@ -622,9 +644,46 @@ package body Agpl.Cr.Assignment is
       Log ("", Always);
    end Print_Summary;
 
---     function Ok (This : in Object) return Boolean is
---     begin
---        return True;
---     end Ok;
+   ---------------------
+   -- Get_Idle_Agents --
+   ---------------------
+
+   function Get_Idle_Agents (This : Object)
+                             return Cr.Agent.Containers.Lists.List
+   is
+      Idles : Ac.Lists.List;
+      procedure Check (I : Ac.Lists.Cursor) is
+         A : constant Cr.Agent.Object'Class :=
+           Cr.Agent.Object'Class (Ac.Lists.Element (I));
+      begin
+         if not A.Has_Tasks then
+            Idles.Append (A);
+         end if;
+      end Check;
+   begin
+      This.Get_Agents.Iterate (Check'Access);
+      return Idles;
+   end Get_Idle_Agents;
+
+   -------------------------
+   -- Get_Non_Idle_Agents --
+   -------------------------
+
+   function Get_Non_Idle_Agents (This : Object)
+                                 return Cr.Agent.Containers.Lists.List
+   is
+      Non_Idles : Ac.Lists.List;
+      procedure Check (I : Ac.Lists.Cursor) is
+         A : constant Cr.Agent.Object'Class :=
+           Cr.Agent.Object'Class (Ac.Lists.Element (I));
+      begin
+         if A.Has_Tasks then
+            Non_Idles.Append (A);
+         end if;
+      end Check;
+   begin
+      This.Get_Agents.Iterate (Check'Access);
+      return Non_Idles;
+   end Get_Non_Idle_Agents;
 
 end Agpl.Cr.Assignment;
