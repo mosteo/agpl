@@ -18,6 +18,20 @@ package body Agpl.Cr.Agent is
       This.Tasks.Append (The_Task);
    end Add_Task;
 
+   ---------------
+   -- Add_Tasks --
+   ---------------
+
+   procedure Add_Tasks (This : in out Object; T : Tc.Lists.List) is
+      use Tc.Lists;
+      procedure Add (I : Cursor) is
+      begin
+         This.Add_Task (Element (I));
+      end Add;
+   begin
+      T.Iterate (Add'Access);
+   end Add_Tasks;
+
    -----------------------
    -- Add_Task_Executer --
    -----------------------

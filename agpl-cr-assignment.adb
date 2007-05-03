@@ -70,6 +70,36 @@ package body Agpl.Cr.Assignment is
       end if;
    end Add;
 
+   ---------
+   -- Add --
+   ---------
+
+   procedure Add
+     (This      : in out Object;
+      Agent     : in     Cr.Agent.Object'Class;
+      The_Tasks : in     Htn.Tasks.Containers.Lists.List)
+   is
+      use Cr.Agent.Maps;
+   begin
+      if Contains (This.Agents, Agent.Get_Name) then
+         declare
+            A : Cr.Agent.Object'Class :=
+                  Element (Find (This.Agents, Cr.Agent.Get_Name (Agent)));
+         begin
+            A.Add_Tasks (The_Tasks);
+            This.Agents.Replace (A.Get_Name, A);
+         end;
+      else
+         declare
+            A : Cr.Agent.Object'Class := Agent;
+         begin
+            A.Clear_Tasks;
+            A.Add_Tasks (The_Tasks);
+            This.Agents.Insert (A.Get_Name, A);
+         end;
+      end if;
+   end Add;
+
    -----------
    -- Clear --
    -----------
@@ -301,6 +331,50 @@ package body Agpl.Cr.Assignment is
    end Get_Agents_Without_Tasks;
 
    ---------------------------
+   -- Get_Less_Costly_Agent --
+   ---------------------------
+
+   function Get_Less_Costly_Agent (This : in Object) return Agent.Object'Class
+   is
+      use Agent.Maps;
+
+      Best   : Cursor   := No_Element;
+      I      : Cursor   := This.Agents.First;
+      Cost   : Cr.Costs := Cr.Infinite;
+   begin
+      while Has_Element (I) loop
+         declare
+            This_Cost : constant Cr.Costs := Element (I).Get_Plan_Cost;
+         begin
+            if This_Cost < Cost then
+               Cost := This_Cost;
+               Best := I;
+            end if;
+         end;
+         Next (I);
+      end loop;
+
+      if Has_Element (Best) then
+         return Element (Best);
+      else
+         raise Constraint_Error with "No agents with finite cost";
+      end if;
+   end Get_Less_Costly_Agent;
+
+   ------------------------------------
+   -- Get_Less_Costly_Non_Idle_Agent --
+   ------------------------------------
+
+   function Get_Less_Costly_Non_Idle_Agent (This : in Object)
+                                            return Agent.Object'Class
+   is
+      Aux : Object;
+   begin
+      Aux.Set_Agents (This.Get_Non_Idle_Agents);
+      return Aux.Get_Less_Costly_Agent;
+   end Get_Less_Costly_Non_Idle_Agent;
+
+   ---------------------------
    -- Get_Most_Costly_Agent --
    ---------------------------
 
@@ -308,7 +382,7 @@ package body Agpl.Cr.Assignment is
    is
       use Agent.Maps;
 
-      Best   : Cursor;
+      Best   : Cursor   := No_Element;
       I      : Cursor   := This.Agents.First;
       Cost   : Cr.Costs := 0.0;
    begin
@@ -316,14 +390,19 @@ package body Agpl.Cr.Assignment is
          declare
             This_Cost : constant Cr.Costs := Element (I).Get_Plan_Cost;
          begin
-            if This_Cost > Cost then
+            if This_Cost >= Cost then
                Cost := This_Cost;
                Best := I;
             end if;
          end;
          Next (I);
       end loop;
-      return Element (Best);
+
+      if Has_Element (Best) then
+         return Element (Best);
+      else
+         raise Constraint_Error with "No agents";
+      end if;
    end Get_Most_Costly_Agent;
 
    -------------------

@@ -36,6 +36,9 @@ package Agpl.Containers.Bulk.Utils is
    function To_List (Src : in Vectors.Vector) return Lists.List;
    function "+"     (Src : in Vectors.Vector) return Lists.List renames To_List;
 
+   function To_List (Src :    Element_Type) return Lists.List;
+   --  construct a list containing a single item
+
    function To_Vector (Src : in Lists.List) return Vectors.Vector;
    function "+"       (Src : in Lists.List) return Vectors.Vector renames To_Vector;
 

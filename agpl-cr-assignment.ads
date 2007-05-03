@@ -47,6 +47,11 @@ package Agpl.Cr.Assignment is
       The_Task : in     Htn.Tasks.Object'Class);
    --  Add a task to some agent
 
+   procedure Add
+     (This      : in out Object;
+      Agent     : in     Cr.Agent.Object'Class;
+      The_Tasks : in     Htn.Tasks.Containers.Lists.List);
+
    procedure Clear (This : in out Object);
 
    function Contains (This : in Object; Name : in String) return Boolean;
@@ -64,6 +69,12 @@ package Agpl.Cr.Assignment is
    --  Get the owner of a given task
 
    procedure Remove_Agent (This : in out Object; Name : String);
+
+   function Get_Less_Costly_Agent (This : in Object) return Agent.Object'Class;
+   --  Get a copy of the agent with less cost (including idles!)
+
+   function Get_Less_Costly_Non_Idle_Agent (This : in Object)
+                                            return Agent.Object'Class;
 
    function Get_Most_Costly_Agent (This : in Object) return Agent.Object'Class;
    --  Get a copy of the agent with longest task list

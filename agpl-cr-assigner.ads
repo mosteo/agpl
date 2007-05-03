@@ -77,4 +77,9 @@ package Agpl.Cr.Assigner is
       Enumerate      : access procedure (A : in Assignment.Object));
    --  As previous, but will call @Enumerate@ with each considered assignment
 
+private
+
+   package Ac renames Agent.Containers;
+   package Tc renames Htn.Tasks.Containers;
+
 end Agpl.Cr.Assigner;

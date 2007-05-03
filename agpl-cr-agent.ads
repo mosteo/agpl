@@ -41,11 +41,15 @@ package Agpl.Cr.Agent is
 
    pragma Preelaborate;
 
+   package Tc renames Htn.Tasks.Containers;
+
    type Object is abstract tagged private;
 
    procedure Add_Task
      (This : in out Object; The_Task : in Htn.Tasks.Object'Class);
    --  Assign this task to the end of this agent TO DO list.
+
+   procedure Add_Tasks (This : in out Object; T : Tc.Lists.List);
 
    procedure Clear_Tasks (This : in out Object);
    --  Remove all assigned tasks.

@@ -33,6 +33,13 @@ package body Agpl.Containers.Bulk.Utils is
       return Dst;
    end To_List;
 
+   function To_List (Src :    Element_Type) return Lists.List is
+      L : Lists.List;
+   begin
+      L.Append (Src);
+      return L;
+   end To_List;
+
    ---------------
    -- To_Vector --
    ---------------

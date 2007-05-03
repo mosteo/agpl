@@ -162,8 +162,6 @@ package Agpl.Cr.Tasks.Insertions is
                         Cost_Delta :    out Cr.Costs);
    --  Append in the less busy agent its best task from Tasks
 
-
-
    --  LIST MANIPULATION
 
    function Contains (T  : Htn.Tasks.Containers.Lists.List;
