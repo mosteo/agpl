@@ -1,3 +1,4 @@
+with "hungarian/hungarian";
 with "gtkada_conditional";
 
 project Agpl is
@@ -39,7 +40,7 @@ project Agpl is
    --  Selective functionalities of Agpl
 
    Include_Base     : Yes_No := External ("Agpl_Include_Base",     "Yes");
-   Include_Concorde : Yes_No := External ("Agpl_Include_Concorde", "No");
+   Include_Concorde : Yes_No := External ("Agpl_Include_Concorde", "Yes");
    Include_Gtk      : Yes_No := External ("Agpl_Include_Gtk",      "No");
    Include_Http     : Yes_No := External ("Agpl_Include_Http",     "No");
    Include_Psql     : Yes_No := External ("Agpl_Include_Psql",     "No");
