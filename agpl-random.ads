@@ -78,6 +78,9 @@ package Agpl.Random is
                          Min, Max : in Integer) return Integer;
    --  if Max < Min then Max is returned
 
+   function Get_Float (This     : in Object;
+                       Min, Max : in Float) return Float;
+
    generic
       type Discrete is (<>);
    function Discrete_Random (This : in Object) return Discrete;

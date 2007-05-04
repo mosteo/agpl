@@ -40,6 +40,17 @@ package body Agpl.Random is
       return Uniform * (Max - Min) + Min;
    end Get_Float;
 
+   ---------------
+   -- Get_Float --
+   ---------------
+
+   function Get_Float (This     : in Object;
+                       Min, Max : in Float) return Float
+   is
+   begin
+      return This.Uniform * (Max - Min) + Min;
+   end Get_Float;
+
    -----------------
    -- Get_Integer --
    -----------------
@@ -89,9 +100,9 @@ package body Agpl.Random is
       if Max < Min then
          return Max;
       else
-         return Integer'Min (Min + Integer (Float'Floor (This.Uniform *
-                                                           Float (Max - Min + 1))),
-                             Max);
+         return Integer'Min
+           (Integer (Float'Floor (This.Get_Float (Float (Min), Float (Max + 1)))),
+            Max);
       end if;
    end Get_Integer;
 
