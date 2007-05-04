@@ -26,6 +26,7 @@
 
 with Agpl.Cr;
 with Agpl.Cr.Agent;
+with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Agent.Handle;
 with Agpl.Cr.Assignment;
 with Agpl.Cr.Cost_Cache;
@@ -38,6 +39,9 @@ use  Agpl;
 package Agpl.Cr.Tasks.Insertions is
 
    --  pragma Preelaborate;
+
+   package Ac renames Agent.Containers;
+   package Tc renames Htn.Tasks.Containers;
 
    type Insertion_Procedures is access
      procedure (A          : in     Agent.Object'Class;
@@ -161,6 +165,14 @@ package Agpl.Cr.Tasks.Insertions is
                         Cost_Total :    out Cr.Costs;
                         Cost_Delta :    out Cr.Costs);
    --  Append in the less busy agent its best task from Tasks
+
+   function Greedy (Agents    : Ac.Lists.List;
+                    Tasks     : Tc.Lists.List;
+                    Costs     : Cost_Cache.Object'Class;
+                    Criterion : Cr.Assignment_Criteria := Cr.Criterion_Minmax;
+                    Random    : Boolean                := False)
+                    return   Cr.Assignment.Object;
+   --  just assign the best one to the best agent and give such an assignment.
 
    --  LIST MANIPULATION
 

@@ -41,6 +41,9 @@ package Agpl.Cr.Assignment is
 
    function Empty_Object return Object;
 
+   function Create (Agents : Cr.Agent.Containers.Lists.List) return Object;
+   pragma Inline (Create);
+
    procedure Add
      (This     : in out Object;
       Agent    : in     Cr.Agent.Object'Class;
@@ -90,6 +93,10 @@ package Agpl.Cr.Assignment is
 
    procedure Set_Agents (This   : in out Object;
                          Agents :        Cr.Agent.Containers.Lists.List);
+
+   procedure Fill_Missing_Agents (This   : in out Object;
+                                  Agents :        Cr.Agent.Containers.Lists.List);
+   --  Merge but keeping existing tasks
 
    function Get_Agents (This : in Object)
                         return Agent.Containers.Lists.List;

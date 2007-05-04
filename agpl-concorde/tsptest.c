@@ -14,6 +14,9 @@ int main (int argc, char **argv)
   int sol [4];
   int res;
 
+  //  In the Ada side...
+  int solve_atsp_problem (int, int*, int, char**, int*);
+
   res = solve_atsp_problem (cities, costs, argc, argv, sol);
 
   printf ("Result from call is %d\n", res);

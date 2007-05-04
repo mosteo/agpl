@@ -1,4 +1,3 @@
-with Agpl.Cr.Agent.Containers;
 with Agpl.Cr.Agent.Utils; use Agpl.Cr.Agent.Utils;
 with Agpl.Dynamic_Vector;
 with Agpl.Htn.Tasks.Utils;
@@ -12,7 +11,6 @@ package body Agpl.Cr.Tasks.Insertions is
    package Agent_Lists renames Agent.Containers.Lists;
    package Agent_Vectors renames Agent.Containers.Vectors;
    package Task_Lists renames Htn.Tasks.Containers.Lists;
-   package Tc renames Htn.Tasks.Containers;
 
    package Candidate_Vectors is
      new Dynamic_Vector (Cr.Agent.Handle.Object);
@@ -412,6 +410,26 @@ package body Agpl.Cr.Tasks.Insertions is
             end if;
          end;
       end loop;
+   end Greedy;
+
+   ------------
+   -- Greedy --
+   ------------
+
+   function Greedy (Agents    : Ac.Lists.List;
+                    Tasks     : Tc.Lists.List;
+                    Costs     : Cost_Cache.Object'Class;
+                    Criterion : Cr.Assignment_Criteria := Cr.Criterion_Minmax;
+                    Random    : Boolean                := False)
+                    return      Cr.Assignment.Object
+   is
+      Result : Assignment.Object;
+      Tid    : Htn.Tasks.Task_Id;
+   begin
+      Greedy (Assignment.Create (Agents), Tasks, Costs, Criterion,
+              Result, Tid,
+              Random);
+      return Result;
    end Greedy;
 
    -----------------

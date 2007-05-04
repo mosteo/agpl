@@ -41,17 +41,18 @@ package body Agpl.Cr.Assigner.Hungarian is
       end loop;
       H.Create (C);
       H.Solve;
-
+      --  H.Print_Assignment;
       --  Solve and convert back to assignment
       declare
          S : constant Hu.Solution_Array := H.Solution;
          R :          Assignment.Object;
       begin
          for I in A.First_Index .. A.Last_Index loop
+            R.Set_Agent (A.Element (I)); -- Add agent in any case or we leak them
             if S (Hu.Worker_Index (I)) in 1 .. Hu.Job_Index (T.Length) then
-               R.Set_Agent (A.Element (I));
                R.Add       (A.Element (I),
                             T.Element (Natural (S (Hu.Worker_Index (I)))));
+               --  and add the task if won
             end if;
          end loop;
          return R;

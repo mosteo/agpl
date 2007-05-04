@@ -129,6 +129,17 @@ package body Agpl.Cr.Assignment is
               Ok     => True);
    end Empty_Object;
 
+   ------------
+   -- Create --
+   ------------
+
+   function Create (Agents : Cr.Agent.Containers.Lists.List) return Object is
+      This : Object;
+   begin
+      This.Set_Agents (Agents);
+      return This;
+   end Create;
+
    -----------------
    -- Fill_Owners --
    -----------------
@@ -226,6 +237,20 @@ package body Agpl.Cr.Assignment is
    begin
       Agents.Iterate (Add'Access);
    end Set_Agents;
+
+   -------------------------
+   -- Fill_Missing_Agents --
+   -------------------------
+
+   procedure Fill_Missing_Agents
+     (This   : in out Object;
+      Agents :        Cr.Agent.Containers.Lists.List)
+   is
+      Prev : constant Cr.Agent.Containers.Lists.List := This.Get_Agents;
+   begin
+      This.Set_Agents (Agents);
+      This.Set_Agents (Prev);
+   end Fill_Missing_Agents;
 
    -----------------
    -- Freeze_Plan --
