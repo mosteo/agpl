@@ -55,6 +55,10 @@ package Agpl.Cr.Assignment is
       Agent     : in     Cr.Agent.Object'Class;
       The_Tasks : in     Htn.Tasks.Containers.Lists.List);
 
+   procedure Set_Tasks (This  : in out Object;
+                        Agent :        String;
+                        Jobs  :        Htn.Tasks.Containers.Lists.List);
+
    procedure Clear (This : in out Object);
 
    function Contains (This : in Object; Name : in String) return Boolean;

@@ -100,6 +100,16 @@ package body Agpl.Cr.Assignment is
       end if;
    end Add;
 
+   procedure Set_Tasks (This  : in out Object;
+                        Agent :        String;
+                        Jobs  :        Htn.Tasks.Containers.Lists.List)
+   is
+      A : Cr.Agent.Object'Class := This.Get_Agent (Agent);
+   begin
+      A.Set_Tasks (Jobs);
+      This.Set_Agent (A);
+   end Set_Tasks;
+
    -----------
    -- Clear --
    -----------

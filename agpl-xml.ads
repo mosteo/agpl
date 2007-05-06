@@ -43,7 +43,7 @@ with Ada.Containers.Vectors;
 
 package Agpl.Xml is
 
-   --  pragma Elaborate_Body;
+   pragma Elaborate_Body;
 
    subtype Node is Dom.Core.Node;
 
@@ -106,7 +106,7 @@ package Agpl.Xml is
 
    generic
       type Number is range <>;
-   function Get_numeric_attribute_from_node
+   function Get_Numeric_Attribute_From_Node
      (Item    : Node;
       Attr    : String;
       Default : Number)
