@@ -800,4 +800,50 @@ package body Agpl.Cr.Assignment is
       return Non_Idles;
    end Get_Non_Idle_Agents;
 
+   ----------------
+   -- Copy_Tasks --
+   ----------------
+
+   procedure Copy_Tasks (Dst : in out Object;
+                         Src :        Object)
+   is
+      Agents : constant Ac.Lists.List := Src.Get_Agents;
+      procedure Check (I : Ac.Lists.Cursor) is
+         Agent : constant Cr.Agent.Object'Class := Ac.Lists.Element (I);
+      begin
+         if not Dst.Contains (Agent.Get_Name) then
+            Dst.Set_Agent (Agent);
+         else
+            Dst.Set_Tasks (Agent.Get_Name, Agent.Get_Tasks);
+         end if;
+      end Check;
+   begin
+      Agents.Iterate (Check'Access);
+   end Copy_Tasks;
+
+   --------------------------
+   -- Merge_Missing_Robots --
+   --------------------------
+
+   procedure Merge_Missing_Robots (Dst        : in out Cr.Assignment.Object;
+                                   Src        :        Cr.Assignment.Object;
+                                   With_Tasks :        Boolean := True)
+   is
+      Agents : Ac.Lists.List;
+      procedure Check (I : Ac.Lists.Cursor) is
+         Agent : constant Cr.Agent.Object'Class := Ac.Lists.Element (I);
+      begin
+         if not Dst.Contains (Agent.Get_Name) then
+            Dst.Set_Agent (Agent);
+         end if;
+      end Check;
+   begin
+      if With_Tasks then
+         Agents := Src.Get_Agents;
+      else
+         Agents := Src.Get_Agents_Without_Tasks;
+      end if;
+      Agents.Iterate (Check'Access);
+   end Merge_Missing_Robots;
+
 end Agpl.Cr.Assignment;

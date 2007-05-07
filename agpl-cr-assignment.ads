@@ -59,6 +59,13 @@ package Agpl.Cr.Assignment is
                         Agent :        String;
                         Jobs  :        Htn.Tasks.Containers.Lists.List);
 
+   procedure Copy_Tasks (Dst : in out Object;
+                         Src :        Object);
+
+   procedure Merge_Missing_Robots (Dst        : in out Object;
+                                   Src        :        Object;
+                                   With_Tasks :        Boolean := True);
+
    procedure Clear (This : in out Object);
 
    function Contains (This : in Object; Name : in String) return Boolean;
