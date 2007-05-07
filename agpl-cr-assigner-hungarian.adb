@@ -1,7 +1,7 @@
 with Agpl.Cr.Agent.Utils; use Agpl.Cr.Agent.Utils;
 with Agpl.Htn.Tasks.Utils; use Agpl.Htn.Tasks.Utils;
 
-with Hungarian;
+with Hungarian_Solver;
 
 package body Agpl.Cr.Assigner.Hungarian is
 
@@ -18,8 +18,8 @@ package body Agpl.Cr.Assigner.Hungarian is
    is
       pragma Unreferenced (This);
 
-      package Hu is new Standard.Hungarian.Solver (Natural (Agents.Length),
-                                                   Natural (Tasks.Length));
+      package Hu is new Hungarian_Solver.Solver (Natural (Agents.Length),
+                                                 Natural (Tasks.Length));
 
       A : Ac.Vectors.Vector := +Agents;
       T : Tc.Vectors.Vector := +Tasks;
