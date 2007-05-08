@@ -28,6 +28,7 @@
 
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Indefinite_Vectors;
 
 generic
@@ -45,6 +46,8 @@ package Agpl.Containers.Bulk is
 
    package Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Key_Type, Element_Type);
+
+   package Key_Sets is new Ada.Containers.Indefinite_Ordered_Sets (Key_Type);
 
    package Vectors is new Ada.Containers.Indefinite_Vectors
      (Index_Type, Element_Type);
