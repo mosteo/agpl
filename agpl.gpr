@@ -102,12 +102,6 @@ project Agpl is
             for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & 
               ("-O2", "-gnato", "-fstack-check", "-gnata");
          when "Release" =>
-            for Switches ("agpl-task_termination.adb") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
-            for Switches ("agpl-calendar-format.adb") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
-            for Switches ("agpl-cr-agent-containers.ads") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
-            for Switches ("agpl-cr-assignment.adb") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
-            for Switches ("agpl-cr-cost_cache.adb") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
-
             for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn");
             for Default_Switches ("C")   use Compiler'Default_Switches ("C")   & ("-O3");
             for Default_Switches ("C++") use Compiler'Default_Switches ("C")   & ("-O3");
