@@ -103,6 +103,9 @@ package Agpl.Cr.Agent is
 
    function Get_Name (This : in Object) return String;
 
+   function Get_Without_Tasks (This : in Object) return Object'Class;
+   --  A copy of himself but without tasks
+
    function Get_First_Task (This : in Object) return Htn.Tasks.Object'Class;
 
    function Get_Last_Task  (This : in Object) return Htn.Tasks.Object'Class;

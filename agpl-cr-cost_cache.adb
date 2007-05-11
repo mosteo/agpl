@@ -1,5 +1,5 @@
 with Agpl.Cr.Agent.Dummy;
-with Agpl.Trace; use Agpl.Trace;
+--  with Agpl.Trace; use Agpl.Trace;
 
 package body Agpl.Cr.Cost_Cache is
 

@@ -195,6 +195,17 @@ package body Agpl.Cr.Agent is
       return S (This.Name);
    end Get_Name;
 
+   -----------------------
+   -- Get_Without_Tasks --
+   -----------------------
+
+   function Get_Without_Tasks (This : in Object) return Object'Class is
+      Clon : Object'Class := This;
+   begin
+      Clon.Clear_Tasks;
+      return Clon;
+   end Get_Without_Tasks;
+
    --------------------
    -- Get_First_Task --
    --------------------
