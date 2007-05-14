@@ -43,6 +43,8 @@ package Agpl.Trace.Root is
    type Object is limited new Trace.Object with private;
    type Object_Access is access all Object'Class;
 
+   pragma Preelaborable_Initialization (Object);
+
    overriding
    procedure Log (This    : in out Object;
                   Text    : in     String;

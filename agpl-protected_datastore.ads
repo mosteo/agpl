@@ -39,6 +39,8 @@ package Agpl.Protected_Datastore is
    type Object is tagged limited private;
    type Object_Access is access Object'Class;
 
+   pragma Preelaborable_Initialization (Object);
+
    function Contains (This : in Object;
                       Key  : in Object_Key)
                       return    Boolean;

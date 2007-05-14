@@ -43,6 +43,8 @@ package Agpl.Trace.Console is
    type Object is new Root.Object with private;
    type Object_Access is access all Object'Class;
 
+   pragma Preelaborable_Initialization (Object);
+
    overriding
    procedure Log (This    : in out Object;
                   Text    : in String;

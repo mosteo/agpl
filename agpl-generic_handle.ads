@@ -42,6 +42,8 @@ package Agpl.Generic_Handle is
 
    type Object is tagged private;
 
+   pragma Preelaborable_Initialization (Object);
+
    function Null_Object return Object;
    pragma Inline (Null_Object);
 

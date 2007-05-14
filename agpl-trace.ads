@@ -48,9 +48,11 @@ package Agpl.Trace is
 
    --  This object is not thread safe.
    --  type Object is limited interface;
-   type Object is abstract tagged limited null record;
+   type Object is abstract tagged limited private; -- null record;
    --  Should be an interface but the gnat bug with containers prevents it
    type Object_Access is access all Object'Class;
+
+   pragma Preelaborable_Initialization (Object);
 
    type Levels is (
       Never,
@@ -140,5 +142,9 @@ package Agpl.Trace is
 
    function Report (E : Ada.Exceptions.Exception_Occurrence) return String
                     renames Agpl.Debug.Report;
+
+private
+
+   type Object is abstract tagged limited null record;
 
 end Agpl.Trace;

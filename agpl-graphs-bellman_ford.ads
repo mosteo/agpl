@@ -45,6 +45,8 @@ package Agpl.Graphs.Bellman_Ford is
    type Graph is tagged private;
    --  Graphs must be continuous: that is, vertices must be consecutively named.
 
+   pragma Preelaborable_Initialization (Graph);
+
    procedure Add_Edge (This : in out Graph;
                        E    : in     Edge);
 
