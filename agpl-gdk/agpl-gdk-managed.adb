@@ -58,13 +58,18 @@ package body Agpl.Gdk.Managed is
 
    task body Gtk_Task is
 
+      Windows_At_Start : constant Integer := 2;
+      --  I'm not sure what happens. Once I create my first window, the toplevel
+      --  count jumps from 0 to 3, so there are two hidden ones I don't know.
+      --  In previous versions of GtkAda they were just 1!
+
       function Num_Windows return Natural is
       begin
-         return Integer'Max (Integer (Length (List_Toplevels)) - 1, 0);
+         return
+           Integer'Max (Integer (Length (List_Toplevels)) - Windows_At_Start, 0);
       end Num_Windows;
 
    begin
-
       select
          accept Start;
       or
@@ -76,6 +81,7 @@ package body Agpl.Gdk.Managed is
 
       loop
          begin
+            --  Put_Line (Num_Windows'Img);
             if Num_Windows = 0 then
                --  Execute codes
                select

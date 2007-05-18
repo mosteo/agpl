@@ -93,7 +93,7 @@ package body Agpl.Cr.Assigner.Greedy_Exhaustive is
       --  Assign tasks:
       while not Pending.Is_Empty loop
          Log ("Pending:" & Pending.Length'Img & " (" & Timer.Image & ")",
-              Always);
+              Debug);
          Timer.Reset;
 
          declare
@@ -123,6 +123,23 @@ package body Agpl.Cr.Assigner.Greedy_Exhaustive is
       A.Set_Valid;
 
       return A;
+   end Assign;
+
+   ------------
+   -- Assign --
+   ------------
+
+   function Assign
+     (Criterion : Assignment_Criteria;
+      Randomize : Boolean;
+      Agents    : Agent.Containers.Lists.List;
+      Tasks     : Htn.Tasks.Containers.Lists.List;
+      Costs     : Cr.Cost_Cache.Object'Class)
+      return      Assignment.Object
+   is
+      This : Object := (Assigner.Object with Randomize, Criterion);
+   begin
+      return This.Assign (Agents, Tasks, Costs);
    end Assign;
 
 end Agpl.Cr.Assigner.Greedy_Exhaustive;

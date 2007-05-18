@@ -11,12 +11,14 @@ package Agpl.Cr.Containers is
    pragma Preelaborate;
 
    package Agent_Containers renames Agpl.Cr.Agent.Containers;
+   package Ac               renames Agent_Containers;
    package Agent_Lists   renames Agent.Containers.Lists;
    package Agent_Maps    renames Agent.Containers.Maps;
    package Agent_Vectors renames Agent.Containers.Vectors;
    package Agent_Utils   renames Agent.Utils;
 
    package Task_Containers renames Agpl.Htn.Tasks.Containers;
+   package Tc              renames Task_Containers;
    package Task_Lists   renames Agpl.Htn.Tasks.Containers.Lists;
    package Task_Maps    renames Agpl.Htn.Tasks.Containers.Maps;
    package Task_Vectors renames Agpl.Htn.Tasks.Containers.Vectors;

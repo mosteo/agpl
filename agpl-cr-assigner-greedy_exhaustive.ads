@@ -50,4 +50,13 @@ package Agpl.Cr.Assigner.Greedy_Exhaustive is
       Costs  : in Cr.Cost_Cache.Object'Class)
       return      Assignment.Object;
 
+   function Assign
+     (Criterion : Assignment_Criteria;
+      Randomize : Boolean;
+      Agents    : Agent.Containers.Lists.List;
+      Tasks     : Htn.Tasks.Containers.Lists.List;
+      Costs     : Cr.Cost_Cache.Object'Class)
+      return      Assignment.Object;
+   --  Convenience
+
 end Agpl.Cr.Assigner.Greedy_Exhaustive;
