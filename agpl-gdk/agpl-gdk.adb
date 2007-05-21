@@ -47,7 +47,7 @@ package body Agpl.Gdk is
       B                        : Float_Matrix;
       Result                   : Float_Matrix;
       I_PIVOT, J_PIVOT         : Integer range 1 .. X'Length (1);
-      BIG_ENTRY, TEMP, EPSILON : Float;
+      BIG_ENTRY, TEMP, EPSILON : Float := 0.0;
       L, M                     : array (1 .. X'Length (1)) of Integer;
 
    --  *******************************************************************

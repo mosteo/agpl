@@ -95,8 +95,8 @@ project Agpl is
       for Default_Switches ("Ada") use ("-g", "-gnatf", "-gnat05", "-gnatwcfjklmopruvz", "-gnatyacehikn", "-gnatqQ");
 
       --  Switches for files with problems
-      for Switches ("agpl-gdk.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
-      for Switches ("agpl-gdk-drawer_figures.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
+      -- for Switches ("agpl-gdk.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
+      -- for Switches ("agpl-gdk-drawer_figures.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
 
       case Build is
          when "Profile" =>
