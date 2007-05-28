@@ -2,7 +2,7 @@ package Agpl.Tasking.Workers is
 
    pragma Preelaborate;
 
-   type Code is interface;
+   type Code is abstract tagged null record;
    --  Non-limited because a copy is needed later
 
    procedure Run (This : in out Code) is abstract;

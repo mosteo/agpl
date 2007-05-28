@@ -46,7 +46,7 @@ package body Agpl.Tasking.Workers is
 
    procedure Check_Old is
       use Worker_Lists;
-      I : Cursor := Running_Workers.Last;
+      I : Cursor := Worker_Lists.Last (Running_Workers);
       J : Cursor;
    begin
       while Has_Element (I) loop
