@@ -192,7 +192,7 @@ package body Agpl.Transf2D is
       B                        : Transformation;
       Result                   : Transformation;
       I_PIVOT, J_PIVOT         : Integer range 1 .. X'Length (1);
-      BIG_ENTRY, TEMP, EPSILON : Real;
+      BIG_ENTRY, TEMP, EPSILON : Real := 0.0;
       L, M                     : array (1 .. X'Length (1)) of Integer;
 
    begin
