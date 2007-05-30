@@ -77,7 +77,7 @@ package body Agpl.Gdk.Managed is
       end select;
 
       Gtk.Main.Init;
-      Log ("Gtk_Task [managed]: Running...", Informative);
+      Log ("Gtk_Task [managed]: Running...", Debug);
 
       loop
          begin
