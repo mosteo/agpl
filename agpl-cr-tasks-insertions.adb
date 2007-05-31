@@ -147,7 +147,7 @@ package body Agpl.Cr.Tasks.Insertions is
                   end;
                else
                   declare
-                     Aux       : Cr.Agent.Object'Class := A;
+                     Aux : Cr.Agent.Object'Class := A;
                   begin
                      Htn.Tasks.Containers.Lists.Insert (New_Tasks, Best_Pos, T);
                      Aux.Set_Tasks (New_Tasks);

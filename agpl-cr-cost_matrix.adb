@@ -83,32 +83,25 @@ package body Agpl.Cr.Cost_Matrix is
             while Fin /= TL.No_Element loop
 
                if Ini /= Fin then
-                  Set_Cost (This,
-                            Cr.Agent.Get_Name (AL.Element (A)),
-                            Htn.Tasks.Get_Id (TL.Element (Ini)),
-                            Htn.Tasks.Get_Id (TL.Element (Fin)),
-                            Cr.Agent.Get_Cost (AL.Element (A),
-                                               TL.Element (Ini),
-                                               TL.Element (Fin)));
-                  Set_Cost (This,
-                            Cr.Agent.Get_Name (AL.Element (A)),
-                            Htn.Tasks.Get_Id (TL.Element (Fin)),
-                            Htn.Tasks.Get_Id (TL.Element (Ini)),
-                            Cr.Agent.Get_Cost (AL.Element (A),
-                                               TL.Element (Fin),
-                                               TL.Element (Ini)));
+                  declare
+                     Bot   : constant Cr.Agent.Object'Class := Al.Element (A);
+                     Name  : constant String            := Bot.Get_Name;
+                     Tini  : constant Htn.Tasks.Object'Class := Tl.Element (Ini);
+                     Tfin  : constant Htn.Tasks.Object'Class := Tl.Element (Fin);
+                     Iniid : constant Htn.Tasks.Task_Id := Tini.Get_Id;
+                     Finid : constant Htn.Tasks.Task_Id := Tfin.Get_Id;
+                  begin
+                     Set_Cost (This, Name, Iniid, Finid, Bot.Get_Cost (Tini, Tfin));
+                     Set_Cost (This, Name, Finid, Iniid, Bot.Get_Cost (Tfin, Tini));
 
-                  --  Special case for the starting task
-                  if Tl.Element (Ini) in Cr.Tasks.Starting_Pose.Object then
-                     Set_Cost (This,
-                               Cr.Agent.Get_Name (Al.Element (A)),
-                               Htn.Tasks.No_Task,
-                               Htn.Tasks.Get_Id (Tl.Element (Fin)),
-                               Get_Cost (Object'Class (This),
-                                         Cr.Agent.Get_Name (Al.Element (A)),
-                                         Htn.Tasks.Get_Id (Tl.Element (Ini)),
-                                         Htn.Tasks.Get_Id (Tl.Element (Fin))));
-                  end if;
+                     --  Special case for the starting task
+                     if Tini in Cr.Tasks.Starting_Pose.Object then
+                        Set_Cost
+                          (This, Name,
+                           Htn.Tasks.No_Task, Finid,
+                           Get_Cost (Object'Class (This), Name, Iniid, Finid));
+                     end if;
+                  end;
                else
                   --  Same task... may be should be Infinite, maybe zero?
                   pragma Ummmm;
