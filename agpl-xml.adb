@@ -277,7 +277,11 @@ package body Agpl.Xml is
       declare
          Result : constant String := DCE.Get_Attribute (Item, Attr);
       begin
-         return Result;
+         if Result /= "" then
+            return Result;
+         else
+            return Default;
+         end if;
       end;
    exception
       when others =>
