@@ -1,0 +1,28 @@
+--  A wrapper on top of a C++ class, with C constructor/destructor
+
+--  INCOMPLETE -- CANNOT RESOLVE SYMBOLS AT ELABORATION TIME, SO SOME FACTORY
+--    APPROACH IS NEEDED OR SOME OTHER IDEA I HAVEN'T YET PRECISED
+
+with Ada.Finalization,
+     Agpl.Interfaces.C.Types;
+
+generic
+   Constructor : String; -- external symbol for the C constructor
+   Destructor  : String; -- Likewise for destructor
+                         --  Both must conform to this prototype:
+                         --  (type*) create_type (void)
+package Agpl.Interfaces.C.Class_Wrapper is
+
+   pragma Preelaborate;
+
+   type Limited_Object is tagged limited private;
+
+   function Ptr (This : Limited_Object) return Types.Void_Ptr;
+
+private
+
+   type Limited_Object is new Ada.Finalization.Limited_Controlled with record
+      Ptr : Types.Void_Ptr;
+   end record;
+
+end Agpl.Interfaces.C.Class_Wrapper;

@@ -1,0 +1,115 @@
+with "gtkada.gpr"; -- GTKADA must be in ADA_INCLUDE_PATH and ADA_OBJECTS_PATH
+
+project Libagpl is
+
+   Name    := "agpl";
+   Version := "20060308";
+
+   for Object_Dir use "obj";
+   for Source_Dirs use (".", "mw", "xmlada", "concorde");
+
+   for Languages use ("Ada", "C");
+
+   type Library_Kind_Type is ("Static", "Dynamic");
+   Kind : Library_Kind_Type := External ("AGPL_Link", "Static");
+
+   type Build_Type is ("Debug", "Release");
+   Build : Build_Type := External ("AGPL_Build", "Debug");
+
+   package Ide is
+      for Vcs_Kind use "Subversion";
+   end Ide;
+
+   for Library_Name use Name;
+   for Library_Kind use Kind;
+   for Library_Version use Name & ".so." & Version;
+
+   case Kind is
+      when "Static"  => for Library_Dir use "libstatic";
+      when "Dynamic" => for Library_Dir use "libdynamic";
+   end case;
+
+   type Include_Concorde_Type is ("Yes", "No");
+   Include_Concorde : Include_Concorde_Type := external ("AGPL_Concorde", "Yes");
+
+   type Include_Gtk_Type is ("Yes", "No");
+   Include_Gtk : Include_Gtk_Type := external ("AGPL_Gtk", "No");
+
+   package Pretty_Printer is
+      for Default_Switches ("ada") use ("-A1", "-A2", "-A3", "-A4");
+   end Pretty_Printer;
+
+   package Compiler is
+
+      for Default_Switches ("c") use ("-g");
+      for Default_Switches ("ada") use ("-g", "-gnatf", "-gnat05", "-gnatwcfjkmoruvz", "-gnatyacehikn");
+
+      case Build is
+
+         when "Debug" =>
+
+            for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-O2", "-gnato", "-fstack-check", "-gnata");
+
+         when "Release" =>
+
+            for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-O3", "-gnatN");
+
+      end case;
+
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-a", "-g");
+   end Builder;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E", "-g");
+   end Binder;
+
+   package Linker is
+
+      for Default_Switches ("ada") use
+                                      ("-g");
+
+      case Include_Gtk is
+          when "No" => null;
+          when "Yes" =>
+             for Default_Switches ("ada") use Linker'Default_Switches ("ada") & (
+                                       "-L/usr/local/include/gtkada",
+                                       "-L/usr/local/lib",
+                                       "-lgtkada",
+                                       "-Wl,--export-dynamic",
+                                       "-lgtk-x11-2.0",
+                                       "-lgdk-x11-2.0",
+                                       "-latk-1.0",
+                                       "-lgdk_pixbuf-2.0",
+                                       "-lm",
+                                       "-lpangoxft-1.0",
+                                       "-lpangox-1.0",
+                                       "-lpango-1.0",
+                                       "-lgobject-2.0",
+                                       "-lgmodule-2.0",
+                                       "-ldl",
+                                       "-lglib-2.0");
+      end case;
+
+      case Include_Concorde is
+
+         when "No" =>
+            null;
+
+         when "Yes" =>
+            for Default_Switches ("ada") use Linker'Default_Switches ("ada") &
+              (
+               "-lm",
+               "-Lobj",
+               "-lagpl",
+               "-Lconcorde",
+               "-lconcorde",
+               "-lqsopt"
+              );
+      end case;
+
+   end Linker;
+
+end Libagpl;
