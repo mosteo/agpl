@@ -32,7 +32,7 @@ package Agpl.Gdk.Managed.Drawing_Area is
                    Title   : in String := "";
                    Bgcolor : in String := "white");
    --  This is the recommended usage... below is the old way of doing things.
-   --  No copy of Draw is kept, so it is ok if it goes out of scope afterwards.
+   --  No ref to Draw is kept, so it is ok if it goes out of scope afterwards.
    --  The background is parsed according to GTK rules (name, or #0123456)
 
    function Show (Draw    : Drawing.Drawable'Class;
