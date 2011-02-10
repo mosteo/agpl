@@ -1,8 +1,8 @@
 with Agpl.Gdk.Palette;
 with Agpl.Monitor;
+with Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
 
-with Gdk.Event; use Gdk.Event;
 with Gdk.Window; use Gdk.Window;
 
 with Gtk.Handlers; pragma Elaborate_All (Gtk.Handlers);
@@ -132,6 +132,26 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          return False;
    end Expose;
 
+   -------------
+   -- Clicked --
+   -------------
+
+   function Clicked (Widget : access Gtk_Widget_Record'Class;
+                     Event  :        Gdk_Event_Button;
+                     This   :        Safe_Access)
+                     return Boolean
+   is
+      pragma Unreferenced (Widget);
+   begin
+      This.Clicked (Event);
+
+      return False;
+   exception
+      when E : others =>
+         Log ("Managed.Drawing_Area.Safe_Access.Clicked: " & Report (E), Warning);
+         return False;
+   end Clicked;
+
    ----------
    -- Show --
    ----------
@@ -255,6 +275,20 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          Draw.Draw (Buffer);
       end Set_Content;
 
+      -------------
+      -- Set_Gui --
+      -------------
+
+      procedure Set_Gui     (Handler : Agpl.Gui.Event_Handler'Class) is
+      begin
+         if Gui.Is_Valid then
+            raise Constraint_Error with "One handler already attached";
+            --  We could lift this having a list, but not needed (yet)
+         else
+            Gui.Set (Handler);
+         end if;
+      end Set_Gui;
+
       ----------------
       -- Set_Widget --
       ----------------
@@ -340,6 +374,33 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          Widget.Queue_Draw;
       end Redraw;
 
+      -------------
+      -- Clicked --
+      -------------
+
+      procedure Clicked (Event : Gdk_Event_Button) is
+      begin
+         if Gui.Is_Valid and then Real_Ok then
+            declare
+               use Agpl.Strings;
+               Coords : Agpl.Gdk.Float_Vector :=
+                          Real.Transform_Back
+                            ((Float (Get_X (Event)), Float (Get_Y (Event)), 1.0));
+            begin
+               Log ("Drawing_Area.Clicked:" &
+                    To_String (Float (Get_X (Event))) & " " &
+                    To_String (Float (Get_Y (Event))),
+                    Debug, Log_Section);
+               Log ("Drawing_Area.Clicked:" &
+                    To_String (Coords (Coords'First)) & " " &
+                    To_String (Coords (Coords'First)),
+                    Debug, Log_Section);
+               Gui.Ref.all.Triggered
+                 (Agpl.Gui.Clicked'(Coords (Coords'First), Coords (Coords'First + 1)));
+            end;
+         end if;
+      end Clicked;
+
    end Safe_Code;
 
    -------------
@@ -410,6 +471,8 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          Widget.Set_Size_Request (1, 1);
          --  This avoids some crash in GTK; user can of course change it at Attach
 
+         Widget.Set_Events (Widget.Get_Events or Button_Press_Mask);
+
          Attach (Gtk_Widget (Widget));
 --           Widget.Realize;
 
@@ -425,6 +488,13 @@ package body Agpl.Gdk.Managed.Drawing_Area is
            (Widget,
             "expose-event",
             Safe_UR.To_Marshaller (Expose'Access),
+            Safe);
+
+         --  Connect the clicked event
+         Safe_UR.Connect
+           (Widget,
+            "button-press-event",
+            Safe_UR.To_Marshaller (Clicked'Access),
             Safe);
 
          Safe.Set_Widget   (Gtk_Widget (Widget));
@@ -498,5 +568,15 @@ package body Agpl.Gdk.Managed.Drawing_Area is
    begin
       return This.Ref.all.Is_Destroyed;
    end Is_Destroyed;
+
+   ------------
+   -- Attach --
+   ------------
+
+   procedure Attach (This    : in out Handle;
+                     Handler :        Gui.Event_Handler'Class) is
+   begin
+      This.Ref.all.Set_Gui (Handler);
+   end Attach;
 
 end Agpl.Gdk.Managed.Drawing_Area;

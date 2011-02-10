@@ -110,6 +110,7 @@ package Agpl.Gdk.Drawer is
    function Transform_Back (This  : in Object;
                             Point : in Float_Vector)
                             return     Float_Vector;
+   pragma Precondition (Point (Point'Last) = 1.0); -- Homogeneous transform.
    --  Apply inverse transformation.
    --  I.E. go from screen to world coordinates.
    --  This function is currently very expensive!!!!!

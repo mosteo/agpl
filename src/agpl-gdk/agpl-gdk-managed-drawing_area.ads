@@ -4,10 +4,13 @@
 with Agpl.Drawing;
 with Agpl.Drawing.Buffer;
 with Agpl.Gdk.Drawer;
+with Agpl.Generic_Handle;
+with Agpl.Gui;
 with Agpl.Smart_Access_Limited;
 with Agpl.Ustrings; use Agpl.Ustrings;
 
 with Gdk.Drawable; use Gdk.Drawable;
+with Gdk.Event;    use Gdk.Event;
 with Gdk;
 
 with Gtk.Drawing_Area; use Gtk.Drawing_Area;
@@ -53,6 +56,12 @@ package Agpl.Gdk.Managed.Drawing_Area is
    --  Note that there's no drawable for the Widget yet, since it is known after
    --    being attached to one...
 
+   procedure Attach (This    : in out Handle;
+                     Handler :        Gui.Event_Handler'Class);
+   --  Clicked.
+   --  Note that a copy is stored; this means that internal pointers have to
+   --    be used in Handler if refs to some other object are needed
+
    procedure Clear (This : in out Handle);
    --  Erase contents.
    --  This won't trigger a redraw, in order to avoid flicker.
@@ -93,6 +102,9 @@ package Agpl.Gdk.Managed.Drawing_Area is
 
 private
 
+   package Gui_Handles is new
+     Agpl.Generic_Handle (Gui.Event_Handler'Class, Gui."=");
+
    type Draw_Code is abstract new Gtk_Code with record
       Drawable : Gdk_Drawable;
       Widget   : Gtk_Widget;
@@ -109,6 +121,7 @@ private
       procedure Clear;
       procedure Add_Content (Draw : Drawing.Drawable'Class);
       procedure Set_Content (Draw : Drawing.Drawable'Class);
+      procedure Set_Gui     (Handler : Gui.Event_Handler'Class);
       procedure Set_Widget (Widget : Gtk_Widget);
       procedure Set_Destroyed;
       procedure Set_Bgcolor (Color : String);
@@ -116,11 +129,13 @@ private
       function Is_Destroyed return Boolean;
       function Get_Bgcolor return String;
 
+      procedure Clicked (Event : Gdk_Event_Button);
       procedure Execute;
       procedure Redraw;
    private
       Widget   : Gtk_Widget;
       Buffer   : Agpl.Drawing.Buffer.Object;
+      Gui      : Gui_Handles.Object;
       Real     : Agpl.Gdk.Drawer.Object;
       Real_OK  : Boolean := False;
       Destroyed : Boolean := False;
