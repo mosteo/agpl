@@ -9,7 +9,6 @@ with Agpl.Gui;
 with Agpl.Smart_Access_Limited;
 with Agpl.Ustrings; use Agpl.Ustrings;
 
-with Gdk.Drawable; use Gdk.Drawable;
 with Gdk.Event;    use Gdk.Event;
 with Gdk;
 
@@ -17,9 +16,12 @@ with Gtk.Drawing_Area; use Gtk.Drawing_Area;
 with Gtk.Widget;       use Gtk.Widget;
 with Gtk.Window;       use Gtk.Window;
 
-with Ada.Finalization;
-
 package Agpl.Gdk.Managed.Drawing_Area is
+
+   pragma Memory_Leak
+     ("This package leaks memory: each created area will retain a reference",
+      "to the created protected object, even after the area destruction",
+      "be it by closing its window or whatever.");
 
    type Handle is tagged private;
    --  Needed only if we intend to perform updates.
@@ -39,9 +41,11 @@ package Agpl.Gdk.Managed.Drawing_Area is
    --  The background is parsed according to GTK rules (name, or #0123456)
 
    function Show (Draw    : Drawing.Drawable'Class;
-                  Title   : String := "";
-                  Bgcolor : String := "white") return Handle;
+                  Title   : String  := "";
+                  Bgcolor : String  := "white";
+                  Autogui : Boolean := True) return Handle;
    --  As above, but provides an updatable object.
+   --  If Autogui, check if Draw is a Gui.Event_Handler and attach.
 
    function Show (Attach  : access procedure (Widget : Gtk_Widget);
                   Bgcolor : String  := "white";
@@ -57,10 +61,12 @@ package Agpl.Gdk.Managed.Drawing_Area is
    --    being attached to one...
 
    procedure Attach (This    : in out Handle;
-                     Handler :        Gui.Event_Handler'Class);
-   --  Clicked.
+                     Handler :        Gui.Event_Handler'Class;
+                     Replace :        Boolean := False);
+   --  Just clicked for now.
    --  Note that a copy is stored; this means that internal pointers have to
    --    be used in Handler if refs to some other object are needed
+   --  If not Replace and already set, error.
 
    procedure Clear (This : in out Handle);
    --  Erase contents.
@@ -80,66 +86,39 @@ package Agpl.Gdk.Managed.Drawing_Area is
    function Is_Destroyed (This : Handle) return Boolean;
    --  Check for RIPness
 
-   -----------------------
-   --  OBSOLESCENT WAY  --
-   -----------------------
-
-   type Draw_Code is abstract new Gtk_Code with private;
-   --  This type is used by the user to supply the drawing code in its Execute.
-
-   function Drawable (This : in Draw_Code) return Gdk_Drawable;
-   --  The user must use this in Execute to get the drawable.
-
-   function Widget (This : in Draw_Code) return Gtk_Widget;
-   --  The user must use this in Execute to get the widget containing the drawable.
-   --  For example to get pango layouts.
-
-   procedure Show (Draw  : in     Draw_Code'Class;
-                   Title : in     String := "";
-                   Bgcol : in     String := "white");
-   --  A copy of Draw will be kept, so there shouldn't be references to external
-   --  data that may have dissapeared.
-
 private
 
    package Gui_Handles is new
      Agpl.Generic_Handle (Gui.Event_Handler'Class, Gui."=");
 
-   type Draw_Code is abstract new Gtk_Code with record
-      Drawable : Gdk_Drawable;
-      Widget   : Gtk_Widget;
-   end record;
-   --  This type is a remainder of the old way of doing things.
-   --  It's still used internally by the new machinery, though, so I can't
-   --    remove it -- yet.
-
-   type Access_Code is access all Draw_Code'Class;
-
-   --  These types below rely still in Draw_Code, but are used to exempt
-   --  the client from using Draw_Code at all, and instead use Drawable'Class
    protected type Safe_Code (Square : Boolean) is
+
       procedure Clear;
       procedure Add_Content (Draw : Drawing.Drawable'Class);
       procedure Set_Content (Draw : Drawing.Drawable'Class);
-      procedure Set_Gui     (Handler : Gui.Event_Handler'Class);
-      procedure Set_Widget (Widget : Gtk_Widget);
+      procedure Set_Gui     (Handler : Gui.Event_Handler'Class; Replace : Boolean);
+      procedure Set_Widget (Area   : Gtk_Drawing_Area);
+      procedure Set_Window (Window : Gtk_Window);
       procedure Set_Destroyed;
       procedure Set_Bgcolor (Color : String);
 
       function Is_Destroyed return Boolean;
-      function Get_Bgcolor return String;
+      function Is_Windowed  return Boolean; -- if WE manage the top-level window
+      function Get_Area     return Gtk_Drawing_Area;
+      function Get_Bgcolor  return String;
 
       procedure Clicked (Event : Gdk_Event_Button);
-      procedure Execute;
+      procedure Expose;
       procedure Redraw;
    private
-      Widget   : Gtk_Widget;
-      Buffer   : Agpl.Drawing.Buffer.Object;
-      Gui      : Gui_Handles.Object;
-      Real     : Agpl.Gdk.Drawer.Object;
-      Real_OK  : Boolean := False;
+      Window    : Gtk_Window; -- Might be null if not stand-alone
+      Gtk_Area  : Gtk_Drawing_Area;
+      Buffer    : Agpl.Drawing.Buffer.Object;
+      Gui       : Gui_Handles.Object;
+      Real      : Agpl.Gdk.Drawer.Object;
+      Real_OK   : Boolean := False;
       Destroyed : Boolean := False;
-      Bgcolor  : Ustring;
+      Bgcolor   : Ustring := +"white";
    end Safe_Code;
 
    type Safe_Access is access all Safe_Code;
@@ -150,24 +129,6 @@ private
 
    type Handle is new Smart_Safe with null record;
 
-   --  This is the type that we use to remove the client necessity for Draw_Code
-   --  Also, this is only needed when the drawable is in a standalone window
-   type Standard_Code is new Draw_Code with record
-      Safe : Smart_Safe;
-   end record;
-
-   overriding
-   procedure Execute (This : in out Standard_Code);
-
-   type Object is new Ada.Finalization.Limited_Controlled with record
-      Area   : Gtk_Drawing_Area;
-      Window : Gtk_Window;
-      Draw   : Access_Code;
-   end record;
-
-   type Object_Access is access all Object'Class;
-
-   procedure Initialize (This : in out Object);
-   procedure Finalize (This : in out Object);
+   type Handle_Access is access all Handle;
 
 end Agpl.Gdk.Managed.Drawing_Area;

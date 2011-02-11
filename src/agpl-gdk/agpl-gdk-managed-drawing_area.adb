@@ -1,5 +1,4 @@
 with Agpl.Gdk.Palette;
-with Agpl.Monitor;
 with Agpl.Strings;
 with Agpl.Trace; use Agpl.Trace;
 
@@ -7,109 +6,35 @@ with Gdk.Window; use Gdk.Window;
 
 with Gtk.Handlers; pragma Elaborate_All (Gtk.Handlers);
 with Gtk.Enums; use Gtk.Enums;
-
-with Ada.Unchecked_Deallocation;
+with Gtk.Object;
 
 package body Agpl.Gdk.Managed.Drawing_Area is
 
-   Mutex : aliased Monitor.Counting_Semaphore;
-
-   package Handlers_UR is new Gtk.Handlers.User_Return_Callback
-     (Gtk_Widget_Record,
-      Boolean,
-      Object_Access);
-
-   package Safe_UR is new Gtk.Handlers.User_Return_Callback
+   package Safe_UR is new Standard.Gtk.Handlers.User_Return_Callback
      (Gtk_Widget_Record,
       Boolean,
       Safe_Access);
 
-   --------------
-   -- Drawable --
-   --------------
-
-   function Drawable (This : in Draw_Code) return Gdk_Drawable
-   is
-   begin
-      return This.Drawable;
-   end Drawable;
-
-   ------------
-   -- Widget --
-   ------------
-
-   function Widget (This : in Draw_Code) return Gtk_Widget is
-   begin
-      return This.Widget;
-   end Widget;
+   package Safe_U is new Standard.Gtk.Handlers.User_Callback
+     (Gtk_Widget_Record,
+      Safe_Access);
 
    -------------
    -- Destroy --
    -------------
 
-   function Destroy (Widget : access Gtk_Widget_Record'Class;
-                     Event  :        Gdk_Event_Any;
-                     This   :        Object_Access)
-                     return          Boolean
-   is
-      pragma Unreferenced (Widget, Event);
-
-      procedure Free is new Ada.Unchecked_Deallocation
-        (Object'Class, Object_Access);
-
-      Alias : Object_Access := This;
-   begin
-      Free (Alias); -- All allocated memory is gone now. Kwatz!
-
-      return False;
-   exception
-      when E : others =>
-         Log ("Managed.Drawing_Area.Destroy: " & Report (E), Warning);
-         return False;
-   end Destroy;
-
-   -------------
-   -- Destroy --
-   -------------
-
-   function Destroy (Widget : access Gtk_Widget_Record'Class;
-                     Event  :        Gdk_Event_Any;
-                     This   :        Safe_Access)
-                     return          Boolean
+   procedure Destroy (Widget : access Gtk_Widget_Record'Class;
+                      Event  :        Gdk_Event_Any;
+                      This   :        Safe_Access)
    is
       pragma Unreferenced (Widget, Event);
    begin
       This.Set_Destroyed;
-
-      return False;
    exception
       when E : others =>
          Log ("Managed.Drawing_Area.Safe_Access.Destroy: " & Report (E),
               Warning);
-         return False;
    end Destroy;
-
-   ------------
-   -- Expose --
-   ------------
-
-   function Expose (Widget : access Gtk_Widget_Record'Class;
-                    Event  :        Gdk_Event_Expose;
-                    This   :        Object_Access)
-                    return          Boolean
-   is
-      pragma Unreferenced (Widget, Event);
-   begin
-      This.Draw.Drawable := Get_Window (This.Area);
-      This.Draw.Widget   := Gtk_Widget (This.Area);
-      This.Draw.Execute; --  No need to do rendez-vous, we're already in the Gtk thread.
-
-      return False;
-   exception
-      when E : others =>
-         Log ("Managed.Drawing_Area.Expose: " & Report (E), Warning);
-         return False;
-   end Expose;
 
    ------------
    -- Expose --
@@ -120,9 +45,10 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                     This   :        Safe_Access)
                     return          Boolean
    is
+      pragma Precondition (In_Gtk_Thread);
       pragma Unreferenced (Widget, Event);
    begin
-      This.Execute;
+      This.Expose;
       --  No need to do rendez-vous, we're already in the Gtk thread.
 
       return False;
@@ -141,6 +67,7 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                      This   :        Safe_Access)
                      return Boolean
    is
+      pragma Precondition (In_Gtk_Thread);
       pragma Unreferenced (Widget);
    begin
       This.Clicked (Event);
@@ -151,95 +78,6 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          Log ("Managed.Drawing_Area.Safe_Access.Clicked: " & Report (E), Warning);
          return False;
    end Clicked;
-
-   ----------
-   -- Show --
-   ----------
-
-   procedure Show (Draw  : in     Draw_Code'Class;
-                   Title : in     String := "";
-                   Bgcol : in     String := "white")
-   is
-      M : Monitor.Object (Mutex'Access); pragma Unreferenced (M);
-
-      This : constant Object_Access := new Object;
-      --  This is freed in the destroy event
-
-      type Show_Code is new Gtk_Code with null record;
-      procedure Execute (X : in out Show_Code) is
-         pragma Unreferenced (X);
-         Pal : constant Agpl.Gdk.Palette.Object :=
-                 Agpl.Gdk.Palette.Create (Draw.Drawable);
-      begin
-         Set_Title (This.Window, Title);
-         Maximize (This.Window);
-         Set_Background (Get_Window (This.Area),
-                         Agpl.Gdk.Palette.Get_Color (Pal, Bgcol));
-         Show_All (This.Window);
-      end Execute;
-
-   begin
-      This.Draw := new Draw_Code'Class'(Draw);
-      --  This is freed at This.Finalize
-      declare
-         Show_It : Show_Code;
-      begin
-         Execute_In_Gtk (Show_It);
-         --  This creates and shows the window but doesn't draw yet.
-         --  The drawing will be triggered at expose event.
-      end;
-   end Show;
-
-   ----------------
-   -- Initialize --
-   ----------------
-
-   procedure Initialize (This : in out Object) is
-      type Init_Code is new Gtk_Code with null record;
-      procedure Execute (X : in out Init_Code) is
-         pragma Unreferenced (X);
-      begin
-         Gtk_New (This.Window);
-         Initialize (This.Window, Window_Toplevel);
-
-         --  Connect the destroy event
-         Handlers_Ur.Connect
-           (This.Window,
-            "delete-event",
-            Handlers_Ur.To_Marshaller (Destroy'Access),
-            This'Unchecked_Access);
-
-         Set_Position (This.Window, Win_Pos_Center);
-         Set_Modal (This.Window, True);
-         Realize (This.Window);
-
-         Gtk_New (This.Area);
-
-         --  Connect the expose event
-         Handlers_Ur.Connect
-           (This.Area,
-            "expose-event",
-            Handlers_Ur.To_Marshaller (Expose'Access),
-            This'Unchecked_Access);
-
-         Add (This.Window, This.Area);
-      end Execute;
-
-      Do_It : Init_Code;
-   begin
-      Execute_In_Gtk (Do_It);
-   end Initialize;
-
-   --------------
-   -- Finalize --
-   --------------
-
-   procedure Finalize (This : in out Object) is
-      procedure Free is new Ada.Unchecked_Deallocation
-        (Draw_Code'Class, Access_Code);
-   begin
-      Free (This.Draw);
-   end Finalize;
 
    ---------------
    -- Safe_Code --
@@ -279,9 +117,9 @@ package body Agpl.Gdk.Managed.Drawing_Area is
       -- Set_Gui --
       -------------
 
-      procedure Set_Gui     (Handler : Agpl.Gui.Event_Handler'Class) is
+      procedure Set_Gui (Handler : Agpl.Gui.Event_Handler'Class; Replace : Boolean) is
       begin
-         if Gui.Is_Valid then
+         if Gui.Is_Valid and then not Replace then
             raise Constraint_Error with "One handler already attached";
             --  We could lift this having a list, but not needed (yet)
          else
@@ -293,10 +131,19 @@ package body Agpl.Gdk.Managed.Drawing_Area is
       -- Set_Widget --
       ----------------
 
-      procedure Set_Widget (Widget : Gtk_Widget) is
+      procedure Set_Widget (Area : Gtk_Drawing_Area) is
       begin
-         Safe_Code.Widget := Widget;
+         Safe_Code.Gtk_Area := Area;
       end Set_Widget;
+
+      ----------------
+      -- Set_Window --
+      ----------------
+
+      procedure Set_Window (Window : Gtk_Window) is
+      begin
+         Safe_Code.Window := Window;
+      end Set_Window;
 
       -------------------
       -- Set_Destroyed --
@@ -317,6 +164,15 @@ package body Agpl.Gdk.Managed.Drawing_Area is
       end Is_Destroyed;
 
       -----------------
+      -- Is_Windowed --
+      -----------------
+
+      function Is_Windowed return Boolean is
+      begin
+         return Window /= null;
+      end Is_Windowed;
+
+      -----------------
       -- Set_Bgcolor --
       -----------------
 
@@ -324,6 +180,15 @@ package body Agpl.Gdk.Managed.Drawing_Area is
       begin
          Bgcolor := +Color;
       end Set_Bgcolor;
+
+      --------------
+      -- Get_Area --
+      --------------
+
+      function Get_Area return Gtk_Drawing_Area is
+      begin
+         return Gtk_Area;
+      end Get_Area;
 
       -----------------
       -- Get_Bgcolor --
@@ -334,22 +199,27 @@ package body Agpl.Gdk.Managed.Drawing_Area is
          return +Bgcolor;
       end Get_Bgcolor;
 
-      -------------
-      -- Execute --
-      -------------
+      ------------
+      -- Expose --
+      ------------
 
-      procedure Execute is
+      procedure Expose is
       begin
-         if not Real_OK and then Widget.Realized_Is_Set then
+         if Destroyed then
+            Log ("Received exposed when destroyed (?)", Warning, Log_Section);
+            return; -- No point in attempting this -- can happen??
+         end if;
+
+         if not Real_OK and then Gtk_Area.Realized_Is_Set then
             Real_OK := True;
-            Real.Set_Widget (Widget);
-            Real.Set_Drawable (Widget.Get_Window);
+            Real.Set_Widget (Gtk_Widget (Gtk_Area));
+            Real.Set_Drawable (Gtk_Area.Get_Window);
 
             declare
                Pal : constant Agpl.Gdk.Palette.Object :=
-                       Agpl.Gdk.Palette.Create (Widget.Get_Window);
+                       Agpl.Gdk.Palette.Create (Gtk_Area.Get_Window);
             begin
-               Set_Background (Widget.Get_Window,
+               Set_Background (Gtk_Area.Get_Window,
                                Agpl.Gdk.Palette.Get_Color (Pal, Get_Bgcolor));
             end;
          end if;
@@ -363,15 +233,21 @@ package body Agpl.Gdk.Managed.Drawing_Area is
             Log ("Managed.DA.Safe.Execute: Widget not yet realized",
                  Warning, Log_Section);
          end if;
-      end Execute;
+      exception
+         when E : others =>
+            Log ("Drawing_Area.Safe.Expose: " & Report (E), Warning);
+      end Expose;
 
       ------------
       -- Redraw --
       ------------
 
       procedure Redraw is
+         pragma Precondition(Managed.In_Gtk_Thread);
       begin
-         Widget.Queue_Draw;
+         if not Destroyed then
+            Gtk_Area.Queue_Draw;
+         end if;
       end Redraw;
 
       -------------
@@ -387,6 +263,8 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                           Real.Transform_Back
                             ((Float (Get_X (Event)), Float (Get_Y (Event)), 1.0));
             begin
+               Gui.Ref.all.Triggered
+                 (Agpl.Gui.Clicked'(Coords (Coords'First), Coords (Coords'First + 1)));
                Log ("Drawing_Area.Clicked:" &
                     To_String (Float (Get_X (Event))) & " " &
                     To_String (Float (Get_Y (Event))),
@@ -395,23 +273,62 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                     To_String (Coords (Coords'First)) & " " &
                     To_String (Coords (Coords'First)),
                     Debug, Log_Section);
-               Gui.Ref.all.Triggered
-                 (Agpl.Gui.Clicked'(Coords (Coords'First), Coords (Coords'First + 1)));
             end;
          end if;
       end Clicked;
 
    end Safe_Code;
 
-   -------------
-   -- Execute --
-   -------------
+   ------------------
+   -- Prepare_Area --
+   ------------------
 
-   procedure Execute (This : in out Standard_Code) is
+   procedure Prepare_Area (Safe    : Safe_Access;
+                           Bgcolor : String) is
+      pragma Precondition (Managed.In_Gtk_Thread);
+
+      Widget : Gtk_Drawing_Area;
    begin
-      This.Safe.Ref.all.Set_Widget (This.Widget);
-      This.Safe.Ref.all.Execute;
-   end Execute;
+      Gtk.Drawing_Area.Gtk_New (Widget);
+
+      if Safe.Is_Windowed then
+         Widget.Set_Size_Request (320, 240);
+      else
+         Widget.Set_Size_Request (8, 8);
+      end if;
+      --  This avoids some crash in GTK; user can of course change it at Attach
+
+      Safe.Set_Widget   (Widget);
+      Safe.Set_Bgcolor (Bgcolor);
+
+      Widget.Set_Events (Widget.Get_Events or Button_Press_Mask);
+
+      --  Connect the expose event
+      Safe_UR.Connect
+        (Widget,
+         Gtk.Widget.Signal_Expose_Event,
+         Safe_UR.To_Marshaller (Expose'Access),
+         Safe);
+
+      --  Connect the clicked event
+      Safe_UR.Connect
+        (Widget,
+         Gtk.Widget.Signal_Button_Press_Event,
+         Safe_UR.To_Marshaller (Clicked'Access),
+         Safe);
+
+      --  Connect the destroy event
+      Safe_U.Connect
+        (Widget,
+         Gtk.Object.Signal_Destroy,
+         Safe_U.To_Marshaller (Destroy'Access),
+         Safe);
+
+   exception
+      when E : others =>
+         Log ("Drawing_Area.Prepare_Area [attach]: " & Report (E),
+              Error, Log_Section);
+   end Prepare_Area;
 
    ----------
    -- Show --
@@ -421,9 +338,11 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                    Title : in String := "";
                    Bgcolor : in String := "white")
    is
-      Throwaway : constant Handle := Show (Draw, Title, Bgcolor);
+      Throwaway : constant Handle_Access :=
+                    new Handle'(Show (Draw, Title, Bgcolor));
       pragma Unreferenced (Throwaway);
    begin
+      pragma Memory_Leak ("Throwaway remains in memory forever :S");
       null;
    end Show;
 
@@ -433,18 +352,45 @@ package body Agpl.Gdk.Managed.Drawing_Area is
 
    function Show (Draw    : Drawing.Drawable'Class;
                   Title   : String := "";
-                  Bgcolor : String := "white") return Handle
+                  Bgcolor : String := "white";
+                  Autogui : Boolean := True) return Handle
    is
-      Sc : Standard_Code;
-      --  A copy is made in Show below, so no need to keep anything around.
+      Safe : constant Safe_Access := new Safe_Code (Square => True);
+
+      Window : Gtk_Window;
+
+      -----------------
+      -- Show_Window --
+      -----------------
+
+      procedure Show_Window is
+      begin
+         Gtk_New (Window, Window_Toplevel);
+         Safe.Set_Window (Window);
+
+         Set_Position (Window, Win_Pos_Center);
+         Set_Modal    (Window, True);
+         Set_Title    (Window, Title);
+         Realize      (Window);
+
+         Prepare_Area (Safe, Bgcolor);
+
+         Window.Add (Safe.Get_Area);
+
+         Show_All (Window);
+      end Show_Window;
+
+      H    : constant Handle_Access := new Handle;
+      pragma Memory_Leak ("Throwaway remains in memory forever :S");
    begin
-      Sc.Safe.Bind (new Safe_Code (True));
+      Managed.Execute (Show_Window'Access);
 
-      --  Keep a copy of the actions for the expose event
-      Sc.Safe.Ref.all.Set_Content (Draw);
-      Show (Sc, Title, Bgcolor);
+      H.Bind (Safe);
+      if Autogui and then Draw in Gui.Event_Handler'Class then
+         H.Attach (Gui.Event_Handler'Class (Draw));
+      end if;
 
-      return Handle'(Sc.Safe with null record);
+      return H.all;
    end Show;
 
    ----------
@@ -455,58 +401,16 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                   Bgcolor : String  := "white";
                   Square  : Boolean := True) return Handle
    is
-      M : Monitor.Object (Mutex'Access); pragma Unreferenced (M);
-      --  This is overcaution?
-
       Safe   : constant Safe_Access := new Safe_Code (Square);
-      Widget :          Gtk_Drawing_Area;
-
-      ----------
-      -- Show --
-      ----------
 
       procedure Show is
       begin
-         Gtk.Drawing_Area.Gtk_New (Widget);
-         Widget.Set_Size_Request (1, 1);
-         --  This avoids some crash in GTK; user can of course change it at Attach
-
-         Widget.Set_Events (Widget.Get_Events or Button_Press_Mask);
-
-         Attach (Gtk_Widget (Widget));
---           Widget.Realize;
-
-         --  Connect the destroy event
-         Safe_UR.Connect
-           (Widget,
-            "delete-event",
-            Safe_UR.To_Marshaller (Destroy'Access),
-            Safe);
-
-         --  Connect the expose event
-         Safe_UR.Connect
-           (Widget,
-            "expose-event",
-            Safe_UR.To_Marshaller (Expose'Access),
-            Safe);
-
-         --  Connect the clicked event
-         Safe_UR.Connect
-           (Widget,
-            "button-press-event",
-            Safe_UR.To_Marshaller (Clicked'Access),
-            Safe);
-
-         Safe.Set_Widget   (Gtk_Widget (Widget));
-         Safe.Set_Bgcolor (Bgcolor);
-      exception
-         when E : others =>
-            Log ("Drawing_Area.Show [attach]: " & Report (E),
-                 Error, Log_Section);
+         Prepare_Area (Safe, Bgcolor);
+         Attach       (Gtk_Widget (Safe.Get_Area));
       end Show;
 
    begin
-      Execute (Show'Access);
+      Managed.Execute (Show'Access);
 
       return Handle'(Smart_Safes.Bind (Safe) with null record);
    end Show;
@@ -545,6 +449,8 @@ package body Agpl.Gdk.Managed.Drawing_Area is
       --    not acquired without the Handle lock (in expose events e.g.).
       --  We must thus always try to acquire the GtkAda lock first.
       Managed.Execute (Inner_Redraw'Access);
+      --  (Besides, trying to get to the Gtk thread from within a protected is
+      --  a bounded error)
    end Redraw;
 
    ----------
@@ -574,9 +480,10 @@ package body Agpl.Gdk.Managed.Drawing_Area is
    ------------
 
    procedure Attach (This    : in out Handle;
-                     Handler :        Gui.Event_Handler'Class) is
+                     Handler :        Gui.Event_Handler'Class;
+                     Replace :        Boolean := False) is
    begin
-      This.Ref.all.Set_Gui (Handler);
+      This.Ref.all.Set_Gui (Handler, Replace);
    end Attach;
 
 end Agpl.Gdk.Managed.Drawing_Area;

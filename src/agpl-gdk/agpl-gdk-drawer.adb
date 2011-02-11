@@ -1,6 +1,7 @@
 with Agpl.Gdk.Drawer_Rectangle;
 with Agpl.Gdk.Drawer_Segment;
 with Agpl.Gdk.Drawer_Write;
+with Agpl.Gdk.Managed;
 with Agpl.Trace; use Agpl.Trace;
 with Glib;
 
@@ -149,7 +150,9 @@ package body Agpl.Gdk.Drawer is
       ----------
 
       procedure Draw (A : in out Action'Class) is
+         pragma Precondition (Managed.In_Gtk_Thread);
       begin
+         pragma Warning ("Should this be done in the GTK thread??");
          Perform (A, This.Transform, This.Draw);
       end Draw;
 

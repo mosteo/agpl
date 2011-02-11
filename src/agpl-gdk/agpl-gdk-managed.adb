@@ -17,6 +17,16 @@ package body Agpl.Gdk.Managed is
                      Ada.Task_Identification.Null_Task_Id;
    pragma Atomic (Gtk_Thread_Id);
 
+   -------------------
+   -- In_Gtk_Thread --
+   -------------------
+
+   function In_Gtk_Thread return Boolean is
+      use Ada.Task_Identification;
+   begin
+      return Ada.Task_Identification.Current_Task = Gtk_Thread_Id;
+   end In_Gtk_Thread;
+
    task Gtk_Task is
 
       entry Start;

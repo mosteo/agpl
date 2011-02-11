@@ -27,11 +27,13 @@ package Agpl.Gdk.Palette is
 
    function Get_Color (This : access Object; Color : in String)
                        return Gdk_Color;
+   pragma Precondition (Color /= "");
    --  Allocates if necessary from default color map.
    --  Color must be a valid gdk parseable string (e.g. "#ffffff" for white).
 
    function Get_Color (This  : access Object;
                        Color : in String) return Gdk_GC;
+   pragma Precondition (Color /= "");
    --  Allocates if necessary from default color map.
    --  Color must be a valid gdk parseable string (e.g. "#ffffff" for white).
    --  It gives an allocated GC instead of a color, ready for drawing.
@@ -41,10 +43,14 @@ package Agpl.Gdk.Palette is
                     Line_Width : in     Integer        := 1;
                     Line_Style : in     Gdk_Line_Style := Line_Solid)
                     return              Gdk_Gc;
+   pragma Precondition (Color /= "");
    --  As previous, but with more options for line effects/fills
 
    function Get_Color (This : in Object; Color : in String) return Gdk_Color;
+   pragma Precondition (Color /= "");
+
    function Get_Color (This : in Object; Color : in String) return Gdk_GC;
+   pragma Precondition (Color /= "");
    --  As the two previous, but using 'Unrestricted_Access on This.
    --  So these two are GNAT specific.
 

@@ -42,6 +42,10 @@ package Agpl.Gdk.Managed is
 
    procedure Execute (This : in out Null_Code) is null;
 
+   function In_Gtk_Thread return Boolean;
+   pragma Inline (In_Gtk_Thread);
+   --  Says if we're already in the Gtk thread
+
 private
 
    procedure Execute_In_Gtk (This : in out Gtk_Code'Class);
