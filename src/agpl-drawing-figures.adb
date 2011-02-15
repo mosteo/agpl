@@ -142,6 +142,7 @@ package body Agpl.Drawing.Figures is
       function Cdf_Chi_P_Inv (P : C.Types.Double; Nu : C.Types.Double) return C.Types.Double;
       pragma Import (C, Cdf_Chi_P_Inv, "gsl_cdf_chisq_Pinv");
       --  This requires both GSL and BLAS
+      --  Nu: Degrees of freedom
 
       K : constant Float :=
             Float (Cdf_Chi_P_Inv (C.Types.Double (This.Conf), 2.0));

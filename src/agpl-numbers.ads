@@ -15,5 +15,6 @@ package Agpl.Numbers is
    pragma Pure;
 
    --  Base package for number manipulation generic packages
+   --  Depending on the precision of Number... bad things can happen?
 
 end Agpl.Numbers;
