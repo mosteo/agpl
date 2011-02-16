@@ -229,7 +229,8 @@ package body Agpl.Gdk.Drawer is
           W_Height - (- This.Min_Y * Ratio_Y + Offset_Y)),
          (0.0, 0.0, 1.0));
 
---      This.Transformb := Inverse (This.Transform);
+      --      This.Transformb := Inverse (This.Transform);
+      --      Not working?
 
       --  Actual drawing
       Iterate (This.Queue, Draw'Access);

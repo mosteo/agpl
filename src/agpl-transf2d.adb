@@ -68,6 +68,19 @@ package body Agpl.Transf2D is
          (0.0, 0.0, 0.0, 1.0));
    end Get_Translation;
 
+   -----------------
+   -- Get_Scaling --
+   -----------------
+
+   function Get_Scaling (Sx, Sy : Real) return Transformation is
+   begin
+      return
+        (( Sx, 0.0, 0.0, 0.0),
+         (0.0,  Sy, 0.0, 0.0),
+         (0.0, 0.0, 1.0, 0.0),
+         (0.0, 0.0, 0.0, 1.0));
+   end Get_Scaling;
+
    ------------------
    -- Get_Rotation --
    ------------------
