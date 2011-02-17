@@ -1,5 +1,8 @@
 with Ada.Numerics.Generic_Elementary_Functions;
+
+with Agpl.Drawing.Buffer;
 with Agpl.Interfaces.C.Types;
+with Agpl.Types.Constants;
 
 package body Agpl.Statistics.Series is
 
@@ -7,6 +10,30 @@ package body Agpl.Statistics.Series is
 
    package Math is new Ada.Numerics.Generic_Elementary_Functions (Number);
    use Math;
+
+   function Drawable (This   : Serie;
+                      Conf   : Probability := 0.95;
+                      Width  : Float       := 0.1)
+                      return   Drawing.Drawable'Class
+   is
+      use Types.Constants;
+      D : Drawing.Buffer.Object;
+      W : constant Float := Float (This.Max - This.Min) * Width / 2.0;
+   begin
+      D.Set_Color (Black, Alpha_Opaque);
+      D.Draw_Line (0.0, Float (This.Min), 0.0, Float (This.Max));
+
+      D.Set_Color (Blue, Alpha_Opaque);
+      D.Draw_Rectangle (-W, Float (This.Avg + This.Confidence_Interval (Conf)),
+                        +W, Float (This.Avg - This.Confidence_Interval (Conf)));
+
+      D.Set_Color (Red, Alpha_Opaque);
+      D.Draw_Line (-W, Float (This.Avg), +W, Float (This.Avg));
+      D.Draw_Line (-W, Float (This.Min), +W, Float (This.Min));
+      D.Draw_Line (-W, Float (This.Max), +W, Float (This.Max));
+
+      return D;
+   end Drawable;
 
    ------------
    -- Append --

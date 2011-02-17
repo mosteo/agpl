@@ -1,5 +1,18 @@
 package body Agpl.Drawing.Transformations is
 
+   ---------------
+   -- Get_Ratio --
+   ---------------
+
+   function Get_Ratio (Xorig1, Xorig2, Xdest1, Xdest2 : Float) return Float is
+   begin
+      if Xorig1 = Xorig2 then
+         return 1.0;
+      else
+         return (Xdest2 - Xdest1) / (Xorig2 - Xorig1);
+      end if;
+   end Get_Ratio;
+
    -----------
    -- Clear --
    -----------
@@ -25,14 +38,31 @@ package body Agpl.Drawing.Transformations is
    procedure Fit
      (This     : in out Transformer;
       Into     : in out Drawer'Class;
-      X_Bottom,
-      X_Top,
-      Y_Left,
-      Y_Right  :        Float;
+      X_Left,
+      X_Right,
+      Y_Bottom,
+      Y_Top    :        Float;
       Square   :        Boolean := True)
    is
+      Scale_X : Float := Get_Ratio (This.Xmin, This.Xmax, X_Left, X_Right);
+      Scale_Y : Float := Get_Ratio (This.Ymin, This.Ymax, Y_Bottom, Y_Top);
    begin
       --  Compute transformation
+      if Square then
+         Scale_X := Float'Min (Scale_X, Scale_Y);
+         Scale_Y := Scale_X;
+      end if;
+
+      --  We apply Matrix * Vector (i.e. right-to-left) so:
+      This.T :=
+        --  Final moving into the fit rectangle
+        Get_Translation (-(X_Left + X_Right) / 2.0,
+                         -(Y_Bottom + Y_Top) / 2.0) *
+        --  Scaling centered in origin
+        Get_Scaling (Scale_X, Scale_Y) *
+        --  Initial moving to place on origin
+        Get_Translation ((This.Xmin + This.Xmax) / 2.0,
+                         (This.Ymin + This.Ymax) / 2.0);
 
       --  Set mode to drawing and re-do:
       This.Back := Into'Unchecked_Access;

@@ -1,5 +1,7 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
+with Agpl.Drawing;
+
 generic
    type Number is digits <>;
 package Agpl.Statistics.Series is
@@ -41,6 +43,14 @@ package Agpl.Statistics.Series is
 
    function Min (This : Serie) return Number;
    function Max (This : Serie) return Number;
+
+   function Drawable (This   : Serie;
+                      Conf   : Probability := 0.95;
+                      Width  : Float       := 0.1)
+                      return   Drawing.Drawable'Class;
+   --  Draws as a standard bar+whiskers, showing Avg, min, max, and confidence
+   --  This is drawn using the real values, so fit it conveniently if needed!
+   --  Width is ratio over (Max - Min)
 
 private
 

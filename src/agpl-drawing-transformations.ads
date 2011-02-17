@@ -15,10 +15,10 @@ package Agpl.Drawing.Transformations is
 
    procedure Fit (This     : in out Transformer;
                   Into     : in out Drawer'Class;
-                  X_Bottom,
-                  X_Top,
-                  Y_Left,
-                  Y_Right  :        Float;
+                  X_Left,
+                  X_Right,
+                  Y_Bottom,
+                  Y_Top    :        Float;
                   Square   :        Boolean := True);
    --  Flush things drawn here fitting them to the given area.
    --  Optionally drop aspect ratio
