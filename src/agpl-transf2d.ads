@@ -81,6 +81,10 @@ package Agpl.Transf2D is
    --  Matrix who provides given translation.
    --  This moves the reference frame, not the pose.
 
+   function Get_Scaling (Sx, Sy : Real) return Transformation;
+   pragma Inline (Get_Scaling);
+   --  Matrix which provides given scaling
+
    function Get_Rotation (A : in Real) return Transformation;
    pragma Inline (Get_Rotation);
    --  Matrix who provides given rotation.

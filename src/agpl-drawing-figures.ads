@@ -1,5 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics.Real_Arrays;
+
 with Agpl.Drawing.Buffer;
 
 package Agpl.Drawing.Figures is
