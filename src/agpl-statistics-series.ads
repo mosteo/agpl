@@ -1,6 +1,7 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
 with Agpl.Drawing;
+with Agpl.Drawing.Buffer;
 
 generic
    type Number is digits <>;
@@ -20,12 +21,17 @@ package Agpl.Statistics.Series is
 
    function Mean (This : Serie) return Number;
 
-   function Variance (This : Serie) return Number;
+   function Variance (This : Serie) return Number'Base;
    --  This is the *Sample* variance (i.e. / (n - 1)) when n > 1
 
-   function Stdev    (This : Serie) return Number;
-   function Sigma    (This : Serie) return Number renames Stdev;
+   function Stdev    (This : Serie) return Number'Base;
+   function Sigma    (This : Serie) return Number'Base renames Stdev;
    --  Just Sqrt(Variance)
+
+   function Stderr   (This : Serie) return Number'Base;
+   --  Sigma / Sqrt (# samples)
+   --  Not really sure what this is..., but according to the internets this is
+   --    what has to be used in a sampling distribution to find the conf. ints.
 
    type Confidences is (CI_50, CI_68, CI_90, CI_95, CI_99);
    --  Shameful kludge because I'm not up to date with my statistics.
@@ -47,7 +53,9 @@ package Agpl.Statistics.Series is
    function Drawable (This   : Serie;
                       Conf   : Probability := 0.95;
                       Width  : Float       := 0.1)
-                      return   Drawing.Drawable'Class;
+                      return   Drawing.Buffer.Object;
+   --  I wanted this to be a Drawing.Drawable'Class but there's some bug in
+   --    gnat that makes this burp.
    --  Draws as a standard bar+whiskers, showing Avg, min, max, and confidence
    --  This is drawn using the real values, so fit it conveniently if needed!
    --  Width is ratio over (Max - Min)

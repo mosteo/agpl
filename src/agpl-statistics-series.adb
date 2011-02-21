@@ -1,32 +1,49 @@
 with Ada.Numerics.Generic_Elementary_Functions;
 
-with Agpl.Drawing.Buffer;
 with Agpl.Interfaces.C.Types;
+with Agpl.Conversions;
+with Agpl.Trace; use Agpl.Trace;
 with Agpl.Types.Constants;
 
 package body Agpl.Statistics.Series is
 
    use type Ada.Containers.Count_Type;
 
-   package Math is new Ada.Numerics.Generic_Elementary_Functions (Number);
+   package Math is new Ada.Numerics.Generic_Elementary_Functions (Number'Base);
    use Math;
+
+   function S is new Conversions.To_Str (Number'Base);
 
    function Drawable (This   : Serie;
                       Conf   : Probability := 0.95;
                       Width  : Float       := 0.1)
-                      return   Drawing.Drawable'Class
+                      return   Drawing.Buffer.Object
    is
       use Types.Constants;
       D : Drawing.Buffer.Object;
-      W : constant Float := Float (This.Max - This.Min) * Width / 2.0;
+      W : constant Float := Float (Number'Last - Number'First) * Width / 2.0;
    begin
-      D.Set_Color (Black, Alpha_Opaque);
-      D.Draw_Line (0.0, Float (This.Min), 0.0, Float (This.Max));
+--        Log ("Min/5/avg/var/conf/95/Max: " &
+--             S (This.Min) & "/" &
+--             S (This.Avg - This.Confidence_Interval (Conf)) & "/" &
+--             S (This.Avg) & "/" &
+--             S (This.Var) & "/" &
+--             S (This.Confidence_Interval (Conf)) & "/" &
+--             S (This.Avg + This.Confidence_Interval (Conf)) & "/" &
+--             S (This.Max),
+--             Always);
 
+      --  Total range
+      D.Set_Color (Blue, Alpha_Opaque);
+      D.Draw_Line (0.0, Float (Number'First),
+                   0.0, Float (Number'Last));
+
+      --  Confidence interval
       D.Set_Color (Blue, Alpha_Opaque);
       D.Draw_Rectangle (-W, Float (This.Avg + This.Confidence_Interval (Conf)),
                         +W, Float (This.Avg - This.Confidence_Interval (Conf)));
 
+      --  Min/Avg/Max whiskers
       D.Set_Color (Red, Alpha_Opaque);
       D.Draw_Line (-W, Float (This.Avg), +W, Float (This.Avg));
       D.Draw_Line (-W, Float (This.Min), +W, Float (This.Min));
@@ -78,7 +95,7 @@ package body Agpl.Statistics.Series is
    -- Variance --
    --------------
 
-   function Variance (This : Serie) return Number is
+   function Variance (This : Serie) return Number'Base is
    begin
       if This.Data.Is_Empty then
          raise Constraint_Error with "Insufficient data for variance";
@@ -91,10 +108,19 @@ package body Agpl.Statistics.Series is
    -- Stdev --
    -----------
 
-   function Stdev (This : Serie) return Number is
+   function Stdev (This : Serie) return Number'Base is
    begin
       return Sqrt (This.Var);
    end Stdev;
+
+   ------------
+   -- Stderr --
+   ------------
+
+   function Stderr   (This : Serie) return Number'Base is
+   begin
+      return This.Stdev / Sqrt (Number'Base (This.Data.Length));
+   end Stderr;
 
    ---------
    -- Min --
@@ -122,7 +148,7 @@ package body Agpl.Statistics.Series is
                                  Confidence : Confidences)
                                  return       Number'Base is
    begin
-      return CI_Factor (Confidence) * This.Sigma;
+      return CI_Factor (Confidence) * This.Stderr;
    end Confidence_Interval;
 
    -------------------------
@@ -144,7 +170,7 @@ package body Agpl.Statistics.Series is
    begin
       return
         Number'Base (Cdf_Chi_P_Inv (C.Types.Double (Confidence), 1.0)) *
-        This.Sigma;
+        This.Stderr;
    end Confidence_Interval;
 
    ------------
