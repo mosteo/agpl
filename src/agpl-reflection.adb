@@ -39,7 +39,7 @@ package body Agpl.Reflection is
 
       procedure Set (Name, Value : String) is
       begin
-         Map.Element (To_Lower (Name)).Set (Value);
+         Map.Element (To_Lower (Name)).all.Set (Value);
       end Set;
 
       ---------

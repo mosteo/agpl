@@ -26,7 +26,8 @@ package body Agpl.Tasking.Generic_Workers is
    Thread_Fin_Rate : Avg_Rates.Object (Slots => 5, Slot_Duration => 1000);
 
    package Code_Handles is new Agpl.Generic_Handle (Code);
-   type Code_Handle is new Code_Handles.Object with null record;
+   subtype Code_Handle is Code_Handles.Object;
+   use Code_Handles;
 
    ------------
    -- Worker --
