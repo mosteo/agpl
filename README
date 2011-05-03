@@ -1,0 +1,5 @@
+AGPL Ada General Purpose Library
+
+A set of helping packages for general use, with a robotics flavor.
+
+The hungarian project is needed in order to compile agpl, separatedly available from https://github.com/mosteo/hungarian
