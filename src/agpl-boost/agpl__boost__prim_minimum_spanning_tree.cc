@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <cstdio>
 #include <cstring> // These are needed by some external 3rd party below
 
 #include <agpl__boost.h>
