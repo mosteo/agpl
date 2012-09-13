@@ -4,13 +4,14 @@
 --  THREAD SAFE
 
 with Ada.Calendar;
+with Agpl.Smart_access_Limited;
 pragma TO_DO ("Migrate to Ada.Real_Time");
 
 package Agpl.Chronos is
 
 --     pragma Elaborate_Body;
 
-   type Object is tagged private;
+   type Object is tagged limited private;
    type Object_Access is access Object'Class;
 
    ------------------------------------------------------------------------
@@ -43,9 +44,20 @@ package Agpl.Chronos is
 
 private
 
-   type Object is tagged record
+   protected type Safe is
+      procedure Set (To_Time : Ada.Calendar.Time := Ada.Calendar.Clock);
+      function  Get return Ada.Calendar.Time;
+   private
       Start : Ada.Calendar.Time := Ada.Calendar.Clock;
-      pragma Atomic (Start);
+   end Safe;
+
+   type Safe_Access is access all Safe;
+
+   package Smart_Safes is new Agpl.Smart_Access_Limited (Safe, Safe_Access);
+
+   type Object is tagged limited record
+      Start : Ada.Calendar.Time := Ada.Calendar.Clock;
+     --  pragma Atomic (Start);
    end record;
 
 end Agpl.Chronos;
