@@ -1,4 +1,4 @@
- 
+
 
 --  Efficient event queue. Useful for timeouts, as an example.
 
@@ -8,7 +8,7 @@ package body Agpl.Event_queues.Real_Time is
 
    procedure Free is new Unchecked_Deallocation (
       Context_type'Class,
-      Context_access);
+      Context_Access);
 
    --  Priority
    function Less (L, R : in Event_type) return Boolean is
@@ -28,7 +28,7 @@ package body Agpl.Event_queues.Real_Time is
      (This     : in out Object;
       Event    : out Event_type;
       Deadline : in Time;
-      Action   : in Action_procedure;
+      Action   : in Action_Procedure;
       Context  : in Context_type'Class)
    is
    begin
@@ -121,8 +121,8 @@ package body Agpl.Event_queues.Real_Time is
    end Active_object;
 
    task body Worker is
-      Context : Context_access;
-      Action  : Action_procedure;
+      Context : Context_Access;
+      Action  : Action_Procedure;
    begin
       loop
          begin
@@ -132,7 +132,7 @@ package body Agpl.Event_queues.Real_Time is
                   Action  := Event.Action;
                end Execute;
                begin
-                  Action (Context);
+                  Action (Context.all);
                exception
                   when E : others =>
                      Trace.Log

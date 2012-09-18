@@ -1,4 +1,4 @@
- 
+
 
 --  Support for segmented things (initially implemented for segmented files).
 --  Allows to keep info about an object which is integrally composed of seg-
@@ -26,6 +26,9 @@ package Agpl.Segmented_Thing is
       First : Index_Type;
       Last  : Index_Type;
    end record;
+
+   function "<" (L, R : in Chunk_Type) return Boolean with Inline;
+   function "=" (L, R : in Chunk_Type) return Boolean with Inline;
 
    ------------------------------------------------------------------------
    -- Create                                                             --
@@ -98,10 +101,6 @@ package Agpl.Segmented_Thing is
    procedure Debug_Dump (This : in Object);
 
 private
-
-   function "<" (L, R : in Chunk_Type) return Boolean;
-   function "=" (L, R : in Chunk_Type) return Boolean;
-   pragma Inline ("<", "=");
 
    package Ordered_Segments is new Ada.Containers.Ordered_Sets (
       Chunk_Type, "<", "=");

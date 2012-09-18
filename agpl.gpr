@@ -3,9 +3,7 @@ with "gtkada_conditional";
 
 project Agpl is
 
-   type Boolean          is ("True",    "False");
-   type Enabled_Disabled is ("Enabled", "Disabled");
-   type Yes_No           is ("Yes",     "No");
+   type Boolean is ("True", "False");
 
    for Source_Dirs use ();
    for Object_Dir  use "obj";
@@ -14,11 +12,11 @@ project Agpl is
    for Languages  use ("Ada", "C", "C++");
 
    Lib_Name    := "agpl";
-   Lib_Version := "20070228";
+   Lib_Version := "20120918";
 
-   type Build_Type   is ("Debug", "Release", "Fastest", "No_Options", "Profile");
+   type Build_Type   is ("Debug");
    type Linking_Type is ("Dependencies", "Static_Library", "Dynamic_Library");
-   
+
    Build : Build_Type   := external ("Agpl_Build", "Debug");
    Link  : Linking_Type := External ("Agpl_Link",  "Dependencies");
 
@@ -39,114 +37,121 @@ project Agpl is
 
    --  Selective functionalities of Agpl
 
-   Include_Base     : Yes_No := External ("Agpl_Include_Base",     "Yes");
-   Include_Concorde : Yes_No := External ("Agpl_Include_Concorde", "Yes");
-   Include_Gtk      : Yes_No := External ("Agpl_Include_Gtk",      "Yes"); -- Requires GtkAda
-   Include_Http     : Yes_No := External ("Agpl_Include_Http",     "No"); -- Requires AWS
-   Include_Db       : Yes_No := External ("Agpl_Include_Db",       "No");
-   Include_Boost    : Yes_No := External ("Agpl_Include_Boost",    "Yes"); -- Requires Boost Graph
-   Include_Pngio    : Yes_No := External ("Agpl_Include_PngIO",    "Yes");
-   Include_Test     : Yes_No := External ("Agpl_Include_Test",     "Yes");
+   Include_Concorde : Boolean := External ("Agpl_Include_Concorde", "False");
+   Include_Gtk      : Boolean := External ("Agpl_Include_Gtk",      "False"); -- Requires GtkAda
+   Include_Http     : Boolean := External ("Agpl_Include_Http",     "False"); -- Requires AWS
+   Include_Db       : Boolean := External ("Agpl_Include_Db",       "False");
+   Include_Boost    : Boolean := External ("Agpl_Include_Boost",    "False"); -- Requires Boost Graph
+   Include_Pngio    : Boolean := External ("Agpl_Include_PngIO",    "False");
+   Include_Test     : Boolean := External ("Agpl_Include_Test",     "False");
 
-   Trace_Enabled    : Enabled_Disabled := External ("Agpl_Trace", "Enabled");
+   Trace_Enabled    : Boolean := External ("Agpl_Trace",            "True");
 
-   case Include_Base is
-      when "Yes" => for Source_Dirs use ("src", "./3rdparty/asl", "./3rdparty/mw", "./3rdparty/xmlada");
-      when "No"  => for Source_Dirs use ();
-   end case;
+   -- Mandatory sources
+   for Source_Dirs use ("src",
+                        "./3rdparty/asl",
+                        "./3rdparty/mw",
+                        "./3rdparty/xmlada");
 
    case Include_Concorde is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/agpl-concorde";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-concorde";
+      when "False" => null;
    end case;
 
    case Include_Gtk is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/agpl-gdk";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-gdk";
+      when "False" => null;
    end case;
 
    case Include_Http is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/agpl-http";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-http";
+      when "False" => null;
    end case;
 
    case Include_Db is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/agpl-db";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-db";
+      when "False" => null;
    end case;
 
    case Include_Boost is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/agpl-boost";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-boost";
+      when "False" => null;
    end case;
 
    case Include_Test is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "src/tests";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs & "src/tests";
+      when "False" => null;
    end case;
 
    case Include_Pngio is
-      when "Yes" => for Source_Dirs use project'Source_Dirs & "./3rdparty/png_io" & "./3rdparty/zlib_ada";
-      when "No"  => null;
+      when "True"  => for Source_Dirs use project'Source_Dirs &
+           "src/agpl-png" &
+           "./3rdparty/png_io" &
+           "./3rdparty/zlib_ada";
+      when "False" => null;
    end case;
 
    case Trace_Enabled is
-      when "Enabled" =>
+      when "True" =>
          for Source_Dirs use project'Source_Dirs & ("src/trace_true");
-      when "Disabled" =>
+      when "False" =>
          for Source_Dirs use project'Source_Dirs & ("src/trace_false");
    end case;
 
    package Ide is
-      for Vcs_Kind use "Subversion";
+      for Vcs_Kind use "git";
    end Ide;
 
    package Compiler is
-      for Default_Switches ("C")   use ("-g", "-Wall", "-O2");
-      for Default_Switches ("C++") use ("-g", "-Wall", "-O2");
-      for Default_Switches ("Ada") use ("-g", "-gnatf", "-gnat05", "-gnatwa", "-gnatVa", "-gnatyacehikn", "-gnatqQ");
 
-      --  Switches for files with problems
-      -- for Switches ("agpl-gdk.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
-      -- for Switches ("agpl-gdk-drawer_figures.adb") use Compiler'Default_Switches ("Ada") & ("-O0", "-gnatao", "-fstack-check");
+      for Required_Switches ("Ada") use ("-gnat2012",
+                                         "-gnatwa",  -- optional warnings from gnat
+                                         "-Wall",    -- optional warnings from gcc
+                                         "-gnatwt",  -- detect dead code
+                                         "-gnatwjl", -- extra warnings
+                                         "-gnaty",   -- standard source code style
+                                         "");
+
+      for Required_Switches ("C")   use ("-Wall");
+      for Required_Switches ("C++") use ("-Wall");
 
       case Build is
-         when "Profile" =>
-            for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & 
-              ("-O2", "-gnato", "-fstack-check", "-gnata", "-gnatpg");
          when "Debug" =>
-            for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & 
-              ("-O2", "-gnato", "-fstack-check", "-gnata");
-         when "Release" =>
-            --  for Default_Switches ("Ada") use Compiler'Default_Switches ("Ada") & ("-O3", "-gnatn", "-gnatp");
-            for Default_Switches ("Ada") use ("-g", "-O3", "-gnatn", "-gnatp");
-            for Default_Switches ("C")   use Compiler'Default_Switches ("C")   & ("-O3");
-            for Default_Switches ("C++") use Compiler'Default_Switches ("C++")   & ("-O3");
-         when "Fastest" =>
-            for Default_Switches ("Ada") use ("-g", "-O3", "-gnatn", "-gnatN", "-gnatp");
-            for Default_Switches ("C")   use Compiler'Default_Switches ("C")   & ("-O3");
-            for Default_Switches ("C++") use Compiler'Default_Switches ("C++")   & ("-O3");
-         when "No_Options" =>
-            for Default_Switches ("Ada") use ("-gnat05");
-            --  Deliberately override default switches not to have any!
+            for Default_Switches ("Ada") use ("-g",
+                                              "-O2",
+                                              "-gnato", -- Standard Ada overflow
+                                              "-fstack-check",
+                                              "-gnata", -- All assertions
+                                              "-gnateE", -- Extra range check info in exceptions
+                                              "-gnatf", -- full errors
+                                              "-gnatqQ", -- compile as much as possible even with errors
+                                              "-gnatVa", -- all validity checks (expensive, use Vd for default)
+                                              "");
+            for Default_Switches ("C")   use ("-g", "-O2");
+            for Default_Switches ("C++") use ("-g", "-O2");
       end case;
    end Compiler;
 
    package Binder is
-      for Default_Switches ("Ada") use ("-E", "-g");
+      for Default_Switches ("Ada") use ("-E",      -- exception tracebacks
+                                        "-g",      -- keep debug symbols? (Unsure)
+                                        -- "-r",   -- restrictions that might be applied
+                                        "-static", -- static runtime
+                                        "");
    end Binder;
 
    package Linker is
       for Default_Switches ("Ada") use ("-g");
       for Default_Switches ("C")   use ("-g");
       for Default_Switches ("C++") use ("-g");
-      
+
       for Linker_Options use ("-lgsl", "-lgslcblas");
+      --  Linker.Linker_Options apply at the main project, not here.
       --  Needed, at least, in Agpl.Drawing.Figures
 
       case Include_Concorde is
-         when "Yes" => for Linker_Options use Linker'Linker_Options & ("-Lsrc/agpl-concorde");
-         when "No"  => null;
+         when "True"  => for Linker_Options use Linker'Linker_Options & ("-Lsrc/agpl-concorde");
+         when "False" => null;
       end case;
    end Linker;
 

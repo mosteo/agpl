@@ -1,8 +1,6 @@
- 
-
 with Permutations;
 
-with Agpl.Text_IO; use Agpl.Text_IO;
+with Agpl.Text_Io; use Agpl.Text_Io;
 
 package body Agpl.Optimization.Mtsp is
 
@@ -12,8 +10,10 @@ package body Agpl.Optimization.Mtsp is
 
    procedure Print_Solution (Costs : in Cost_Matrix; Res : in Result_Matrix) is
    begin
-      Put_Line ("Solution found. Total  Cost: " & Get_Total_Cost (Costs, Res)'Img);
-      Put_Line ("Solution found. MinMax Cost: " & Get_Max_Min_Cost (Costs, Res)'Img);
+      Put_Line ("Solution found. Total  Cost: " &
+                  Get_Total_Cost (Costs, Res)'Img);
+      Put_Line ("Solution found. MinMax Cost: " &
+                  Get_Max_Min_Cost (Costs, Res)'Img);
       for S in Res'Range (1) loop
          Put ("Salesman" & S'Img & ":");
          for C in Res'Range (2) loop
@@ -55,7 +55,9 @@ package body Agpl.Optimization.Mtsp is
            (P     : in Perm.Permutation;
             City  : in Natural; -- Index to P for next city to visit
             Pos   : in Pos_Matrix; -- Last city visited by some salesman
-            Stage : in Stage_Matrix; -- Num of cities visited already by each salesman
+            Stage : in Stage_Matrix;
+            --  Num of cities visited already
+            --   by each salesman
             Res   : in Result_Matrix
            ) is
          begin
@@ -76,7 +78,7 @@ package body Agpl.Optimization.Mtsp is
                   begin
                      Stage_Bis (S) := Stage (S) + 1; -- Salesman to next stage
                      Pos_Bis (S)   := P (City);      -- Salesman to new city
-                     Res_Bis (S, Pos_Bis (S)) := Stage_Bis (S); -- Update result
+                     Res_Bis (S, Pos_Bis (S)) := Stage_Bis (S); -- Update reslt
                      Assign_Nth (P,
                                  City + 1,
                                  Pos_Bis,
@@ -104,7 +106,7 @@ package body Agpl.Optimization.Mtsp is
       end Try_Perm;
 
       procedure Enumerate is new Perm.Enumeration (Try_Perm);
-
+--
    begin
       pragma Assert (Costs'First (2) = Costs'First (3) and
                        Costs'Last (2) = Costs'Last (3));
@@ -157,31 +159,31 @@ package body Agpl.Optimization.Mtsp is
       Worst_Cost : Float := 0.0;
       Salesman_Cost : Float;
    begin
-      for S in Sol'Range (1) loop
-         Salesman_Cost := 0.0;
-         for I in Sol'Range (2) loop
-            if Sol (S, I) > 1 then -- It's visited by this salesman
-                                   --  locate previous location:
-               for J in Sol'Range (2) loop
-                  if Sol (S, J) = Sol (S, I) - 1 then
-                     declare
-                        Cost : constant Float := Costs (S, J, I);
-                     begin
-                        if Cost < Float'Last then
-                           Salesman_Cost := Salesman_Cost + Cost;
-                        else
-                           return Float'Last;
-                        end if;
-                     end;
-                  end if;
-               end loop;
-            end if;
-         end loop;
-         if Salesman_Cost > Worst_Cost then
-            Worst_Cost := Salesman_Cost;
-         end if;
-      end loop;
-
+--        for S in Sol'Range (1) loop
+--           Salesman_Cost := 0.0;
+--           for I in Sol'Range (2) loop
+--              if Sol (S, I) > 1 then -- It's visited by this salesman
+--                                     --  locate previous location:
+--                 for J in Sol'Range (2) loop
+--                    if Sol (S, J) = Sol (S, I) - 1 then
+--                       declare
+--                          Cost : constant Float := Costs (S, J, I);
+--                       begin
+--                          if Cost < Float'Last then
+--                             Salesman_Cost := Salesman_Cost + Cost;
+--                          else
+--                             return Float'Last;
+--                          end if;
+--                       end;
+--                    end if;
+--                 end loop;
+--              end if;
+--           end loop;
+--           if Salesman_Cost > Worst_Cost then
+--              Worst_Cost := Salesman_Cost;
+--           end if;
+--        end loop;
+--
       return Worst_Cost;
    end Get_Max_Min_Cost;
 

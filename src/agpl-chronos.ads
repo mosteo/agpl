@@ -11,7 +11,7 @@ package Agpl.Chronos is
 
 --     pragma Elaborate_Body;
 
-   type Object is tagged limited private;
+   type Object is tagged private;
    type Object_Access is access Object'Class;
 
    ------------------------------------------------------------------------
@@ -44,18 +44,18 @@ package Agpl.Chronos is
 
 private
 
-   protected type Safe is
-      procedure Set (To_Time : Ada.Calendar.Time := Ada.Calendar.Clock);
-      function  Get return Ada.Calendar.Time;
-   private
-      Start : Ada.Calendar.Time := Ada.Calendar.Clock;
-   end Safe;
+--     protected type Safe is
+--        procedure Set (To_Time : Ada.Calendar.Time := Ada.Calendar.Clock);
+--        function  Get return Ada.Calendar.Time;
+--     private
+--        Start : Ada.Calendar.Time := Ada.Calendar.Clock;
+--     end Safe;
+--
+--     type Safe_Access is access all Safe;
+--
+--     Package Smart_Safes is new Agpl.Smart_Access_Limited (Safe, Safe_Access);
 
-   type Safe_Access is access all Safe;
-
-   package Smart_Safes is new Agpl.Smart_Access_Limited (Safe, Safe_Access);
-
-   type Object is tagged limited record
+   type Object is tagged record
       Start : Ada.Calendar.Time := Ada.Calendar.Clock;
      --  pragma Atomic (Start);
    end record;
