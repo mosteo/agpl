@@ -29,10 +29,10 @@ procedure T027_Utrees_Leak is
    use Side_Trees;
 
 begin
-   Gnat.Debug_Pools.Configure (Side_Trees.Pool,
-                               Reset_Content_On_Free => True,
-                               Minimum_To_Free => Gnat.Debug_Pools.Ssc'Last,
-                               Maximum_Logically_Freed_Memory => 1);
+--     Gnat.Debug_Pools.Configure (Side_Trees.Pool,
+--                                 Reset_Content_On_Free => True,
+--                                 Minimum_To_Free => Gnat.Debug_Pools.Ssc'Last,
+--                                 Maximum_Logically_Freed_Memory => 1);
 
    Agpl.Os_Utils.Mtrace;
 

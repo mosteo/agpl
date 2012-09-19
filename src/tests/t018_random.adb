@@ -1,4 +1,4 @@
-with Text_Io; use Text_Io;
+with Text_IO; use Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 
 with Agpl.Random; use Agpl.Random;

@@ -59,7 +59,13 @@ project Agpl is
    end case;
 
    case Include_Gtk is
-      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-gdk";
+      when "True"  =>
+         for Source_Dirs use project'Source_Dirs & "src/agpl-gdk";
+         case Include_Test is
+            when "True" =>
+               for Source_Dirs use project'Source_Dirs & "src/tests/gtk";
+            when others => null;
+         end case;
       when "False" => null;
    end case;
 
@@ -74,7 +80,13 @@ project Agpl is
    end case;
 
    case Include_Boost is
-      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-boost";
+      when "True"  =>
+         for Source_Dirs use project'Source_Dirs & "src/agpl-boost";
+         case Include_Test is
+            when "True" =>
+               for Source_Dirs use project'Source_Dirs & "src/tests/boost";
+            when others => null;
+         end case;
       when "False" => null;
    end case;
 
