@@ -3,3 +3,6 @@ AGPL Ada General Purpose Library
 A set of helping packages for general use, with a robotics flavor.
 
 The hungarian project is needed in order to compile agpl, separatedly available from https://github.com/mosteo/hungarian
+
+Tested with GNAT GPL 2012
+Not working with latest Ubuntu 12.04 GNAT version.
