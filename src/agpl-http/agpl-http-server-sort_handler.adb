@@ -1,57 +1,52 @@
 
 
-with Aws.Messages;
-with Aws.Mime;
-with Aws.Parameters;
-with Aws.Response;
-with Aws.Status;
-with Templates_parser;
+with AWS.Messages;
+with AWS.MIME;
+with AWS.Parameters;
 
 with Agpl.Conversions;
-with Agpl.Dynamic_vector;
 with Agpl.Strings;
 
-with Charles.Maps.Sorted.Strings.Unbounded;
-with Charles.Multimaps.Sorted.Strings.Unbounded;
-
-with Ada.Streams.Stream_io;
+with Ada.Streams.Stream_IO;
 with Ada.Strings;
 with Ada.Strings.Fixed;
 
-with Gnat.Os_lib;
+with GNAT.OS_Lib;
 
-with Text_Io;
+with Text_IO;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package body Agpl.Http.Server.Sort_handler is
 
-   use type Ustring;
+   use type UString;
 
-   -- Settings in disk here:
-   Settings_file : Ustring := Null_ustring;
+   --  Settings in disk here:
+   Settings_file : UString := Null_Ustring;
 
-   package Orderers is new Charles.Multimaps.Sorted.Strings.Unbounded (
-      Natural, "<", "=");
+   pragma UhOh ("I'm pretty sure the next should be a multimap which doesn't exist in the standard lib but did in Charles");
+   package Orderers is new Ada.Containers.Indefinite_Ordered_Maps
+     (String, Natural);
 
    type Vector_tag_array is array (Positive range <>) of
-      Templates_parser.Vector_tag;
+      Templates_Parser.Vector_Tag;
 
    ------------------------------------------------------------------------
    -- Caching                                                            --
    ------------------------------------------------------------------------
-   -- We cache the settings used for sort/sense in each page
-   package Orders_vectors is new Agpl.Dynamic_vector (Positive);
+   --  We cache the settings used for sort/sense in each page
+   package Orders_vectors is new Agpl.Containers.Naked_Vectors (Positive);
    Max_orders : constant Positive := 2;
    type Page_settings is record
       Columns   : Orders_vectors.Object (First => 1);
-      Ascending : Boolean     := true;
+      Ascending : Boolean     := True;
       Lines     : Positive    := Default_Lines_Per_Page;
       Page      : Positive    := 1;
    end record;
 
-   package Settings_caches is new Charles.Maps.Sorted.Strings.Unbounded (
-      Page_settings, "<", "=");
+   package Settings_caches is new Ada.Containers.Indefinite_Ordered_Maps
+     (String, Page_Settings);
 
-   Settings_cache : Settings_caches.Container_type;
+   Settings_cache : Settings_caches.Map;
 
    procedure Load_settings;
    procedure Save_settings;
@@ -68,9 +63,9 @@ package body Agpl.Http.Server.Sort_handler is
 
    function Get_settings (
       This    : in Object;
-      Request : in Aws.Status.Data) return Page_settings
+      Request : in AWS.Status.Data) return Page_settings
    is
-      Params   : Aws.Parameters.List := Aws.Status.Parameters (Request);
+      Params   : Constant Aws.Parameters.List := AWS.Status.Parameters (Request);
       Column   : Natural;
       Order    : Boolean;
       Settings : Page_settings;
@@ -80,15 +75,15 @@ package body Agpl.Http.Server.Sort_handler is
    begin
       Append (Defaults.Columns, 1);
 
-      if Is_in (This.Page.all, Settings_cache) then
+      if Contains (Settings_Cache, This.Page.all) then
          Settings := Element (Find (Settings_cache, This.Page.all));
       else
          Settings := Defaults;
       end if;
 
-      -- Obtain ordering index:
+      --  Obtain ordering index:
       begin
-         Column := Natural'Value (Aws.Parameters.Get (Params, "orden"));
+         Column := Natural'Value (AWS.Parameters.Get (Params, "orden"));
          if Length (Settings.Columns) = 0 or else
             Settings.Columns.Vector (1) /= Column
          then
@@ -102,27 +97,27 @@ package body Agpl.Http.Server.Sort_handler is
             null; -- From 'Value
       end;
 
-      -- Obtain way of ordering:
+      --  Obtain way of ordering:
       begin
-         Order := Boolean'Value (Aws.Parameters.Get (Params, "sentido"));
+         Order := Boolean'Value (AWS.Parameters.Get (Params, "sentido"));
          Settings.Ascending := Order;
       exception
          when others =>
             null; -- From 'Value
       end;
 
-      -- Page
+      --  Page
       begin
-         Settings.Page := Positive'Value (Aws.Parameters.Get (Params, "page"));
+         Settings.Page := Positive'Value (AWS.Parameters.Get (Params, "page"));
       exception
          when others =>
             null; -- From 'Value
       end;
 
-      -- Lines per page
-      -- Not cached or saved, if missing we use the default for the object.
+      --  Lines per page
+      --  Not cached or saved, if missing we use the default for the object.
       begin
-         Settings.Lines := Positive'Value (Aws.Parameters.Get (Params, "lines"));
+         Settings.Lines := Positive'Value (AWS.Parameters.Get (Params, "lines"));
       exception
          when others =>
             Settings.Lines := This.Lines_Per_Page;
@@ -136,43 +131,43 @@ package body Agpl.Http.Server.Sort_handler is
    ------------------------------------------------------------------------
    function Get_page (
       This    : in Object;
-      Request : in Aws.Status.Data) return Aws.Response.Data
+      Request : in AWS.Status.Data) return AWS.Response.Data
    is
       Data     : Data_set;
-      Cont     : Orderers.Container_type;
+      Cont     : Orderers.Map;
       Settings : Page_settings := Get_settings (This, Request);
 
       use Ada.Strings;
       use Ada.Strings.Fixed;
       use Datasets;
       use Orderers;
-      use Templates_parser;
+      use Templates_Parser;
       use Settings_caches;
    begin
-      -- Store new settings:
+      --  Store new settings:
       Delete (Settings_cache, This.Page.all);
       Insert (Settings_cache, This.Page.all, Settings);
 
-      -- Obtain data:
+      --  Obtain data:
       This.Source (Data);
 
-      -- Dummy response if no data:
+      --  Dummy response if no data:
       if Last (Data) = 0 then
          return -- <-------------------- EARLY EXIT!!
-            Aws.Response.Build (
-               Aws.Mime.Content_type (This.Page.all),
+            AWS.Response.Build (
+               AWS.MIME.Content_Type (This.Page.all),
                UString'(Parse (
-                  Get_root & This.Page.all,
-                  Standard_xlats (Request) & This.Single.all,
-                  Cached => false)),
-               Cache_control => Aws.Messages.No_cache);
+                  Get_Root & This.Page.all,
+                  Standard_Xlats (Request) & This.Single.all,
+                  Cached => False)),
+               Cache_Control => AWS.Messages.No_Cache);
       end if;
 
-      -- Insert it in the container:
+      --  Insert it in the container:
       for N in 1 .. Last (Data) loop
          declare
-            Indexer : Ustring := Null_ustring;
-            Sep     : constant Ustring := U (":");
+            Indexer : UString := Null_Ustring;
+            Sep     : constant UString := U (":");
             use Orders_vectors;
          begin
             for M in 1 .. Last (Settings.Columns) loop
@@ -183,12 +178,12 @@ package body Agpl.Http.Server.Sort_handler is
          end;
       end loop;
 
-      -- Create filters
+      --  Create filters
       declare
          Values : Vector_tag_array (1 .. Last (Data.Vector (1)));
-         I      : Orderers.Iterator_type;
-         Transl : Translate_table (Values'First .. Values'Last);
-         Extras : Translate_table := (
+         I      : Orderers.Cursor;
+         Transl : Translate_Table (Values'First .. Values'Last);
+         Extras : Translate_Table := (
             1 => Assoc ("SENTIDO", not Settings.Ascending),
             2 => Assoc ("ORDEN",   Settings.Columns.Vector (1)),
             3 => Assoc ("LINES",   Settings.Lines),
@@ -199,7 +194,7 @@ package body Agpl.Http.Server.Sort_handler is
          if Settings.Ascending then
             I := First (Cont);
             begin
-               Increment (I, (Settings.Page - 1) * Settings.Lines);
+               Cont.Replace_Element (I, Element (I) + (Settings.Page - 1) * Settings.Lines);
             exception
                when others =>
                   I := First (Cont);
@@ -207,7 +202,7 @@ package body Agpl.Http.Server.Sort_handler is
          else
             I := Last (Cont);
             begin
-               Decrement (I, (Settings.Page - 1) * Settings.Lines);
+               Cont.Replace_Element (I, Element (I) - (Settings.Page - 1) * Settings.Lines);
             exception
                when others =>
                   I := Last (Cont);
@@ -221,18 +216,18 @@ package body Agpl.Http.Server.Sort_handler is
                   Values (M) & Data.Vector (Element (I)).Vector (M).Value;
             end loop;
             if Settings.Ascending then
-               I := Succ (I);
+               I := Next (I);
             else
-               I := Pred (I);
+               I := Previous (I);
             end if;
          end loop;
          for N in Transl'Range loop
             Transl (N) := Assoc ("VALUE" & Trim (N'Img, Both), Values (N));
          end loop;
 
-         -- Create pager
+         --  Create pager
          declare
-            Tag : Ustring;
+            Tag : UString;
          begin
             ASU.Append (Tag, "<span class=""pager"">");
             for I in 1 .. (Length (Data) - 1) / Settings.Lines + 1 loop
@@ -258,20 +253,20 @@ package body Agpl.Http.Server.Sort_handler is
          Save_settings;
 
          --  Return filtered:
-         return Aws.Response.Build (
-            Aws.Mime.Content_type (This.Page.all),
+         return AWS.Response.Build (
+            AWS.MIME.Content_Type (This.Page.all),
             UString'(Parse (
-               Get_root & This.Page.all,
-               Transl & Extras & Standard_xlats (Request) & This.Single.all & Pager,
+               Get_Root & This.Page.all,
+               Transl & Extras & Standard_Xlats (Request) & This.Single.all & Pager,
              Cached => False)),
-            Cache_control => Aws.Messages.No_cache);
+            Cache_Control => AWS.Messages.No_Cache);
       end;
    end Get_page;
 
    ------------------------------------------------------------------------
    -- Set_Lines_Per_Page                                                 --
    ------------------------------------------------------------------------
-   -- To change the default number of records per page.
+   --  To change the default number of records per page.
    procedure Set_Lines_Per_Page (This : in out Object; Lines : in Positive) is
    begin
       This.Lines_Per_Page := Lines;
@@ -280,7 +275,7 @@ package body Agpl.Http.Server.Sort_handler is
    ------------------------------------------------------------------------
    -- Set_settings_file                                                  --
    ------------------------------------------------------------------------
-   -- To indicate where (path + name) to save ordering prefs.
+   --  To indicate where (path + name) to save ordering prefs.
    procedure Set_settings_file (This : in String) is
    begin
       Settings_file := U (This);
@@ -292,28 +287,28 @@ package body Agpl.Http.Server.Sort_handler is
    ------------------------------------------------------------------------
    procedure Load_settings is
       use Settings_caches;
-      use Ada.Streams.Stream_io;
-      F : File_type;
+      use Ada.Streams.Stream_IO;
+      F : File_Type;
    begin
-      if not Gnat.Os_lib.Is_regular_file (To_string (Settings_file)) then
+      if not GNAT.OS_Lib.Is_Regular_File (To_String (Settings_file)) then
          return;
       end if;
 
-      Open (F, Name => To_string (Settings_file), Mode => In_file);
-      while not End_of_file (F) loop
+      Open (F, Name => To_String (Settings_file), Mode => In_File);
+      while not End_Of_File (F) loop
          declare
             S : Page_settings;
-            K : Ustring;
+            K : UString;
          begin
-            K := Ustring'Input (Stream (F));
+            K := UString'Input (Stream (F));
             Page_settings'Read (Stream (F), S);
-            Insert (Settings_cache, To_string (K), S);
+            Insert (Settings_cache, To_String (K), S);
          end;
       end loop;
       Close (F);
    exception
       when others =>
-         if Is_open (F) then
+         if Is_Open (F) then
             Close (F);
             raise;
          end if;
@@ -323,23 +318,23 @@ package body Agpl.Http.Server.Sort_handler is
    ------------------------------------------------------------------------
    procedure Save_settings is
       use Settings_caches;
-      use Ada.Streams.Stream_io;
-      F : File_type;
-      I : Iterator_type := First (Settings_cache);
+      use Ada.Streams.Stream_IO;
+      F : File_Type;
+      I : Cursor := First (Settings_cache);
    begin
       if Settings_file = Null_Ustring then
          return;
       end if;
-      Create (F, Name => To_string (Settings_file), Mode => Out_file);
-      while I /= Back (Settings_cache) loop
-         Ustring'Output (Stream (F), To_ustring (Key (I)));
+      Create (F, Name => To_String (Settings_file), Mode => Out_File);
+      while Has_Element (I) loop
+         UString'Output (Stream (F), To_Ustring (Key (I)));
          Page_settings'Write (Stream (F), Element (I));
-         I := Succ (I);
+         I := Next (I);
       end loop;
       Close (F);
    exception
       when others =>
-         if Is_open (F) then
+         if Is_Open (F) then
             Close (F);
             raise;
          end if;
@@ -348,17 +343,17 @@ package body Agpl.Http.Server.Sort_handler is
    ------------------------------------------------------------------------
    -- Void_singleton                                                     --
    ------------------------------------------------------------------------
-   -- Dummy auxiliary singleton_function which returns the empty translation.
-   function Void_singleton return Templates_parser.Translate_table is
+   --  Dummy auxiliary singleton_function which returns the empty translation.
+   function Void_singleton return Templates_Parser.Translate_Table is
    begin
-      return Templates_parser.No_translation;
+      return Templates_Parser.No_Translation;
    end Void_singleton;
 
    ------------------------------------------------------------------------
    -- Rpad                                                               --
    ------------------------------------------------------------------------
-   -- Auxiliary to ease creation of sorting fields based in integers
-   function Rpad (I : in Integer; Size : in Natural := 11) return Ustring is
+   --  Auxiliary to ease creation of sorting fields based in integers
+   function Rpad (I : in Integer; Size : in Natural := 11) return UString is
       use Ada.Strings;
       use Ada.Strings.Fixed;
       V : constant String :=
@@ -367,26 +362,26 @@ package body Agpl.Http.Server.Sort_handler is
       if I < 0 then
          return Rpad (Integer'Last + I, Size);
       else
-         return U (V (V'last - Size + 1 .. V'Last));
+         return U (V (V'Last - Size + 1 .. V'Last));
       end if;
    end Rpad;
 
-   function Rpad (I : in Float; Size : in Natural := 11) return Ustring is
+   function Rpad (I : in Float; Size : in Natural := 11) return UString is
       use Ada.Strings;
       use Ada.Strings.Fixed;
       V : constant String :=
-         String'(1 .. Size => '0') & Agpl.Strings.To_string(I);
+         String'(1 .. Size => '0') & Agpl.Strings.To_string (I);
    begin
       if I < 0.0 then
          return Rpad (Float'Last + I, Size);
       else
-         return U (V (V'last - Size + 1 .. V'Last));
+         return U (V (V'Last - Size + 1 .. V'Last));
       end if;
    end Rpad;
 
-   function Rpad (I : in Duration; Size : in Natural := 11) return Ustring is
+   function Rpad (I : in Duration; Size : in Natural := 11) return UString is
    begin
-      return RPad (Float (I), Size);
-   end RPad;
+      return Rpad (Float (I), Size);
+   end Rpad;
 
 end Agpl.Http.Server.Sort_handler;

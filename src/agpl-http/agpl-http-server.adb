@@ -13,8 +13,9 @@ with Aws.Mime;
 with Aws.Parameters;
 with Aws.Resources.Embedded;
 with AWS.Status.Set;
-with AWS.Utils;
 use  AWS;
+
+with Gnat.Os_Lib;
 
 with Text_Io;
 
@@ -123,11 +124,11 @@ package body Agpl.Http.Server is
             if Has_Element (I) then
                Log ("Handler: " & URI, Trace.Debug, Log_Section);
                return Get_Page (Element (I).all, Request);
-            elsif Aws.Utils.Is_Regular_File (Path) or else
+            elsif Gnat.OS_Lib.Is_Regular_File (Path) or else
               Aws.Resources.Embedded.Is_Regular_File (Path)
             then
                Log ("File: " & Path & "(" & Aws.Mime.Content_Type (Path) & ")" &
-                    " as " & Aws.Resources.Embedded.Exist (Path)'Img,
+                    " as " & Aws.Resources.Embedded.Exists (Path)'Img,
                     Trace.Debug, Log_Section);
                if Aws.Mime.Is_Text (Aws.Mime.Content_Type (Path)) then
                   return Aws.Response.Build
@@ -195,7 +196,7 @@ package body Agpl.Http.Server is
       begin
          Aws.Status.Set.Request
            (New_Req,
-            Aws.Status.GET'Img,
+            Aws.Status.GET,
             To,
             Aws.Http_Version);
          return Agpl.Http.Server.Callback_Function (New_Req);

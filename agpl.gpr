@@ -70,7 +70,11 @@ project Agpl is
    end case;
 
    case Include_Http is
-      when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-http";
+      when "True"  => for Source_Dirs use project'Source_Dirs &
+           "src/agpl-http" &
+           "3rdparty/aws/src" &
+           "3rdparty/aws/ssl" &
+           "3rdparty/aws/include";
       when "False" => null;
    end case;
 

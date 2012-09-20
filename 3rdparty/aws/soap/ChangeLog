@@ -1,0 +1,519 @@
+2003-02-23  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-response-error.ads:
+	Minor reformatting.
+	Update copyright notice.
+
+	* soap-message-response-error.adb:
+	Replace pragma Warnings by Unreferenced.
+	Minor reformatting.
+	Update copyright notice.
+
+	* soap-message-reader.adb:
+	Replace pragma Warnings by Unreferenced.
+	Update copyright notice.
+
+	* soap-client.adb:
+	Minor reformatting.
+	Update copyright notice.
+
+2003-02-01  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* makefile:
+	(clean): Use rm -f to avoid warnings.
+
+2003-01-22  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* makefile:
+	(UNITS): New variable used to rebuild all units.
+	(build): Do not use a loop for the build process. It depends on
+	 UNITS and units are built by this rule. Now the build process
+	 stop at the first error. Cleaner build process.
+
+2002-12-04  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* makefile:
+	(GARGS): Add -q and -u (quiet mode).
+	(build): Echo the current compiled package.
+
+2002-11-26  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-types.ads:
+	Group all Get routines together. Fix some comments.
+	Update copyright notice.
+
+	* soap-client.adb:
+	Minor reformatting.
+
+	* soap-types.ads, soap-types.adb:
+	(Size): New routine.
+	(V): New routine to get an item from an array using an index.
+
+2002-11-20  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-reader.adb:
+	Minor reformatting.
+	Update copyright notice.
+
+2002-09-25  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-types.adb:
+	Put routines in alphabetical order.
+
+2002-09-21  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-parameters.ads, soap-parameters.adb:
+	(Get): New function returning a SOAP_Base64.
+
+	* soap-types.ads, soap-types.adb:
+	(Get): New function returning a SOAP_Base64.
+
+2002-09-18  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap.ads:
+	(Version): Set to 1.1.
+
+	* soap-client.adb:
+	(Call): SOAPAction is URL & '#' & Procedure_Name by default. This
+	 is now consistent with spec comments.
+
+	* soap-client.ads:
+	Update comment about SOAPAction.
+	Minor reformatting.	
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	(Build): Name_Space default set to Default_Name_Space.
+	Minor reformatting.
+
+	* soap-message-xml.adb:
+	(State): Add Name_Space field. Will keep the object name space as
+	 parsed into the Payload.
+	(Load_Payload): Build the payload with the right name space.
+	(LOad_Response): Build response object with the right name space
+	 instead of a null one.
+	(Parse_Array): Fix State aggregate (new field Name_Space).
+	(Parse_Base64): Correctly handle empty Base64 content.
+	(Parse_Wrapper): Retrieved and set the name space as encoded into
+	 the wrapper object.
+	Minor reformatting.	
+
+	* soap-message.adb:
+	(XML_Image): Do not use hard coded dummy name space but the one
+	 encoded into the message object.
+
+	* soap-message.ads:
+	(Default_Name_Space): New constant.
+	(Object.Name_Space): Initialize with the default name space value.
+
+2002-08-02  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-parameters.adb:
+	Change Object_Controlled to Object_Safe_Pointer. Use "-" as it is
+	 not possible to access object directly.
+
+	* soap-types.adb:
+	(xsi_type): Inlined.
+	(Spaces): Inlined.
+	("-"): New procedure to retreive an Object from an Object_Safe_Pointer.
+	(Finalize): [for Composite] Properly release all objects.
+	A lot of changes in aggregate construction due to object being
+	 a controlled object.
+	
+	* soap-types.ads:
+	(Object): Now a controlled object to properly release the memory.
+	 Needed to fix a big memory leak on composite objects.
+	(Object_Controlled): Renamed to Object_Safe_Pointer.
+	(Object_Safe_Pointer): Do not expose the record here.
+	("-"): New procedure to retreive an Object from an Object_Safe_Pointer.
+	(Composite): Add Object_Set_Access here.
+	(SOAP_Record): Derived directly from Composite adding no field.
+	(SOAP_Array): Idem.
+	
+2002-07-31  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-types.ads:
+	Composite types are now handed by reference to gain speed while
+	 handling large array or record. Problem reported by Wiljan Derks.
+	(Initialize): New routines for SOAP_Array and SOAP_Record.
+	(Finalize): Idem.
+	Minor reformatting.
+	
+	* soap-types.adb:
+	A lot of changes due to data structure change for handling
+	 composite types by reference.
+	(Initialize): New routines for SOAP_Array and SOAP_Record.
+	(Finalize): Idem.
+	Minor reformatting.
+
+	* soap.ads:
+	(Version): Set 1.0
+
+2002-05-25  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-xml.adb:
+	(Parse_String): Properly handle null string. Fix a bug reported by
+	 Wiljan Derks.
+
+2002-05-17  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-reader.adb:
+	Add pragma Warnings Off to avoid compilation warnings about unused
+	 entities.
+	Patch from Wiljan Derks.
+
+	* soap-message-response-error.adb:
+	(Start_Faultcode): Remove as it is not used.
+	(End_Faultcode): Idem.
+	(Start_Faultstring): Idem.
+	(End_Faultstring): Idem.
+	(From): Add pragma Warnings Off to avoid compilation warnings
+	 about unused entity.
+	(Is_Error): Idem.
+	Patch from Wiljan Derks.
+
+	* soap-message-response.adb:
+	(Is_Error): Add pragma Warnings Off to avoid compilation warnings
+	 about unused entity.
+	Patch from Wiljan Derks
+
+	* soap-message-xml.adb:
+	(Start_Fault_Env): Remove as it is not used.
+	Patch from Wiljan Derks.
+
+	* soap-types.adb:
+	Add pragma Warnings Off to avoid compilation warnings about unused
+	 entities.
+	Remove some unused constant.
+	Patch from Wiljan Derks.
+
+2002-03-26  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-types.adb:
+	Minor comment fix.
+	
+	* soap-types.adb:
+	(Array_Type): Fix implementation. Handle properly Array with a
+	 single record.
+
+2002-03-24  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-types.adb:
+	Fix minor style error.
+
+	* soap-message-xml.adb:
+	(Parse_Param): Detect object without type. Workaround a problem
+	 with interoperability with IIS server using WSDL and not providing
+	 the type into the payload. All such type are just encoded as
+	 XML_String objects. First part of the fix for a bug reported by
+	 Wiljan Derks.
+	Add node name to error message.
+	Minor reformatting.
+
+	* soap-message.adb:
+	(XML_Image): Rename NL to New_Line. Do not indent here the payload
+	 wrapper. This is now properly done into SOAP.Types.
+
+	* soap-types.adb:
+	(XML_Indent): Thread safe counter used to indent XML payload.
+	(Spaces): New routine.
+	(XML_Image): All version, use XML_Indent to properly indent the
+	 XML payload. Easier to read.
+	(Array_Type): Same_Type is false if we have composite type (Record
+	 or Array) into the Array. Second part of the fix for a bug
+	 reported by Wiljan Derks.
+
+2002-03-20  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap.ads:
+	(Version): Set to 0.9.
+
+	* soap-types.adb:
+	(Array_Type): Returns XML_Undefined for a zero length array.
+	Patch from Wiljan Derks.
+
+2002-03-04  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-client.adb:
+	(RPC_Call): Use Pathname instead of URL (previous fix was wrong).
+
+2002-03-03  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-xml.adb:
+	Put all routines in alphabetical order.
+
+2002-02-06  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-client.adb:
+	(Call): [HTTP_Connection] New function.
+	Remove with AWS.Client.
+	Patch from Wiljan Derks.
+	
+	* soap-client.ads:
+	(Call): [HTTP_Connection] New function.
+	Move with AWS.Client here instead of body.
+	Patch from Wiljan Derks.
+
+	* soap-types.ads, soap-types.adb:
+	(V): [SOAP_Record] New function returning an Object_Set for a SOAP
+	 record.
+	Patch from Wiljan Derks.
+
+2002-01-23  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-client.adb:
+	(RPC_Call): Rename URI to URL.
+
+2001-10-22  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-xml.adb:
+	Fix casing.
+
+	* soap-types.ads, soap-types.adb:
+	Fix casing.
+
+2001-10-12  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap.ads:
+	Fix typo in header.
+
+	* soap-utils.ads, soap-utils.adb:
+	Fix typo in header.
+
+	* soap-types.ads, soap-types.adb:
+	Fix typo in header.
+
+	* soap-parameters.ads, soap-parameters.adb:
+	Fix typo in header.
+
+	* soap-message.ads, soap-message.adb:
+	Fix typo in header.
+
+	* soap-message-xml.ads, soap-message-xml.adb:
+	Fix typo in header.
+
+	* soap-message-response.ads, soap-message-response.adb:
+	Fix typo in header.
+
+	* soap-message-response-error.ads, soap-message-response-error.adb:
+	Fix typo in header.
+
+	* soap-message-reader.ads, soap-message-reader.adb:
+	Fix typo in header.
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	Fix typo in header.
+
+	* soap-client.ads, soap-client.adb:
+	Fix typo in header.
+
+2001-09-28  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-reader.adb:
+	(Ignorable_Whitespace): remove handling for ASCII.CR since an XML
+	 parser should removes all ASCII.CR occurences.
+
+2001-09-21  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* makefile: 
+	(GARGS): use GFLAGS passed from makefile in parent directory.
+	
+	* soap-message-reader.ads:
+	Removes unused with clause.
+
+	* soap-message-xml.adb:
+	Removes not used with clause.
+	Add with that was on the spec.
+	(Parse_Body): removes NL and Name (not used).
+
+	* soap-message-xml.ads:
+	Move with clause to body.
+
+	* soap-parameters.ads, soap-parameters.adb:
+	(Check_Int): renamed to Check_Integer.
+	(Check_Boolean): new procedure.
+	(Check_Time_Instant): idem.
+	(Check_Base64): idem.
+	(Check_Null): idem.
+	(Check_Record): idem.
+	(Check_Array): idem.
+
+	* soap-client.ads:
+	Fix typo in comment.
+
+	* soap-message-reader.ads:
+	Minor casing fix.
+
+	* soap-message-xml.adb:
+	Minor casing fix.
+
+2001-09-20  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	Rename Parameters.Set to Parameters.List.
+
+	* soap-message-response-error.adb:
+	Rename Parameters.Set to Parameters.List.
+
+	* soap-message-xml.adb:
+	Rename Parameters.Set to Parameters.List.
+
+	* soap-message.ads, soap-message.adb:
+	Rename Parameters.Set to Parameters.List.
+
+	* soap-parameters.ads, soap-parameters.adb:
+	(Set): renamed List as we have AWS.Parameters.List.
+
+	* soap-types.adb:
+	(A): return now a controlled object.
+	(Adjust): new procedure.
+	(Finalize): new procedure.
+	(Finalize): free memory only if pointer is not null.
+	(Image): [for SOAP_Array] fix reference to object since now it is
+	 a controlled object.
+	(Image): [for SOAP_Record] idem.
+	(V): [for SOAP_Array] idem.
+	(V): [for SOAP_Record] idem.
+	(XML_Image): [for SOAP_Array] idem.
+	(XML_Image): [for SOAP_Record] idem.
+	(R): return now a controlled object.
+
+	* soap-types.ads:
+	(Object_Set_Controlled): new type. Used for SOAP_Array and
+	 SOAP_Record to avoid memory leak.
+	(Adjust): new procedure.
+	(Finalize): new procedure.
+	(SOAP_Array): use an Object_Set_Controlled.
+	(SOAP_Record): idem.
+
+2001-09-19  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	Minor reformating.
+
+	* soap-message-xml.adb:
+	(Load_Payload): Call free to relase DOM tree memory.
+	(Load_Response): idem.
+	(Parse_Float): Value is now a constant.
+	(Parse_Int): idem.
+
+	* soap-message-response-error.adb:
+	(Tag): moved to SOAP.Utils.
+	(XML_Image): uses SOAP.Utils.Tag.
+
+	* soap-message-response-error.ads:
+	Minor reformating.
+
+	* soap-message-xml.ads, soap-message-xml.adb:
+	Complete rewrite using DOM instead of SAX. This implementation
+	 support all SOAP 1.1 types and has been validated.
+
+	* soap-message.adb:
+	(XML_Image): uses Utils.Tag to build the Message_Body.
+
+	* soap-parameters.adb:
+	(Get): add implementation returning Boolean, Record, Array.
+	(Exist): new function.
+
+	* soap-parameters.ads:
+	(Get): add implementation returning Boolean, Record, Array.
+	(Exist): new function.
+	(Set): is now based on Types.Object_Set.
+
+	* soap.ads:
+	(Version): set to 0.8 (this version has been validated through
+	 http://validator.soapware.org/)
+	(SOAP_Error): new exception.
+
+	* soap-types.ads, soap-types.adb:
+	A lot of changes. Renames all SOAP object to SOAP_* to avoid
+	 conflict with standards types.	Add implementation for Boolean,
+	 Timeinstant, Base64, Array, Record and Null data. Object added to
+	 an Object_Set are now controlled since here we need to use an
+	 access type. This should avoid memory leaks.
+
+	* soap-utils.ads, soap-utils.adb:
+	Initial revision.
+
+	* soap-message-reader.ads, soap-message-reader.adb:
+	Initial revision.
+
+2001-08-30  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* makefile:
+	(GFLAGS): mode XML path to main makefile.
+	
+	* makefile:
+	Initial revision.
+
+2001-08-26  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap-message-xml.ads, soap-message-xml.adb:
+	Removed unused package.
+	Rename Message.Error to Message.Response.Error.
+
+	* soap.ads:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-types.ads, soap-types.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-parameters.ads, soap-parameters.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-message.ads, soap-message.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-message-xml.ads, soap-message-xml.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-message-response.ads, soap-message-response.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-message-error.ads, soap-message-error.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+	* soap-client.ads, soap-client.adb:
+	Add copyright notice. This is to be considered as the first
+	 version. Most of the framework is validated at this point.
+
+2001-08-25  Pascal Obry  <p.obry@wanadoo.fr>
+
+	* soap.ads:
+	Initial revision.
+
+	* soap-types.ads, soap-types.adb:
+	Initial revision.
+
+	* soap-parameters.ads, soap-parameters.adb:
+	Initial revision.
+
+	* soap-message.ads, soap-message.adb:
+	Initial revision.
+
+	* soap-message-xml.ads, soap-message-xml.adb:
+	Initial revision.
+
+	* soap-message-response.ads, soap-message-response.adb:
+	Initial revision.
+
+	* soap-message-payload.ads, soap-message-payload.adb:
+	Initial revision.
+
+	* soap-message-error.ads, soap-message-error.adb:
+	Initial revision.
+
+	* soap-client.ads, soap-client.adb:
+
+	Initial revision.
+

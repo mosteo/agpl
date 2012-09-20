@@ -1,4 +1,4 @@
- 
+
 
 with Agpl.Http.Server.Sort_handler;
 with Agpl.Http.Server.Sort_handler.Aux;
@@ -14,8 +14,8 @@ package body Agpl.Http.Server.Sort_handler.Simple_list is
    package Conv is new System.Address_to_access_conversions (Object);
 
    use Aux.Address_lists;
-   
-   Msgs    : Aux.Address_lists.Container_type;
+
+   Msgs    : Aux.Address_lists.List;
    Pending : Natural := 0;
    pragma Atomic (Pending);
 
@@ -33,7 +33,7 @@ package body Agpl.Http.Server.Sort_handler.Simple_list is
       Auxp : Object_access;
       procedure Free is new Unchecked_deallocation (Object, Object_access);
    begin
-      while Length (Msgs) >= Max_entries loop
+      while Integer (Msgs.Length) >= Max_entries loop
          Auxp := Object_access (Conv.To_pointer (Element (Last (Msgs))));
          Free (Auxp);
          Delete_last (Msgs);
@@ -57,20 +57,20 @@ package body Agpl.Http.Server.Sort_handler.Simple_list is
    procedure Http_report (Data : out Agpl.Http.Server.Sort_handler.Data_set)
    is
       use Agpl.Http.Server.Sort_handler;
-      I    : Iterator_type := First (Msgs);
+      I    : Cursor := First (Msgs);
       Pos  : Positive      := 1;
    begin
-      while I /= Back (Msgs) loop
+      while Has_Element (I) loop
          declare
             Row : Data_row;
             Q   : System.Address renames Element (I);
          begin
             Generate_row (
-               Object_access (Conv.To_pointer (Q)).all, 
-               Pos <= Pending, 
+               Object_access (Conv.To_pointer (Q)).all,
+               Pos <= Pending,
                Row);
             Append (Data, Row);
-            I := Succ (I);
+            I := Next (I);
          end;
          Pos := Pos + 1;
       end loop;

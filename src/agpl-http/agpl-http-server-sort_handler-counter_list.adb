@@ -1,4 +1,4 @@
- 
+
 
 --  Keep track of hubs in each country:
 
@@ -25,7 +25,7 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
       function  Total_Count return Integer;
    private
       Total : Integer := 0;
-      Table : Indexer.Container_type;
+      Table : Indexer.Map;
    end Counter;
    protected body Counter is
       ---------
@@ -33,12 +33,12 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
       ---------
       procedure Add (Key : String; Amount : in Integer := 1) is
          use Indexer;
-         I         : Iterator_type := Find (Table, Key);
+         I         : Cursor := Find (Table, Key);
          New_value : Integer;
       begin
          Total := Total + Amount;
 
-         if I /= Back (Table) then
+         if Has_Element (I) then
             New_value := Element (I) + Amount;
             Delete (Table, I);
             if New_value > 0 then
@@ -54,9 +54,9 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
       ---------
       function  Get (Key : String) return Integer is
          use Indexer;
-         I : constant Iterator_type := Find (Table, Key);
+         I : constant Cursor := Find (Table, Key);
       begin
-         if I /= Back (Table) then
+         if Has_Element (I) then
             return Element (I);
          else
             return 0;
@@ -81,12 +81,12 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
       ------------------
       function  Get_Next_Key (Key : String) return String is
          use Indexer;
-         I : constant Iterator_Type := Find (Table, Key);
+         I : constant Cursor := Find (Table, Key);
       begin
-         if I = Back (Table) or else Succ (I) = Back (Table) then
+         if (not Has_Element (I)) or else not Has_Element (Next (I)) then
             raise No_More_Keys;
          else
-            return Indexer.Key (Succ (I));
+            return Indexer.Key (Next (I));
          end if;
       end Get_Next_Key;
 
@@ -98,13 +98,13 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
          Negatives : in Boolean := False)
       is
          use Indexer;
-         I : Iterator_Type := First (Table);
+         I : Cursor := First (Table);
       begin
-            while I /= Back (Table) loop
+            while Has_Element (I) loop
                if Negatives or else Element (I) >= 0 then
                   Process (Key (I), Element (I));
                end if;
-               I := Succ (I);
+               I := Next (I);
             end loop;
       end Iterate;
 
@@ -114,13 +114,13 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
       procedure Report (Data : out Agpl.Http.Server.Sort_handler.Data_set) is
          use Agpl.Http.Server.Sort_handler;
          use Indexer;
-         I      : Iterator_type  := First (Table);
+         I      : Cursor  := First (Table);
          FTotal : constant Float := Float (Total);
          FMax   : Float          := 1.0;
       begin
          -- Rows:
          I := First (Table);
-         while I /= Back (Table) loop
+         while Has_Element (I) loop
             if Element (I) > 0 or else Show_Negatives then
                declare
                   Row : Data_row;
@@ -156,7 +156,7 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
                   Fmax := Float'Max (Fmax, Float (Element (I)));
                end;
             end if;
-            I := Succ (I);
+            I := Next (I);
          end loop;
          -- Create last value getting normalized values across 1 -- 100 (ints)
          begin
@@ -167,7 +167,7 @@ package body Agpl.Http.Server.Sort_Handler.Counter_List is
                      Integer (
                         Float (Element (I)) * 100.0 / FMax)))),
                   Rpad (Integer (Float (Element (I)) * 100.0 / Fmax))));
-               I := Succ (I);
+               I := Next (I);
             end loop;
          end;
       end Report;
