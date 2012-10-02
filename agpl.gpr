@@ -1,3 +1,4 @@
+with "skel";
 with "hungarian/hungarian";
 
 --  Library without GTK facilities
@@ -6,35 +7,10 @@ project Agpl is
 
    type Boolean is ("True", "False");
 
-   for Source_Dirs use ();
    for Object_Dir  use "obj";
    for Exec_Dir    use "obj";
 
    for Languages  use ("Ada", "C", "C++");
-
-   Lib_Name    := "agpl";
-   Lib_Version := "20120918";
-
-   type Build_Type   is ("Debug");
-   type Linking_Type is ("Dependencies", "Static_Library", "Dynamic_Library");
-
-   Build : Build_Type   := external ("Agpl_Build", "Debug");
-   Link  : Linking_Type := External ("Agpl_Link",  "Dependencies");
-
-   case Link is
-      when "Dependencies" =>
-         null;
-      when "Static_Library" =>
-         for Library_Dir     use "libstatic";
-         for Library_Name    use Lib_Name;
-         for Library_Kind    use "Static";
-         for Library_Version use Lib_Name & ".a." & Lib_Version;
-      when "Dynamic_Library" =>
-         for Library_Dir     use "libdynamic";
-         for Library_Name    use Lib_Name;
-         for Library_Kind    use "Dynamic";
-         for Library_Version use Lib_Name & ".so." & Lib_Version;
-   end case;
 
    --  Selective functionalities of Agpl
 
@@ -107,48 +83,14 @@ project Agpl is
       for Vcs_Kind use "git";
    end Ide;
 
-   package Compiler is
+   package Compiler renames Skel.Compiler;
 
-      for Required_Switches ("Ada") use ("-gnat2012",
-                                         "-gnatwa",  -- optional warnings from gnat
-                                         "-Wall",    -- optional warnings from gcc
-                                         "-gnatwt",  -- detect dead code
-                                         "-gnatwjl", -- extra warnings
-                                         "-gnaty",   -- standard source code style
-                                         "");
-
-      for Required_Switches ("C")   use ("-Wall");
-      for Required_Switches ("C++") use ("-Wall");
-
-      case Build is
-         when "Debug" =>
-            for Default_Switches ("Ada") use ("-g",
-                                              "-O2",
-                                              "-gnato", -- Standard Ada overflow
-                                              "-fstack-check",
-                                              "-gnata", -- All assertions
-                                              "-gnateE", -- Extra range check info in exceptions
-                                              "-gnatf", -- full errors
-                                              "-gnatqQ", -- compile as much as possible even with errors
-                                              "-gnatVa", -- all validity checks (expensive, use Vd for default)
-                                              "");
-            for Default_Switches ("C")   use ("-g", "-O2");
-            for Default_Switches ("C++") use ("-g", "-O2");
-      end case;
-   end Compiler;
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-E",      -- exception tracebacks
-                                        "-g",      -- keep debug symbols? (Unsure)
-                                        -- "-r",   -- restrictions that might be applied
-                                        "-static", -- static runtime
-                                        "");
-   end Binder;
+   package Binder renames Skel.Binder;
 
    package Linker is
-      for Default_Switches ("Ada") use ("-g");
-      for Default_Switches ("C")   use ("-g");
-      for Default_Switches ("C++") use ("-g");
+      for Default_Switches ("Ada") use Skel.Linker'Default_Switches ("Ada");
+      for Default_Switches ("C")   use Skel.Linker'Default_Switches ("C");
+      for Default_Switches ("C++") use Skel.Linker'Default_Switches ("C++");
 
       for Linker_Options use ("-Wl,-Bstatic",
                               "-lgsl", "-lgslcblas",
@@ -158,27 +100,16 @@ project Agpl is
 
       case Include_Concorde is
          when "True"  =>
-            for Linker_Options use Linker'Linker_Options & ("-Lsrc/agpl-concorde");
+            for Linker_Options use Linker'Linker_Options &
+              ("-Lsrc/agpl-concorde", "-lconcorde");
          when "False" => null;
       end case;
    end Linker;
 
-   package Builder is
-      for Default_Switches ("Ada") use ("-g", "-j3");
-   end Builder;
+   package Builder renames Skel.Builder;
 
-   package Pretty_Printer is
-      for Default_Switches ("Ada") use ("-A1", "-A2", "-A3", "-A4");
-   end Pretty_Printer;
+   package Pretty_Printer renames Skel.Pretty_Printer;
 
-   package Naming is
-      for Specification_Suffix  ("C") use ".h";
-      for Implementation_Suffix ("C") use ".c";
-      for Specification_Suffix  ("C++") use ".hh";
-      for Implementation_Suffix ("C++") use ".cc";
-      for Specification_Suffix  ("Changelog") use "changelog";
-      for Specification_Suffix  ("Project file") use ".gpr";
-      for Specification_Suffix  ("Python") use ".py";
-   end Naming;
+   package Naming renames Skel.Naming;
 
 end Agpl;

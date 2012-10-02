@@ -1,13 +1,14 @@
+with "agpl";
 with "gtkada";
 
 -- With GTK facilities
 
-project Agpl_Gtk extends "agpl.gpr" is
+project Agpl_Gtk is
 
    for Source_Dirs use ("src/agpl-gdk");
    for Object_Dir  use "obj/gdk";
 
-   for Languages  use ("Ada", "C", "C++");
+   for Languages  use ("Ada");
 
    case Agpl.Include_Test is
       when "True" =>
@@ -15,10 +16,23 @@ project Agpl_Gtk extends "agpl.gpr" is
       when "False" => null;
    end case;
 
+   package Compiler renames Agpl.Compiler;
+
    package Binder is
       for Default_Switches ("Ada") use
         Agpl.Binder'Default_Switches ("Ada") & ("-rdynamic");
         --  Needed by glade autoconnect
    end Binder;
+
+   package Linker renames Agpl.Linker;
+
+--     package Linker is
+--        for Linker_Options use Agpl.Linker'Linker_Options;
+--        --  These are never inherited in extension projects
+--     end Linker;
+
+   package Pretty_Printer renames Agpl.Pretty_Printer;
+
+   package Naming renames Agpl.Naming;
 
 end Agpl_Gtk;
