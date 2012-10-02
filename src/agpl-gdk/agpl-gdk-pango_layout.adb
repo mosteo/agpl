@@ -1,4 +1,3 @@
- 
 
 --  Controlled version of a pango layout
 

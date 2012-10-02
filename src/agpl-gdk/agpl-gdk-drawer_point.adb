@@ -1,4 +1,3 @@
- 
 
 with Glib;
 
@@ -8,7 +7,7 @@ package body Agpl.Gdk.Drawer_Point is
    -- Create --
    ------------
 
-   function Create (Gc : Gdk_Gc; X, Y : Float) return Object is
+   function Create (Gc : Gdk_GC; X, Y : Float) return Object is
    begin
       return (Gc => Gc, P => (X, Y, 1.0));
    end Create;

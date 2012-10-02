@@ -118,7 +118,7 @@ private
       Real      : Agpl.Gdk.Drawer.Object;
       Real_OK   : Boolean := False;
       Destroyed : Boolean := False;
-      Bgcolor   : Ustring := +"white";
+      Bgcolor   : UString := +"white";
    end Safe_Code;
 
    type Safe_Access is access all Safe_Code;

@@ -1,4 +1,3 @@
- 
 
 with Agpl.Cv;
 with Agpl.Gdk.Drawer_Point;
@@ -33,7 +32,7 @@ package body Agpl.Gdk.Drawer_Figures is
 
    procedure Draw_Arrow (X1, Y1, X2, Y2 : in     Float;
                          Size           : in     Float;
-                         Gc             : in     Gdk_Gc;
+                         Gc             : in     Gdk_GC;
                          Draw           : in out Drawer.Object)
    is
    begin
@@ -42,20 +41,20 @@ package body Agpl.Gdk.Drawer_Figures is
       --  Arrow
       declare
          H  : constant Float := Size;
-         P1 : Cv.Point2d := ( - H,   H, 1.0);
-         P2 : Cv.Point2d := ( - H, - H, 1.0);
-         P5 : Cv.Point2d := ( 0.0, 0.0, 1.0);
+         P1 : Cv.Point2D := (-H,   H, 1.0);
+         P2 : Cv.Point2D := (-H, -H, 1.0);
+         P5 : Cv.Point2D := (0.0, 0.0, 1.0);
          A  : constant Float := Arctan (Y2 - Y1, X2 - X1);
       begin
          --  Transform the points to reflect the true pose:
          declare
             use Transform;
             T : constant Transformation :=
-                  Get_Translation ( - X2, - Y2) * Get_Rotation ( - A);
+                  Get_Translation (-X2, -Y2) * Get_Rotation (-A);
          begin
-            P1 := + (T * ( + P1));
-            P2 := + (T * ( + P2));
-            P5 := + (T * ( + P5));
+            P1 := +(T * (+P1));
+            P2 := +(T * (+P2));
+            P5 := +(T * (+P5));
          end;
 
          Draw_Segment (P1 (1), P1 (2), P5 (1), P5 (2), Gc, Draw);
@@ -69,7 +68,7 @@ package body Agpl.Gdk.Drawer_Figures is
 
    procedure Draw_Grid_Points
      (X1, Y1, X2, Y2 : in     Float;
-      Gc             : in     Gdk_Gc;
+      Gc             : in     Gdk_GC;
       Draw           : in out Drawer.Object;
       Every_X        : in     Float := 1.0;
       Every_Y        : in     Float := 1.0)
@@ -136,7 +135,7 @@ package body Agpl.Gdk.Drawer_Figures is
 
    procedure Draw_Plus
      (X, Y : in     Float;
-      Gc   : in     Gdk_Gc;
+      Gc   : in     Gdk_GC;
       Draw : in out Drawer.Object;
       Size : in     Float := 1.0)
    is
@@ -151,29 +150,29 @@ package body Agpl.Gdk.Drawer_Figures is
    ----------------
 
    procedure Draw_Robot (X, Y, A : in     Float;
-                         Gc      : in     Gdk_Gc;
+                         Gc      : in     Gdk_GC;
                          Draw    : in out Drawer.Object;
                          Size    : in     Float := 0.5)
    is
       --  Points for a robot looking along the X axis.
       H : constant Float := Size / 2.0;
-      P1 : Cv.Point2D := ( - H, H, 1.0);
-      P2 : Cv.Point2D := ( - H, - H, 1.0);
-      P3 : Cv.Point2D := ( H, H, 1.0);
-      P4 : Cv.Point2D := ( H, - H, 1.0);
-      P5 : Cv.Point2D := ( H, 0.0, 1.0);
+      P1 : Cv.Point2D := (-H, H, 1.0);
+      P2 : Cv.Point2D := (-H, -H, 1.0);
+      P3 : Cv.Point2D := (H, H, 1.0);
+      P4 : Cv.Point2D := (H, -H, 1.0);
+      P5 : Cv.Point2D := (H, 0.0, 1.0);
    begin
       --  Transform the points to reflect the true pose:
       declare
          use Transform;
          T : constant Transformation :=
-               Get_Translation ( - X, - Y) * Get_Rotation ( - A);
+               Get_Translation (-X, -Y) * Get_Rotation (-A);
       begin
-         P1 := + (T * ( + P1));
-         P2 := + (T * ( + P2));
-         P3 := + (T * ( + P3));
-         P4 := + (T * ( + P4));
-         P5 := + (T * ( + P5));
+         P1 := +(T * (+P1));
+         P2 := +(T * (+P2));
+         P3 := +(T * (+P3));
+         P4 := +(T * (+P4));
+         P5 := +(T * (+P5));
       end;
 
       --  Arrow
@@ -194,7 +193,7 @@ package body Agpl.Gdk.Drawer_Figures is
    ------------------
 
    procedure Draw_Segment (X1, Y1, X2, Y2 : in     Float;
-                           Gc             : in     Gdk_Gc;
+                           Gc             : in     Gdk_GC;
                            Draw           : in out Drawer.Object)
    is
    begin
@@ -207,7 +206,7 @@ package body Agpl.Gdk.Drawer_Figures is
 
    procedure Draw_Vector (X, Y : in Float;
                           A, L : in Float;
-                          Gc   : in Gdk_Gc;
+                          Gc   : in Gdk_GC;
                           Draw : in out Drawer.Object)
    is
       X2 : constant Float := X + L * Cos (A);

@@ -40,7 +40,7 @@ package body Agpl.Gdk.Managed is
    -- Glade_Autoconnect --
    -----------------------
 
-   procedure Glade_Autoconnect (Xml : Glade.Xml.Glade_Xml) is
+   procedure Glade_Autoconnect (Xml : Glade.XML.Glade_XML) is
       procedure Glade_Connect (X : System.Address);
       pragma Import (C, Glade_Connect, "glade_xml_signal_autoconnect");
       procedure Internal is
@@ -168,13 +168,13 @@ package body Agpl.Gdk.Managed is
                      Log ("Gtk_Task: Aborted managed code (too long): " &
                           External_Tag (This'Tag),
                           Warning, Log_Section);
-                     Ok := False;
+                     OK := False;
                   then abort
                      declare
                         Timer : Agpl.Chronos.Object;
                      begin
                         This.Execute;
-                        Ok := True;
+                        OK := True;
                         if Timer.Elapsed > 5.0 then
                            Log ("Managed.Gtk_Task.Execute: Long processing: " &
                                 Timer.Image, Warning, Log_Section);

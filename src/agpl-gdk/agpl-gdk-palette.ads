@@ -7,7 +7,7 @@ with Agpl.Types;
 
 with Gdk.Color;    use Gdk.Color;
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Finalization;
@@ -42,7 +42,7 @@ package Agpl.Gdk.Palette is
                     Color      : in     String;
                     Line_Width : in     Integer        := 1;
                     Line_Style : in     Gdk_Line_Style := Line_Solid)
-                    return              Gdk_Gc;
+                    return              Gdk_GC;
    pragma Precondition (Color /= "");
    --  As previous, but with more options for line effects/fills
 
@@ -71,7 +71,7 @@ package Agpl.Gdk.Palette is
 
 private
 
-   use type Gdk_Gc;
+   use type Gdk_GC;
 
    package Color_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (String, Gdk_Color);

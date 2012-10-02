@@ -43,7 +43,7 @@ package body Agpl.Gdk.Drawer is
    ---------------
 
    procedure Set_Color (This  : in out Object;
-                        Rgb   :        Types.Rgb_Triplet;
+                        Rgb   :        Types.Rgb_triplet;
                         Alpha :        Types.Unsigned_8)
    is
       pragma Unreferenced (Alpha);
@@ -218,7 +218,7 @@ package body Agpl.Gdk.Drawer is
       end if;
 
       --  Add margins
-      Offset_X := Offset_X + W_Width * (This.Margin - 1.0) / 2.0 ;
+      Offset_X := Offset_X + W_Width * (This.Margin - 1.0) / 2.0;
       Offset_Y := Offset_Y + W_Height * (This.Margin - 1.0) / 2.0;
 
       --  Here is injected the correction cartesian/bottom-up
@@ -226,7 +226,7 @@ package body Agpl.Gdk.Drawer is
         ((Ratio_X, 0.0,
           -This.Min_X * Ratio_X + Offset_X),
          (0.0, -Ratio_Y,
-          W_Height - (- This.Min_Y * Ratio_Y + Offset_Y)),
+          W_Height - (-This.Min_Y * Ratio_Y + Offset_Y)),
          (0.0, 0.0, 1.0));
 
       --      This.Transformb := Inverse (This.Transform);

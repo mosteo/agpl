@@ -1,4 +1,3 @@
- 
 
 with Glib;
 
@@ -11,7 +10,7 @@ package body Agpl.Gdk.Drawer_Arc is
    ------------
 
    function Create
-     (Gc     : Gdk_Gc;
+     (Gc     : Gdk_GC;
       X, Y   : Float;
       Width  : Float;
       Height : Float;
@@ -33,7 +32,7 @@ package body Agpl.Gdk.Drawer_Arc is
    -- Create_Circle --
    -------------------
 
-   function Create_Circle (Gc      : Gdk_Gc;
+   function Create_Circle (Gc      : Gdk_GC;
                            X, Y, R : Float;
                            Fill    : Boolean := False) return Object is
    begin

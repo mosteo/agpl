@@ -1,4 +1,3 @@
- 
 
 package body Agpl.Gdk.Conversions is
 

@@ -32,7 +32,7 @@ private
 
    package Cb_Handles is new Agpl.Generic_Handle (Callback'Class);
 
-   type CB_Handle is new CB_Handles.Object with null record;
+   type CB_Handle is new Cb_Handles.Object with null record;
 
    type Object is new Ada.Finalization.Limited_Controlled with record
       Area   : Gtk_Drawing_Area;

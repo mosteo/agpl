@@ -30,31 +30,31 @@ package Agpl.Types.Constants is
    -- Colours                                                            --
    ------------------------------------------------------------------------
    --  Primary
-   White  : constant RGB_Triplet := (255, 255, 255);
-   Black  : constant RGB_Triplet := (  0,   0,   0);
-   Red    : constant RGB_Triplet := (255,   0,   0);
-   Green  : constant RGB_Triplet := (  0, 255,   0);
-   Blue   : constant RGB_Triplet := (  0,   0, 255);
+   White  : constant Rgb_Triplet := (255, 255, 255);
+   Black  : constant Rgb_Triplet := (  0,   0,   0);
+   Red    : constant Rgb_Triplet := (255,   0,   0);
+   Green  : constant Rgb_Triplet := (  0, 255,   0);
+   Blue   : constant Rgb_Triplet := (  0,   0, 255);
 
    --  Secondary
-   Yellow : constant RGB_Triplet := (255, 255,   0);
+   Yellow : constant Rgb_Triplet := (255, 255,   0);
 
    --  Web
-   Navy      : constant RGB_Triplet := (  0,   0, 128);
-   Gray      : constant RGB_Triplet := (128, 128, 128);
-   Silver    : constant RGB_Triplet := (192, 192, 192);
-   Gainsboro : constant RGB_Triplet := (220, 220, 220);
+   Navy      : constant Rgb_Triplet := (  0,   0, 128);
+   Gray      : constant Rgb_Triplet := (128, 128, 128);
+   Silver    : constant Rgb_Triplet := (192, 192, 192);
+   Gainsboro : constant Rgb_Triplet := (220, 220, 220);
 
-   Soft_Green     : constant RGB_Triplet := (  0, 192,   0);
-   Middle_Green   : constant RGB_Triplet := (  0, 128,   0);
-   Dark_Green     : constant RGB_Triplet := (  0, 096,   0);
+   Soft_Green     : constant Rgb_Triplet := (  0, 192,   0);
+   Middle_Green   : constant Rgb_Triplet := (  0, 128,   0);
+   Dark_Green     : constant Rgb_Triplet := (  0, 096,   0);
 
-   Soft_Red       : constant RGB_Triplet := (192,   0,   0);
-   Middle_Red     : constant RGB_Triplet := (128,   0,   0);
-   Dark_Red       : constant RGB_Triplet := (096,   0,   0);
-   Crimson        : constant RGB_Triplet := (128,   0,   0);
+   Soft_Red       : constant Rgb_Triplet := (192,   0,   0);
+   Middle_Red     : constant Rgb_Triplet := (128,   0,   0);
+   Dark_Red       : constant Rgb_Triplet := (096,   0,   0);
+   Crimson        : constant Rgb_Triplet := (128,   0,   0);
 
-   Light_Blue     : constant Rgb_Triplet := (173, 216, 230);
+   Light_Blue     : constant Rgb_triplet := (173, 216, 230);
 
    Alpha_Opaque : constant Unsigned_8 := 255;
    Alpha_Transp : constant Unsigned_8 := 0;

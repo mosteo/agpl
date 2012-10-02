@@ -1,8 +1,7 @@
- 
 
 with Glib;
 
-with Ada.Text_Io; use Ada.Text_Io;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Agpl.Gdk.Drawer_Segment is
 
@@ -10,7 +9,7 @@ package body Agpl.Gdk.Drawer_Segment is
    -- Create --
    ------------
 
-   function Create (Gc : Gdk_Gc; X1, Y1, X2, Y2 : Float) return Object is
+   function Create (Gc : Gdk_GC; X1, Y1, X2, Y2 : Float) return Object is
    begin
       return (Gc => Gc,
               P1 => (X1, Y1, 1.0),

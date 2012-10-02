@@ -1,10 +1,9 @@
- 
 
 --  A controlled GC to avoid resource leaks.
 --  On creation it is allocated, on finalization it is unref'ed.
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 
 with Ada.Finalization;
 
@@ -14,14 +13,14 @@ package Agpl.Gdk.Controlled_Gc is
 
    type Object (Draw : Gdk_Drawable) is tagged limited private;
 
-   function Get_Gc (This : in Object) return Gdk_Gc;
-   function "+" (This : in Object) return Gdk_Gc renames Get_Gc;
+   function Get_Gc (This : in Object) return Gdk_GC;
+   function "+" (This : in Object) return Gdk_GC renames Get_Gc;
 
 private
 
    type Object (Draw : Gdk_Drawable) is new Ada.Finalization.Limited_Controlled with
       record
-         Gc : Gdk_Gc;
+         Gc : Gdk_GC;
       end record;
 
    procedure Initialize (This : in out Object);

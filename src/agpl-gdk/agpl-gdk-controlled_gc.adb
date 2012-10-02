@@ -4,7 +4,7 @@ package body Agpl.Gdk.Controlled_Gc is
    -- Get_Gc --
    ------------
 
-   function Get_Gc (This : in Object) return Gdk_Gc is
+   function Get_Gc (This : in Object) return Gdk_GC is
    begin
       return This.Gc;
    end Get_Gc;

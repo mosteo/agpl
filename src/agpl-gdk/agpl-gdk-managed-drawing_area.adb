@@ -271,7 +271,7 @@ package body Agpl.Gdk.Managed.Drawing_Area is
                     Debug, Log_Section);
                Log ("Drawing_Area.Clicked:" &
                     To_String (Coords (Coords'First)) & " " &
-                    To_String (Coords (Coords'First)),
+                    To_string (Coords (Coords'First)),
                     Debug, Log_Section);
             end;
          end if;

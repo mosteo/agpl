@@ -1,6 +1,6 @@
 with Agpl.Trace; use Agpl.Trace;
 
-with Gdk.Gc;     use Gdk.Gc;
+with Gdk.GC;     use Gdk.GC;
 
 package body Agpl.Gdk.Utils is
 
@@ -19,7 +19,7 @@ package body Agpl.Gdk.Utils is
    begin
       Alloc_Color (Get_Colormap (Drawable), C, Success => Ok, Best_Match => False);
       pragma Assert (Ok);
-      Set_Foreground ( + This, C);
+      Set_Foreground (+This, C);
    exception
       when E : others =>
          Log ("Gdk.Utils.Set_Color: " & Report (E), Warning);

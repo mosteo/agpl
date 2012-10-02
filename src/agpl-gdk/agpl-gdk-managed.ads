@@ -1,4 +1,4 @@
-with Glade.Xml;
+with Glade.XML;
 
 --  Hierarchy starting here provides some utilities for displaying drawings
 --  without having to take care of any Gdk/Gtk management. In other words,
@@ -22,7 +22,7 @@ package Agpl.Gdk.Managed is
    --  Execute this code within the main GTK thread
    --  Will initialize first time called
 
-   procedure Glade_Autoconnect (Xml : Glade.Xml.Glade_Xml);
+   procedure Glade_Autoconnect (Xml : Glade.XML.Glade_XML);
    --  Remember to compile with -rdynamic (linker, C++) in order for this
    --  to find the procedures.
 

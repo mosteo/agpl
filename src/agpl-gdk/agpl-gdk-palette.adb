@@ -79,9 +79,9 @@ package body Agpl.Gdk.Palette is
       else
          declare
             C : constant Gdk_Color := Get_Color (This, Color);
-            X : Gdk_Gc;
+            X : Gdk_GC;
          begin
-            Gdk_new (X, This.Drawable);
+            Gdk_New (X, This.Drawable);
             Set_Foreground (X, C);
             This.Gcs.Insert (To_Lower (Color), X);
             return X;
@@ -97,7 +97,7 @@ package body Agpl.Gdk.Palette is
                     Color      : in     String;
                     Line_Width : in     Integer        := 1;
                     Line_Style : in     Gdk_Line_Style := Line_Solid)
-                    return              Gdk_Gc
+                    return              Gdk_GC
    is
       use Gc_Maps;
       Key : constant String := To_Lower (Color) & ":" &
@@ -110,9 +110,9 @@ package body Agpl.Gdk.Palette is
       else
          declare
             C : constant Gdk_Color := Get_Color (This, Color);
-            X : Gdk_Gc;
+            X : Gdk_GC;
          begin
-            Gdk_new (X, This.Drawable);
+            Gdk_New (X, This.Drawable);
             Set_Foreground (X, C);
             Set_Line_Attributes (X,
                                  Gint (Line_Width),
@@ -123,7 +123,7 @@ package body Agpl.Gdk.Palette is
             return X;
          end;
       end if;
-   end Get_GC;
+   end Get_Gc;
 
    function Get_Color (This : in Object; Color : in String) return Gdk_Color is
    begin
@@ -196,13 +196,13 @@ package body Agpl.Gdk.Palette is
    function Gradient (Val : Domain_Range'Base) return Rgb_Component is
       subtype LLF is Long_Long_Float;
       subtype LLI is Long_Long_Integer;
-      subtype RGB is LLI range LLI (RGB_Component'First) .. LLI (RGB_Component'Last);
+      subtype RGB is LLI range LLI (Rgb_Component'First) .. LLI (Rgb_Component'Last);
       package Scale is new Scaling1d (LLF);
       S : constant Scale.Object :=
             Scale.Set_Equivalence (LLF (Domain_Range'First), LLF (Domain_Range'Last),
-                                   LLF (RGB_Min), LLF (RGB_Max));
+                                   LLF (Rgb_Min), LLF (Rgb_Max));
    begin
-      return RGB_Component
+      return Rgb_Component
         (RGB'Base'Max (RGB'First,
                        RGB'Base'Min (RGB'Last,
                                      RGB'Base (S.Scale (LLF (Val))))));
@@ -220,13 +220,13 @@ package body Agpl.Gdk.Palette is
       Val : Float renames Val_In_Domain;
       subtype LLF is Float;
       subtype LLI is Long_Long_Integer;
-      subtype RGB is LLI range LLI (RGB_Component'First) .. LLI (RGB_Component'Last);
+      subtype RGB is LLI range LLI (Rgb_Component'First) .. LLI (Rgb_Component'Last);
       package Scale is new Scaling1d (LLF);
       S : constant Scale.Object :=
             Scale.Set_Equivalence (LLF (Min_In_Domain), LLF (Max_In_Domain),
                                    LLF (Min_In_Rgb), LLF (Max_In_Rgb));
    begin
-      return RGB_Component
+      return Rgb_Component
         (RGB'Base'Max (RGB'First,
                        RGB'Base'Min (RGB'Last,
                                      RGB'Base (S.Scale (LLF (Val))))));

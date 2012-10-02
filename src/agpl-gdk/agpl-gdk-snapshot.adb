@@ -11,7 +11,7 @@ package body Agpl.Gdk.Snapshot is
 
    procedure Save_Png (This : Gdk_Drawable; Filename : String) is
       Buffer : Gdk_Pixbuf;
-      Error  : Gerror;
+      Error  : GError;
       W, H   : Gint;
    begin
       Get_Size (This, Width => W, Height => H);
@@ -24,7 +24,7 @@ package body Agpl.Gdk.Snapshot is
                                    H - 1);
       Save (Buffer,
             Filename,
-            Png,
+            PNG,
             Error);
 
       if Error /= null then

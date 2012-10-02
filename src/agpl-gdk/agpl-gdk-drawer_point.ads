@@ -1,11 +1,10 @@
- 
 
 --  Drawing points
 
 with Agpl.Gdk.Drawer_Action;
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 
 package Agpl.Gdk.Drawer_Point is
 
@@ -13,7 +12,7 @@ package Agpl.Gdk.Drawer_Point is
 
    type Object is new Agpl.Gdk.Drawer_Action.Object with private;
 
-   function Create (Gc : Gdk_Gc; X, Y : Float) return Object;
+   function Create (Gc : Gdk_GC; X, Y : Float) return Object;
 
    procedure Prepare  (This   : in out Object;
                        Transf : in     Float_Matrix; -- Any transformation.
@@ -32,7 +31,7 @@ private
 
    type Object is new Agpl.Gdk.Drawer_Action.Object with record
       P      : Float_Vector;
-      Gc     : Gdk_Gc;
+      Gc     : Gdk_GC;
    end record;
 
 end Agpl.Gdk.Drawer_Point;

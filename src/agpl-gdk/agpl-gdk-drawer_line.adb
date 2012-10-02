@@ -1,4 +1,3 @@
- 
 
 with Glib;
 
@@ -8,14 +7,14 @@ package body Agpl.Gdk.Drawer_Line is
    -- Create --
    ------------
 
-   function Create (Gc : Gdk_Gc; X1, Y1, X2, Y2 : Float) return Object is
+   function Create (Gc : Gdk_GC; X1, Y1, X2, Y2 : Float) return Object is
    begin
       return (Gc => Gc,
               P1 => (X1, Y1, 1.0),
               P2 => (X2, Y2, 1.0));
    end Create;
 
-   function Create (Gc : Gdk_Gc; A, B, C : Float) return Object is
+   function Create (Gc : Gdk_GC; A, B, C : Float) return Object is
       Line  : constant Float_Vector := (A, B, C);
       Ord0  : constant Float_Vector := (0.0, 0.0, 1.0) ** (0.0, 1.0, 1.0);
       OrdW  : constant Float_Vector := (1.0, 0.0, 1.0) **

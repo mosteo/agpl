@@ -1,4 +1,3 @@
- 
 
 with Glib;
 
@@ -8,7 +7,7 @@ package body Agpl.Gdk.Drawer_Rectangle is
    -- Create --
    ------------
 
-   function Create (Gc             : Gdk_Gc;
+   function Create (Gc             : Gdk_GC;
                     X1, Y1, X2, Y2 : Float;
                     Fill           : Boolean := True) return Object is
    begin

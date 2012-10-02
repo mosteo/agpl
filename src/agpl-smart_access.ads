@@ -13,7 +13,7 @@ generic
    type Item_access is access Item;     -- This is the access we want safe.
    Item_id : String := "Anonymous";     -- For debug and error reporting.
    Debug   : Boolean := False;          -- Log bind/free
-package Agpl.Smart_access is
+package Agpl.Smart_Access is
 
    pragma Preelaborate;
 

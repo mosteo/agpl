@@ -2,7 +2,7 @@ with Agpl.Trace; use Agpl.Trace;
 
 with Ada.Unchecked_Deallocation;
 
-package body Agpl.Smart_Access_Limited is
+package body Agpl.Smart_access_Limited is
 
    ----------
    -- Free --

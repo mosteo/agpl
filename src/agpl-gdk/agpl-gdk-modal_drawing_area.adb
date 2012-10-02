@@ -75,10 +75,10 @@ package body Agpl.Gdk.Modal_Drawing_Area is
       Initialize (This.Window, Window_Toplevel);
 
       --  Connect the destroy event
-      Handlers_Ur.Connect
+      Handlers_UR.Connect
         (This.Window,
          "delete-event",
-         Handlers_Ur.To_Marshaller (Destroy'Access),
+         Handlers_UR.To_Marshaller (Destroy'Access),
          This'Unchecked_Access);
 
       Set_Position (This.Window, Win_Pos_Center);
@@ -88,10 +88,10 @@ package body Agpl.Gdk.Modal_Drawing_Area is
       Gtk_New (This.Area);
 
       --  Connect the expose event
-      Handlers_Ur.Connect
+      Handlers_UR.Connect
         (This.Area,
          "expose-event",
-         Handlers_Ur.To_Marshaller (Expose'Access),
+         Handlers_UR.To_Marshaller (Expose'Access),
          This'Unchecked_Access);
 
       Add (This.Window, This.Area);

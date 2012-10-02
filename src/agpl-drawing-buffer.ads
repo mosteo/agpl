@@ -84,7 +84,7 @@ private
                       Dest : in out Drawer'Class);
 
    type Action_Color is new Action with record
-      Rgb   : Types.Rgb_Triplet;
+      Rgb   : Types.Rgb_triplet;
       Alpha : Types.Unsigned_8;
    end record;
 

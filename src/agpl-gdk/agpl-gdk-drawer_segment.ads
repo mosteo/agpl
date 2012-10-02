@@ -1,4 +1,3 @@
- 
 
 --  Proxy for drawing in a GdkDrawable, adding capabilities like autoscale,
 --  zoom, axis flipping...
@@ -6,7 +5,7 @@
 with Agpl.Gdk.Drawer_Action;
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 
 package Agpl.Gdk.Drawer_Segment is
 
@@ -14,7 +13,7 @@ package Agpl.Gdk.Drawer_Segment is
 
    type Object is new Agpl.Gdk.Drawer_Action.Object with private;
 
-   function Create (Gc : Gdk_Gc; X1, Y1, X2, Y2 : Float) return Object;
+   function Create (Gc : Gdk_GC; X1, Y1, X2, Y2 : Float) return Object;
 
    procedure Prepare  (This   : in out Object;
                        Transf : in     Float_Matrix; -- Any transformation.
@@ -33,7 +32,7 @@ private
 
    type Object is new Agpl.Gdk.Drawer_Action.Object with record
       P1, P2 : Float_Vector;
-      Gc     : Gdk_Gc;
+      Gc     : Gdk_GC;
    end record;
 
 end Agpl.Gdk.Drawer_Segment;

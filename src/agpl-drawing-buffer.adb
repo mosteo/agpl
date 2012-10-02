@@ -33,7 +33,7 @@ package body Agpl.Drawing.Buffer is
 
    procedure Set_Color
      (This  : in out Object;
-      Rgb   :        Types.Rgb_Triplet;
+      Rgb   :        Types.Rgb_triplet;
       Alpha :        Types.Unsigned_8)
    is
    begin

@@ -206,12 +206,12 @@ package body Agpl.Gdk is
    begin
       for R in X'Range loop
          declare
-            Line : Ustring;
+            Line : UString;
          begin
             for C in X'Range (2) loop
-               Asu.Append
+               ASU.Append
                  (Line,
-                  Strings.Rpad (Strings.To_String (X (R, C), 10), 20));
+                  Strings.Rpad (Strings.To_string (X (R, C), 10), 20));
             end loop;
             Log ("Matrix row" & R'Img & ":" & S (Line), Always, Log_Section);
          end;

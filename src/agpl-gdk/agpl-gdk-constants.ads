@@ -1,4 +1,3 @@
- 
 
 with Gdk.Color; use Gdk.Color;
 

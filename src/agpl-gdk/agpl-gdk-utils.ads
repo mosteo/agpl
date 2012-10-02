@@ -1,4 +1,3 @@
- 
 
 with Agpl.Gdk.Controlled_Gc;
 

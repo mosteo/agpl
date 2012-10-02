@@ -1,11 +1,10 @@
- 
 
 --  Drawing points
 
 with Agpl.Gdk.Drawer_Action;
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 
 package Agpl.Gdk.Drawer_Arc is
 
@@ -13,7 +12,7 @@ package Agpl.Gdk.Drawer_Arc is
 
    type Object is new Agpl.Gdk.Drawer_Action.Object with private;
 
-   function Create(Gc     : Gdk_Gc;
+   function Create(Gc     : Gdk_GC;
                    X, Y   : Float;
                    Width  : Float;
                    Height : Float;
@@ -22,7 +21,7 @@ package Agpl.Gdk.Drawer_Arc is
                    Fill   : Boolean := False)  -- Radians from Start
    return Object;
 
-   function Create_Circle (Gc      : Gdk_Gc;
+   function Create_Circle (Gc      : Gdk_GC;
                            X, Y, R : Float;
                            Fill    : Boolean := False) return Object;
 
@@ -47,7 +46,7 @@ private
       Ini,
       Fin    : Float;
       Fill   : Boolean;
-      Gc     : Gdk_Gc;
+      Gc     : Gdk_GC;
    end record;
 
 end Agpl.Gdk.Drawer_Arc;

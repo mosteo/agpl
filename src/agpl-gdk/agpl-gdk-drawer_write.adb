@@ -8,7 +8,7 @@ package body Agpl.Gdk.Drawer_Write is
    -- Create --
    ------------
 
-   function Create (Gc   : Gdk_Gc;
+   function Create (Gc   : Gdk_GC;
                     W    : Gtk_Widget;
                     X, Y : Float;
                     Utf8 : String) return Object is

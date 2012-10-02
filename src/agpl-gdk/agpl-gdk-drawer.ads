@@ -7,7 +7,7 @@ with Agpl.Gdk.Palette;
 with Agpl.Types;
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 with Gtk.Widget;   use Gtk.Widget;
 
 --  with Ada.Containers.Indefinite_Doubly_Linked_Lists;
@@ -149,7 +149,7 @@ private
       Queue      : Drawer_Action.Action_List;
 
       Pal        : aliased Palette.Object;
-      Curr_Gc    :         Gdk_Gc;
+      Curr_Gc    :         Gdk_GC;
    end record;
 
 end Agpl.Gdk.Drawer;

@@ -6,7 +6,7 @@
 with Agpl.Gdk.Drawer_Action;
 
 with Gdk.Drawable; use Gdk.Drawable;
-with Gdk.Gc;       use Gdk.Gc;
+with Gdk.GC;       use Gdk.GC;
 with Gtk.Widget;   use Gtk.Widget;
 
 package Agpl.Gdk.Drawer_Write is
@@ -15,7 +15,7 @@ package Agpl.Gdk.Drawer_Write is
 
    type Object (<>) is new Agpl.Gdk.Drawer_Action.Object with private;
 
-   function Create (Gc   : Gdk_Gc;
+   function Create (Gc   : Gdk_GC;
                     W    : Gtk_Widget;
                     X, Y : Float;
                     Utf8 : String) return Object;
@@ -36,7 +36,7 @@ package Agpl.Gdk.Drawer_Write is
 private
 
    type Object (Last : Natural) is new Agpl.Gdk.Drawer_Action.Object with record
-      Gc     : Gdk_Gc;
+      Gc     : Gdk_GC;
       W      : Gtk_Widget;
       P      : Float_Vector;
       Utf8   : String (1 .. Last);
