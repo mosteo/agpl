@@ -1,0 +1,24 @@
+with "gtkada";
+
+-- With GTK facilities
+
+project Agpl_Gtk extends "agpl.gpr" is
+
+   for Source_Dirs use ("src/agpl-gdk");
+   for Object_Dir  use "obj/gdk";
+
+   for Languages  use ("Ada", "C", "C++");
+
+   case Agpl.Include_Test is
+      when "True" =>
+         for Source_Dirs use project'Source_Dirs & ("src/agpl-gdk/test");
+      when "False" => null;
+   end case;
+
+   package Binder is
+      for Default_Switches ("Ada") use
+        Agpl.Binder'Default_Switches ("Ada") & ("-rdynamic");
+        --  Needed by glade autoconnect
+   end Binder;
+
+end Agpl_Gtk;

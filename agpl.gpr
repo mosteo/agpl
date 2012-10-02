@@ -1,5 +1,6 @@
 with "hungarian/hungarian";
-with "gtkada_conditional";
+
+--  Library without GTK facilities
 
 project Agpl is
 
@@ -38,7 +39,6 @@ project Agpl is
    --  Selective functionalities of Agpl
 
    Include_Concorde : Boolean := External ("Agpl_Include_Concorde", "False");
-   Include_Gtk      : Boolean := External ("Agpl_Include_Gtk",      "False"); -- Requires GtkAda
    Include_Http     : Boolean := External ("Agpl_Include_Http",     "False"); -- Requires AWS
    Include_Db       : Boolean := External ("Agpl_Include_Db",       "False");
    Include_Boost    : Boolean := External ("Agpl_Include_Boost",    "False"); -- Requires Boost Graph
@@ -55,17 +55,6 @@ project Agpl is
 
    case Include_Concorde is
       when "True"  => for Source_Dirs use project'Source_Dirs & "src/agpl-concorde";
-      when "False" => null;
-   end case;
-
-   case Include_Gtk is
-      when "True"  =>
-         for Source_Dirs use project'Source_Dirs & "src/agpl-gdk";
-         case Include_Test is
-            when "True" =>
-               for Source_Dirs use project'Source_Dirs & "src/tests/gtk";
-            when others => null;
-         end case;
       when "False" => null;
    end case;
 
@@ -161,12 +150,15 @@ project Agpl is
       for Default_Switches ("C")   use ("-g");
       for Default_Switches ("C++") use ("-g");
 
-      for Linker_Options use ("-lgsl", "-lgslcblas");
+      for Linker_Options use ("-Wl,-Bstatic",
+                              "-lgsl", "-lgslcblas",
+                              "-Wl,-Bdynamic");
       --  Linker.Linker_Options apply at the main project, not here.
       --  Needed, at least, in Agpl.Drawing.Figures
 
       case Include_Concorde is
-         when "True"  => for Linker_Options use Linker'Linker_Options & ("-Lsrc/agpl-concorde");
+         when "True"  =>
+            for Linker_Options use Linker'Linker_Options & ("-Lsrc/agpl-concorde");
          when "False" => null;
       end case;
    end Linker;
