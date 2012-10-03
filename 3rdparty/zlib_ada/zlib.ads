@@ -33,8 +33,6 @@ with Interfaces;
 
 package ZLib is
 
-   pragma Linker_Options ("-lz");
-
    ZLib_Error   : exception;
    Status_Error : exception;
 

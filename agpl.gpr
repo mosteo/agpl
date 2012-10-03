@@ -89,12 +89,8 @@ project Agpl is
 
    package Linker is
       for Default_Switches ("Ada") use Skel.Linker'Default_Switches ("Ada");
-      for Default_Switches ("C")   use Skel.Linker'Default_Switches ("C");
-      for Default_Switches ("C++") use Skel.Linker'Default_Switches ("C++");
 
-      for Linker_Options use ("-Wl,-Bstatic",
-                              "-lgsl", "-lgslcblas",
-                              "-Wl,-Bdynamic");
+      for Linker_Options use ("-lgsl", "-lgslcblas");
       --  Linker.Linker_Options apply at the main project, not here.
       --  Needed, at least, in Agpl.Drawing.Figures
 
@@ -104,6 +100,13 @@ project Agpl is
               ("-Lsrc/agpl-concorde", "-lconcorde");
          when "False" => null;
       end case;
+
+      case Include_Pngio is
+         when "True" =>
+            for Linker_Options use Linker'Linker_Options & ("-lz");
+         when "False" => null;
+      end case;
+
    end Linker;
 
    package Builder renames Skel.Builder;

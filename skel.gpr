@@ -16,8 +16,8 @@ project Skel is
                                          "-gnatwa",  -- optional warnings from gnat
                                          "-Wall",    -- optional warnings from gcc
                                          "-gnatwt",  -- detect dead code
-                                         "-gnatwjl", -- extra warnings
-                                         "-gnaty",   -- standard source code style
+                                         "-gnatwj",  -- extra warnings
+                                         "-gnaty-s", -- Most style checks
                                          "");
 
       for Required_Switches ("C")   use ("-Wall");
@@ -44,21 +44,12 @@ project Skel is
       for Default_Switches ("Ada") use ("-E",      -- exception tracebacks
                                         "-g",      -- keep debug symbols? (Unsure)
                                         -- "-r",   -- restrictions that might be applied
-                                        "-static", -- static runtime
+                                        "-static", -- static GNAT runtime
                                         "");
    end Binder;
 
    package Linker is
       for Default_Switches ("Ada") use ("-g");
-      for Default_Switches ("C")   use ("-g");
-      for Default_Switches ("C++") use ("-g");
-
-      Link_Flags := External ("LFLAGS", "");
-
-      for Linker_Options use ("-Wl,-Bstatic",
-		              Link_Flags,
-                              "-Wl,-Bdynamic");
-      --  Linker.Linker_Options apply at the main project, not here.
    end Linker;
 
    package Builder is

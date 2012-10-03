@@ -10,7 +10,7 @@ project Zlib is
    end Compiler;
 
    package Linker is
-      for Default_Switches ("ada") use ("-lz");
+      for Linker_Options use ("-lz");
    end Linker;
 
    package Builder is

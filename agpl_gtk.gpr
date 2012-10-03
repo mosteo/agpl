@@ -26,11 +26,6 @@ project Agpl_Gtk is
 
    package Linker renames Agpl.Linker;
 
---     package Linker is
---        for Linker_Options use Agpl.Linker'Linker_Options;
---        --  These are never inherited in extension projects
---     end Linker;
-
    package Pretty_Printer renames Agpl.Pretty_Printer;
 
    package Naming renames Agpl.Naming;

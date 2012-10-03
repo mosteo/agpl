@@ -1,5 +1,5 @@
 with Ada.Task_Identification;
-with Agpl.Chronos;
+with Agpl.Chronos; pragma Elaborate_All (Agpl.Chronos);
 with Agpl.Trace; use Agpl.Trace;
 with Gdk.Threads;
 with Gtk.Main;
@@ -40,16 +40,35 @@ package body Agpl.Gdk.Managed is
    -- Glade_Autoconnect --
    -----------------------
 
-   procedure Glade_Autoconnect (Xml : Glade.XML.Glade_XML) is
-      procedure Glade_Connect (X : System.Address);
-      pragma Import (C, Glade_Connect, "glade_xml_signal_autoconnect");
-      procedure Internal is
-      begin
-         Glade_Connect (Xml.Get_Object);
-      end Internal;
+--     procedure Glade_Autoconnect (Xml : Glade.XML.Glade_XML) is
+--        procedure Glade_Connect (X : System.Address);
+--        pragma Import (C, Glade_Connect, "glade_xml_signal_autoconnect");
+--        procedure Internal is
+--        begin
+--           Glade_Connect (Xml.Get_Object);
+--        end Internal;
+--     begin
+--        Execute (Internal'Access);
+--     end Glade_Autoconnect;
+
+   procedure GtkBuilder_Connect (Builder : Gtkada_Builder;
+                                 Data    : access User_Data) is
+      procedure Internal (Builder :        System.Address;
+                          Data    : access User_Data) with
+        Import,
+        Convention => C,
+        External_Name => "gtk_builder_connect_signals";
    begin
-      Execute (Internal'Access);
-   end Glade_Autoconnect;
+      Internal (Builder.all'Address, Data);
+      pragma Untested ("The above line is most likely a bomb");
+   end GtkBuilder_Connect;
+
+   procedure GtkBuilder_Connect_Void (Builder : Gtkada_Builder) is
+      type Void is null record;
+      procedure Internal is new GtkBuilder_Connect (Void);
+   begin
+      Internal (Builder, null);
+   end GtkBuilder_Connect_Void;
 
    --------------------
    -- Execute_In_Gtk --
@@ -116,7 +135,7 @@ package body Agpl.Gdk.Managed is
 
       procedure Init is
       begin
-         Standard.Gtk.Main.Set_Locale;
+         --  Standard.Gtk.Main.Set_Locale; -- Was obsolescent
          Standard.Gtk.Main.Init;
          Standard.Gdk.Threads.G_Init;
          Standard.Gdk.Threads.Init;
