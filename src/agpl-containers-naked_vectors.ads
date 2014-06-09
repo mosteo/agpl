@@ -136,7 +136,7 @@ private
    procedure Adjust     (this : in out Proto_object);
    procedure Finalize   (this : in out Proto_object);
 
-   type Object (First : Integer) is new Proto_object (First) with record
+   type Object (First : Integer) is new Proto_object (First => First) with record
       Last : Integer := First - 1;
    end record;
 
