@@ -1,5 +1,5 @@
 with "agpl";
-with "gtkada";
+with "gtkada2/gtkada2";
 
 -- With GTK facilities
 

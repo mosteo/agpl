@@ -32,7 +32,7 @@ project Skel is
                                               "-gnata", -- All assertions
                                               "-gnateE", -- Extra range check info in exceptions
                                               "-gnatf", -- full errors
-                                              "-gnatqQ", -- compile as much as possible even with errors
+--                                              "-gnatqQ", -- compile as much as possible even with errors
                                               "-gnatVa", -- all validity checks (expensive, use Vd for default)
                                               "");
             for Default_Switches ("C")   use ("-g", "-O2");
