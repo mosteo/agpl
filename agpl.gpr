@@ -1,5 +1,5 @@
 with "skel";
-with "hungarian/hungarian";
+-- with "hungarian/hungarian";
 
 --  Library without GTK facilities
 
@@ -10,15 +10,15 @@ project Agpl is
    for Object_Dir  use "obj";
    for Exec_Dir    use "obj";
 
-   for Languages  use ("Ada", "C", "C++");
+   for Languages  use ("Ada", "C"); --, "C++");
 
    --  Selective functionalities of Agpl
 
    Include_Concorde : Boolean := External ("Agpl_Include_Concorde", "False");
    Include_Http     : Boolean := External ("Agpl_Include_Http",     "False"); -- Requires AWS
    Include_Db       : Boolean := External ("Agpl_Include_Db",       "False");
-   Include_Boost    : Boolean := External ("Agpl_Include_Boost",    "True"); -- Requires Boost Graph
-   Include_Pngio    : Boolean := External ("Agpl_Include_PngIO",    "True");
+   Include_Boost    : Boolean := External ("Agpl_Include_Boost",    "False"); -- Requires Boost Graph
+   Include_Pngio    : Boolean := External ("Agpl_Include_PngIO",    "False");
    Include_Test     : Boolean := External ("Agpl_Include_Test",     "False");
 
    Trace_Enabled    : Boolean := External ("Agpl_Trace",            "True");
