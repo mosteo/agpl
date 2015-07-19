@@ -9,7 +9,7 @@ package Agpl.Strings.Fields is
    ------------------------------------------------------------------------
    --  Returns the Nth field in a string, using the specified separator If no
    --  separator found, returns whole string
-   function Select_field
+   function Select_Field
      (S    : in String;
       N    : in Positive;
       C    : in Character := ' ')
