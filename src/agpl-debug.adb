@@ -4,10 +4,23 @@
 
 with Agpl.Conversions;
 with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
+with GNAT.Exception_Traces;
+with GNAT.Traceback;
+with GNAT.Traceback.Symbolic;
 
 package body Agpl.Debug is
 
    use type Ustring;
+   
+   --------------------------------
+   -- Enable_Symbolic_Tracebacks --
+   --------------------------------
+
+   procedure Enable_Symbolic_Tracebacks is 
+   begin
+      GNAT.Exception_Traces.Trace_On (GNAT.Exception_Traces.Unhandled_Raise);
+      GNAT.Exception_Traces.Set_Trace_Decorator (GNAT.Traceback.Symbolic.Symbolic_Traceback'Access);
+   end Enable_Symbolic_Tracebacks;
 
    ------------------------------------------------------------------------
    -- Report                                                             --
