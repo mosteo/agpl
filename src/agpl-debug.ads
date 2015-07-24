@@ -10,11 +10,9 @@ use  Ada;
 
 package Agpl.Debug is
 
-   --  pragma Preelaborate;
+   pragma Preelaborate;
 
    --   Pool : Gnat.Debug_Pools.Debug_Pool;
-   
-   procedure Enable_Symbolic_Tracebacks;
 
    ------------------------------------------------------------------------
    -- Report                                                             --

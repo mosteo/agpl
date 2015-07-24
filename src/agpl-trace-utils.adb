@@ -1,6 +1,10 @@
 with Agpl.Calendar.Format;
 with Agpl.Strings;
 
+with GNAT.Exception_Traces;
+with GNAT.Traceback;
+with GNAT.Traceback.Symbolic;
+
 package body Agpl.Trace.Utils is
 
    subtype Warn_Prefix is String (1 .. 4);
@@ -12,6 +16,16 @@ package body Agpl.Trace.Utils is
       Error       => "[E] ",
       Warning     => "<w> ",
       Always      => "!A! ");
+
+      --------------------------------
+   -- Enable_Symbolic_Tracebacks --
+   --------------------------------
+
+   procedure Enable_Symbolic_Tracebacks is
+   begin
+      GNAT.Exception_Traces.Trace_On (GNAT.Exception_Traces.Unhandled_Raise);
+      GNAT.Exception_Traces.Set_Trace_Decorator (GNAT.Traceback.Symbolic.Symbolic_Traceback'Access);
+   end Enable_Symbolic_Tracebacks;
 
    -------------------
    -- Prepend_Level --

@@ -6,9 +6,9 @@ package Agpl.Trace.Utils is
 
    pragma Elaborate_Body;
 
-
    Filer : aliased File.Object;
 
+   procedure Enable_Symbolic_Tracebacks;
 
    --  Prependers:
 
