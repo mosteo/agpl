@@ -8,4 +8,4 @@ minimal:
 clean:
 	gprclean -r -Pagpl
 #	rm -f obj/* libstatic/* libdynamic/*
-	make -C hungarian clean
+#	make -C hungarian clean

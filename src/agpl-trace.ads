@@ -2,7 +2,6 @@ with Interfaces.C;
 with Interfaces.C.Strings;
 
 with Ada.Finalization;
-with Agpl.Debug;
 with Agpl.Trace_Is;
 
 with Ada.Exceptions;
@@ -138,8 +137,7 @@ package Agpl.Trace is
    function External_Tag (Tag : in Ada.Tags.Tag) return String renames
      Ada.Tags.External_Tag;
 
-   function Report (E : Ada.Exceptions.Exception_Occurrence) return String
-                    renames Agpl.Debug.Report;
+   function Report (E : Ada.Exceptions.Exception_Occurrence) return String;
 
    type String_Access is access all String;
 

@@ -6,6 +6,7 @@
 --  Gnat's implementation of I/O allows it so in this first approach we'll
 --  leave it like that.
 
+with Agpl.Debug;
 with Agpl.Trace.Console;
 
 with Ada.Containers.Vectors;
@@ -222,5 +223,14 @@ package body Agpl.Trace is
    begin
       Log (Value (Text), Levels'Val (Level), Value (Section));
    end C_Log;
+
+   ------------
+   -- Report --
+   ------------
+
+   function Report (E : Ada.Exceptions.Exception_Occurrence) return String is
+   begin
+      return Agpl.Debug.Report (E);
+   end Report;
 
 end Agpl.Trace;

@@ -8,12 +8,12 @@ with Agpl.Types.Ustrings; use Agpl.Types.Ustrings;
 package body Agpl.Debug is
 
    use type Ustring;   
-
+     
    ------------------------------------------------------------------------
    -- Report                                                             --
    ------------------------------------------------------------------------
    --  Constructs a error string upon exception:
-   function Report (E : Exceptions.Exception_occurrence) return String is
+   function Report (E : Exceptions.Exception_Occurrence) return String is
    begin
       return Exceptions.Exception_information (E);
    end Report;

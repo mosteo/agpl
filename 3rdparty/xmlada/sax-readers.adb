@@ -35,7 +35,6 @@ with Input_Sources.Strings;     use Input_Sources.Strings;
 with Input_Sources;             use Input_Sources;
 with Interfaces;                use Interfaces;
 with Sax.Attributes;            use Sax.Attributes;
-with Sax.Attributes;            use Sax.Attributes;
 with Sax.Encodings;             use Sax.Encodings;
 with Sax.Exceptions;            use Sax.Exceptions;
 with Sax.Locators;              use Sax.Locators;
@@ -50,8 +49,8 @@ package body Sax.Readers is
 
    use Entity_Table, Attributes_Table, Notations_Table;
 
-   Debug_Lexical : constant Boolean := False;
-   Debug_Input : constant Boolean := False;
+--     Debug_Lexical : constant Boolean := False;
+--     Debug_Input : constant Boolean := False;
    --  Set to True if you want to debug this package
 
    Always_Test_Valid_Char : constant Boolean := True;
@@ -733,10 +732,10 @@ package body Sax.Readers is
 
       --  Else read from the initial input stream
       elsif Eof (Input) then
-         if Debug_Input then
-            Put_Line
-              ("++Input " & To_String (Parser.Locator.all) & " END_OF_INPUT");
-         end if;
+--           if Debug_Input then
+--              Put_Line
+--                ("++Input " & To_String (Parser.Locator.all) & " END_OF_INPUT");
+--           end if;
          Parser.Last_Read := 16#FFFF#;
          raise Input_Ended;
 
@@ -744,15 +743,15 @@ package body Sax.Readers is
          Internal (Input);
       end if;
 
-      if Debug_Input then
-         Put ("++Input " & To_String (Parser.Locator.all)
-              & "(" & Unicode_Char'Image (Parser.Last_Read) & ")= ");
-         if Parser.Last_Read /= Line_Feed then
-            Put_Line (Debug_Encode (Parser.Last_Read));
-         else
-            Put_Line ("Line_Feed");
-         end if;
-      end if;
+--        if Debug_Input then
+--           Put ("++Input " & To_String (Parser.Locator.all)
+--                & "(" & Unicode_Char'Image (Parser.Last_Read) & ")= ");
+--           if Parser.Last_Read /= Line_Feed then
+--              Put_Line (Debug_Encode (Parser.Last_Read));
+--           else
+--              Put_Line ("Line_Feed");
+--           end if;
+--        end if;
    end Next_Char;
 
    -------------------
@@ -1170,6 +1169,7 @@ package body Sax.Readers is
 
       procedure Debug_Print;
       --  Print the returned token
+      pragma Unreferenced (Debug_Print);
 
       procedure Handle_Entity_Ref;
       --  '&' has been read (as well as the following character). Skips till
@@ -2043,16 +2043,16 @@ package body Sax.Readers is
 
       Id.Last := Parser.Buffer_Length;
 
-      if Debug_Lexical then
-         Debug_Print;
-      end if;
+--        if Debug_Lexical then
+--           Debug_Print;
+--        end if;
 
       --  Internal entities should be processes inline
 
       if Is_Entity_Ref /= None then
          declare
             N : constant Byte_Sequence := Parser.Buffer (Id.First .. Id.Last);
-            V : Entity_Entry_Access := Get (Parser.Entities, N);
+            V : constant Entity_Entry_Access := Get (Parser.Entities, N);
             Null_Loc : Locator_Impl;
          begin
             Reset_Buffer (Parser, Id);
@@ -2188,9 +2188,9 @@ package body Sax.Readers is
       when Input_Ended =>
             --  Make sure we always emit the last characters in the buffer
          Id.Last := Parser.Buffer_Length;
-         if Debug_Lexical then
-            Debug_Print;
-         end if;
+--           if Debug_Lexical then
+--              Debug_Print;
+--           end if;
 
          if Id.Typ = Cdata_Section then
             Fatal_Error

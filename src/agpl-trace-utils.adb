@@ -23,6 +23,7 @@ package body Agpl.Trace.Utils is
 
    procedure Enable_Symbolic_Tracebacks is
    begin
+      --  For unhadled exceptions: (Using for every raise causes printing even if handled, so not useful)
       GNAT.Exception_Traces.Trace_On (GNAT.Exception_Traces.Unhandled_Raise);
       GNAT.Exception_Traces.Set_Trace_Decorator (GNAT.Traceback.Symbolic.Symbolic_Traceback'Access);
    end Enable_Symbolic_Tracebacks;

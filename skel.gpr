@@ -4,7 +4,7 @@ project Skel is
 
    type Boolean is ("True", "False");
 
-   type Build_Type   is ("Debug");
+   type Build_Type is ("Debug");
 
    Build : Build_Type := External ("Build", "Debug");
 
@@ -18,10 +18,12 @@ project Skel is
                                          "-gnatwt",  -- detect dead code
                                          "-gnatwj",  -- extra warnings
                                          "-gnaty-s", -- Most style checks
+                                         -- "-gnatwe",  -- Warnings as errors
+                                         "-fcallgraph-info=su,da", -- Stack use info
                                          "");
 
-      for Required_Switches ("C")   use ("-Wall");
-      for Required_Switches ("C++") use ("-Wall");
+      for Required_Switches ("C")   use ("-Wall", "-Wextra", "-Wpedantic");
+      for Required_Switches ("C++") use ("-Wall", "-Wextra", "-Wpedantic");
 
       case Build is
          when "Debug" =>
@@ -42,6 +44,7 @@ project Skel is
 
    package Binder is
       for Default_Switches ("Ada") use ("-E",      -- exception tracebacks
+                                        "-Es",     -- symbolic tracebacks
                                         "-g",      -- keep debug symbols? (Unsure)
                                         -- "-r",   -- restrictions that might be applied
                                         "-static", -- static GNAT runtime

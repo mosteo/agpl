@@ -1,9 +1,9 @@
-with "skel";
+-- with "skel";
 -- with "hungarian/hungarian";
 
 --  Library without GTK facilities
 
-project Agpl is
+project Agpl extends "skel.gpr" is
 
    type Boolean is ("True", "False");
 
