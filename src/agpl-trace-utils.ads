@@ -8,9 +8,7 @@ package Agpl.Trace.Utils is
 
    Filer : aliased File.Object;
 
-   --  This enables last-chance handler with symbols,
-   --  if -Es has been passed to the binder.
-   --  No difference otherwise
+   --  This enables last-chance handler & symbolic tracebacks
    procedure Enable_Symbolic_Tracebacks;
 
    --  Prependers:

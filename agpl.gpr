@@ -1,9 +1,9 @@
--- with "skel";
+with "skel";
 -- with "hungarian/hungarian";
 
 --  Library without GTK facilities
 
-project Agpl extends "skel.gpr" is
+project Agpl is
 
    type Boolean is ("True", "False");
 
@@ -79,17 +79,13 @@ project Agpl extends "skel.gpr" is
          for Source_Dirs use project'Source_Dirs & ("src/trace_false");
    end case;
 
-   package Ide is
-      for Vcs_Kind use "git";
-   end Ide;
+   package Builder renames Skel.Builder;
 
    package Compiler renames Skel.Compiler;
 
    package Binder renames Skel.Binder;
 
    package Linker is
-      for Default_Switches ("Ada") use Skel.Linker'Default_Switches ("Ada");
-
       for Linker_Options use ("-lgsl", "-lgslcblas");
       --  Linker.Linker_Options apply at the main project, not here.
       --  Needed, at least, in Agpl.Drawing.Figures
@@ -109,10 +105,12 @@ project Agpl extends "skel.gpr" is
 
    end Linker;
 
-   package Builder renames Skel.Builder;
-
    package Pretty_Printer renames Skel.Pretty_Printer;
 
    package Naming renames Skel.Naming;
+
+   package Ide is
+      for Vcs_Kind use "git";
+   end Ide;
 
 end Agpl;

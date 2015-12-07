@@ -19,7 +19,8 @@ project Skel is
                                          "-gnatwj",  -- extra warnings
                                          "-gnaty-s", -- Most style checks
                                          -- "-gnatwe",  -- Warnings as errors
-                                         "-fcallgraph-info=su,da", -- Stack use info
+                                         -- "-fcallgraph-info=su,da", -- Stack use info
+                                         -- GPL 2015 and above only ^
                                          "");
 
       for Required_Switches ("C")   use ("-Wall", "-Wextra", "-Wpedantic");
@@ -44,7 +45,6 @@ project Skel is
 
    package Binder is
       for Default_Switches ("Ada") use ("-E",      -- exception tracebacks
-                                        "-Es",     -- symbolic tracebacks
                                         "-g",      -- keep debug symbols? (Unsure)
                                         -- "-r",   -- restrictions that might be applied
                                         "-static", -- static GNAT runtime
