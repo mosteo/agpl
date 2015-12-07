@@ -55,12 +55,14 @@ package body Agpl.Strings.Utf8 is
    function Is_Valid_Latin1 (Str : Utf8_String) return Boolean is
       use Unicode;
    begin
-      if Ces.Utf8.To_Unicode_Le
-        (Str,
-         Unicode.Ccs.Iso_8859_1.Iso_8859_1_Character_Set) /= ""
-      then
+      declare
+         Foo : String := Ces.Utf8.To_Unicode_Le
+           (Str,
+            Unicode.Ccs.Iso_8859_1.Iso_8859_1_Character_Set);
+         pragma Unreferenced (Foo);
+      begin
          null;
-      end if;
+      end;
 --      Log ("Utf8 is latin1: " & Str, Always);
       return True;
    exception
