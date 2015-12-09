@@ -4,8 +4,8 @@
 --  THREAD SAFE
 
 with Ada.Calendar;
-with Agpl.Smart_access_Limited;
-pragma TO_DO ("Migrate to Ada.Real_Time");
+--  with Agpl.Smart_access_Limited;
+--  pragma TO_DO ("Migrate to Ada.Real_Time");
 
 package Agpl.Chronos is
 
