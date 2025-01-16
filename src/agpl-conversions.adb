@@ -7,7 +7,7 @@ with Agpl.Strings.Fields;
 --  with Agpl.Trace; use Agpl.Trace;
 
 pragma Warnings (Off);
-with System.Img_Real;
+--  with System.Img_Real;
 pragma Warnings (On);
 --  Necessary evil to remain preelaborable and not lose precision using
 --   decimal types when imaging floats without E notation.
@@ -133,34 +133,37 @@ package body Agpl.Conversions is
       return To_String (Long_Long_Float (N), Decimals);
    end To_string;
 
-   function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
-      S : String (1 .. 8192); -- Maximum is E+4096; should fit here, right?
-      P : Natural := 0;
-   begin
-      System.Img_Real.Set_Image_Real (N, S, P, 0, Decimals, 0);
-      return S (1 .. P);
-   end To_String;
+   --  function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
+   --     S : String (1 .. 8192); -- Maximum is E+4096; should fit here, right?
+   --     P : Natural := 0;
+   --  begin
+   --     System.Img_Real.Set_Image_Real (N, S, P, 0, Decimals, 0);
+   --     return S (1 .. P);
+   --  end To_String;
 
---     function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
---        type Prn is delta 0.000001 digits 16;
---     begin
---        if Decimals > 0 then
---           begin
---              declare
---                 Str : constant String := Trim (Prn'Image (Prn (N))) & "000000";
---              begin
---                 return
---                   Str (Str'First .. Pos (Str, ".") + Decimals);
---              end;
---           exception
---              when others =>
---                 --  Fallback in case the printer type can't hold N.
---                 return N'Img;
---           end;
---        else
---           return To_String (Integer (N));
---        end if;
---     end To_string;
+   --  Previous was better but is not non-preelaborable. I should dig for an
+   --  alternative rather than the untested following.
+
+   function To_String (N : Long_Long_Float; Decimals : Natural := 2) return String is
+      type Prn is delta 0.000001 digits 16;
+   begin
+      if Decimals > 0 then
+         begin
+            declare
+               Str : constant String := Trim (Prn'Image (Prn (N))) & "000000";
+            begin
+               return
+                 Str (Str'First .. Pos (Str, ".") + Decimals);
+            end;
+         exception
+            when others =>
+               --  Fallback in case the printer type can't hold N.
+               return N'Img;
+         end;
+      else
+         return To_String (Integer (N));
+      end if;
+   end To_string;
 
    ------------
    -- To_Str --
